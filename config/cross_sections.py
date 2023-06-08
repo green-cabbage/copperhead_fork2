@@ -1,8 +1,8 @@
 cross_sections = {
     "test_file": 1,
-    "dy": 5765.40,
+    "dy": 5379.0, #UL
     "dy_0j": 4620.52,
-    "dy_1j": 859.59,
+    "dy_1j": 922.5,  #UL
     "dy_2j": 338.26,
     "dy_m105_160_mg": 47.17,
     "dy_m105_160_vbf_mg": {"2016": 1.77, "2017": 2.04, "2018": 2.03},
@@ -38,6 +38,7 @@ cross_sections = {
     "ggh_amcPS_TuneCP5down": 0.01057,
     "ggh_amcPS_TuneCP5up": 0.01057,
     "ggh_amc": 0.01057,
+    "ggh_localTest": 0.01057,
     "vbf": 0.0008210722,
     "vbf_sync": 0.0008210722,
     "vbf_powheg_herwig": 0.0008210722,

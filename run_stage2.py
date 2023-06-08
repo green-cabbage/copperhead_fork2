@@ -16,7 +16,7 @@ __all__ = ["dask"]
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-y", "--years", nargs="+", help="Years to process", default=["2018"]
+    "-y", "--year", nargs="+", help="Years to process", default=["2018"]
 )
 parser.add_argument(
     "-sl",
@@ -25,6 +25,14 @@ parser.add_argument(
     default=None,
     action="store",
     help="Slurm cluster port (if not specified, will create a local cluster)",
+)
+parser.add_argument(
+    "-l",
+    "--label",
+    dest="label",
+    default="test",
+    action="store",
+    help="Unique run label (to create output path)",
 )
 args = parser.parse_args()
 
@@ -44,24 +52,26 @@ else:
 parameters = {
     # < general settings >
     "slurm_cluster_ip": slurm_cluster_ip,
-    "global_path": "/depot/cms/hmm/copperhead/",
-    "years": args.years,
-    "label": "test",
-    "channels": ["vbf"],
-    "regions": ["h-peak", "h-sidebands"],
+    "global_path": "/depot/cms/hmm/vscheure",
+    "years": args.year,
+    "label": args.label,
+    "channels": ["ggh_0jets","ggh_1jets","ggh_2orMoreJets","vbf"],
+    #"channels": ["vbf"],
+    "regions": ["h-peak","h-sidebands"],
     "syst_variations": ["nominal"],
     # "custom_npartitions": {
     #     "vbf_powheg_dipole": 1,
     # },
     #
     # < settings for histograms >
-    "hist_vars": ["dimuon_mass"],
+    "hist_vars":  ["dimuon_mass","dimuon_dR","njets","mu1_pt","dimuon_mass_res","mu1_eta","jet1_pt"],
     "variables_lookup": variables_lookup,
     "save_hists": True,
     #
     # < settings for unbinned output>
     "tosave_unbinned": {
         "vbf": ["dimuon_mass", "event", "wgt_nominal", "mu1_pt", "score_pytorch_test"],
+        "none": ["dimuon_mass", "event", "wgt_nominal", "mu1_pt", "score_pytorch_test"],
         "ggh_0jets": ["dimuon_mass", "wgt_nominal"],
         "ggh_1jet": ["dimuon_mass", "wgt_nominal"],
         "ggh_2orMoreJets": ["dimuon_mass", "wgt_nominal"],
@@ -69,11 +79,33 @@ parameters = {
     "save_unbinned": True,
     #
     # < MVA settings >
-    "models_path": "data/trained_models/",
-    "dnn_models": {
-        "vbf": ["pytorch_test"],
+    "models_path": "/depot/cms/hmm/copperhead/trained_models/",
+   "dnn_models": {
+        #"vbf": ["pytorch_test"],
+        # "vbf": ["pytorch_test"],
+        # "vbf": ["pytorch_jun27"],
+        "vbf": ["pytorch_jun27"],
+        #"vbf": ["pytorch_jul12"],  # jun27 is best
+        # "vbf": ["pytorch_aug7"],
+        # "vbf": [
+        #    #"pytorch_sep4",
+        #    #"pytorch_sep2_vbf_vs_dy",
+        #    #"pytorch_sep2_vbf_vs_ewk",
+        #    #"pytorch_sep2_vbf_vs_dy+ewk",
+        #    #"pytorch_sep2_ggh_vs_dy",
+        #    #"pytorch_sep2_ggh_vs_ewk",
+        #    #"pytorch_sep2_ggh_vs_dy+ewk",
+        #    #"pytorch_sep2_vbf+ggh_vs_dy",
+        #    #"pytorch_sep2_vbf+ggh_vs_ewk",
+        #    #"pytorch_sep2_vbf+ggh_vs_dy+ewk",
+        # ],
+        # "vbf": ["pytorch_may24_pisa"],
     },
-    "bdt_models": {},
+    # "mva_categorizer": "3layers_64_32_16_all_feat",
+    # "vbf_mva_cutoff": 0.5,
+    "bdt_models": {
+        # "vbf": ["bdt_sep13"],
+    },
     "mva_bins_original": mva_bins,
 }
 
@@ -86,6 +118,7 @@ parameters["datasets"] = [
     "data_F",
     "data_G",
     "data_H",
+    #"dy",
     "dy_m105_160_amc",
     "dy_m105_160_vbf_amc",
     "ewk_lljj_mll105_160_py_dipole",
@@ -108,7 +141,7 @@ parameters["datasets"] = [
     "vbf_powheg_dipole",
 ]
 # using one small dataset for debugging
-# parameters["datasets"] = ["vbf_powheg_dipole"]
+#parameters["datasets"] = ["ggh_localTest"]
 
 if __name__ == "__main__":
     # prepare Dask client
@@ -122,7 +155,7 @@ if __name__ == "__main__":
             dashboard_address=dashboard_address,
             n_workers=ncpus_local,
             threads_per_worker=1,
-            memory_limit="4GB",
+            memory_limit="8GB",
         )
     else:
         print(
@@ -137,7 +170,7 @@ if __name__ == "__main__":
     dnn_models = list(parameters["dnn_models"].values())
     bdt_models = list(parameters["bdt_models"].values())
     for models in dnn_models + bdt_models:
-        for model in models:
+       for model in models:
             parameters["hist_vars"] += ["score_" + model]
 
     # prepare lists of paths to parquet files (stage1 output) for each year and dataset
@@ -150,20 +183,26 @@ if __name__ == "__main__":
                 f"{parameters['label']}/stage1_output/{year}/"
                 f"{dataset}/*.parquet"
             )
+            print(f"{parameters['global_path']}/"
+                f"{parameters['label']}/stage1_output/{year}/"
+                f"{dataset}/")
             all_paths[year][dataset] = paths
 
     # run postprocessing
     for year in parameters["years"]:
         print(f"Processing {year}")
+        
         for dataset, path in tqdm.tqdm(all_paths[year].items()):
+            #print(dataset)
             if len(path) == 0:
                 continue
 
             # read stage1 outputs
             df = load_dataframe(client, parameters, inputs=[path], dataset=dataset)
+            print(df.compute())
             if not isinstance(df, dd.DataFrame):
                 continue
 
             # run processing sequence (categorization, mva, histograms)
             info = process_partitions(client, parameters, df)
-            # print(info)
+            print(info)

@@ -165,6 +165,7 @@ def load_stage2_output_hists(argset, parameters):
         return
 
     path = f"{global_path}/{label}/stage2_histograms/{var_name}/{year}/"
+    print(path)
     paths = [f"{path}/{dataset}.pickle"]
     for fname in os.listdir(path):
         if re.fullmatch(rf"{dataset}_[0-9]+.pickle", fname):

@@ -96,7 +96,7 @@ class DimuonProcessor(processor.ProcessorABC):
         # Initialize timer
         if self.timer:
             self.timer.update()
-
+        print(df)
         # Dataset name (see definitions in config/datasets.py)
         dataset = df.metadata["dataset"]
         is_mc = "data" not in dataset

@@ -160,7 +160,7 @@ def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
         eval_filter = df.event.mod(nfolds).isin(eval_folds)
 
         scalers_path = (
-            # f"{parameters['models_path']}/{channel}/scalers/scalers_{model}_{i}.npy"
+            #f"{parameters['models_path']}/{channel}/scalers/scalers_{model}_{i}.npy"
             f"{parameters['models_path']}/{model}/scalers_{model}_{i}.npy"
         )
         scalers = np.load(scalers_path)
@@ -173,8 +173,9 @@ def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
         df_i = torch.tensor(df_i.values).float()
 
         dnn_model = Net(len(features))
-        # model_path = f"{parameters['models_path']}/{channel}/models/{model}_{i}.pt"
+        #model_path = f"{parameters['models_path']}/{channel}/models/model_{model}_{i}.pt"
         model_path = f"{parameters['models_path']}/{model}/{model}_{i}.pt"
+        #print(torch.load(model_path,map_location=torch.device("cpu")).keys())
         dnn_model.load_state_dict(
             torch.load(model_path, map_location=torch.device("cpu"))
         )

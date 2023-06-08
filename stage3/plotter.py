@@ -4,7 +4,7 @@ from hist.intervals import poisson_interval
 from python.workflow import parallelize
 from python.io import load_stage2_output_hists, mkdir
 from python.variable import Variable
-
+from config.variables import variables_lookup
 import matplotlib.pyplot as plt
 import mplhep as hep
 
@@ -98,7 +98,7 @@ def plot(args, parameters={}):
     var_name = args["var_name"]
     hist = args["df"].loc[(args["df"].var_name == var_name) & (args["df"].year == year)]
 
-    if var_name in parameters["variables_lookup"].keys():
+    if var_name in variables_lookup.keys():
         var = parameters["variables_lookup"][var_name]
     else:
         var = Variable(var_name, var_name, 50, 0, 5)
@@ -113,7 +113,6 @@ def plot(args, parameters={}):
     variation = "nominal"
 
     slicer = {"region": region, "channel": channel, "variation": variation}
-
     fig = plt.figure()
 
     if parameters["plot_ratio"]:
@@ -263,16 +262,20 @@ def get_plottables(hist, entry, year, var_name, slicer):
 
         hist_values_group = []
         hist_sumw2_group = []
-
-        for h in hist.loc[hist.dataset.isin(group_entries), "hist"].values:
+       
+        print(hist.loc[hist.dataset.isin(group_entries),"hist"].values)
+        for h in hist.loc[hist.dataset.isin(group_entries),"hist"].values:
+            print("done")
             if not pd.isna(h[slicer_value].project(var_name).sum()):
                 hist_values_group.append(h[slicer_value].project(var_name))
                 hist_sumw2_group.append(h[slicer_sumw2].project(var_name))
 
         if len(hist_values_group) == 0:
+            print("Hello")
             continue
 
         nevts = sum(hist_values_group).sum()
+        print(plottables_df)
         if nevts > 0:
             plottables_df = plottables_df.append(
                 pd.DataFrame(

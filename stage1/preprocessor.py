@@ -4,7 +4,7 @@ import glob
 import tqdm
 
 import uproot
-
+uproot.open.defaults["xrootd_handler"] = uproot.MultithreadedXRootDSource
 from config.parameters import parameters
 from config.cross_sections import cross_sections
 
@@ -19,10 +19,10 @@ def load_sample(dataset, parameters):
         "datasets_from": "purdue",
         "debug": DEBUG,
         "xrootd": xrootd,
-        "timeout": 120,
+        "timeout": 300,
     }
     samp_info = SamplesInfo(**args)
-    samp_info.load(dataset, use_dask=True, client=parameters["client"])
+    samp_info.load(dataset, use_dask=False, client=parameters["client"])
     samp_info.finalize()
     return {dataset: samp_info}
 
@@ -52,11 +52,12 @@ def load_samples(datasets, parameters):
     return samp_info_total
 
 
-def read_via_xrootd(server, path, from_das=True):
+def read_via_xrootd(server, path, from_das=False):
     if from_das:
         command = f'dasgoclient --query=="file dataset={path}"'
     else:
         command = f"xrdfs {server} ls -R {path} | grep '.root'"
+        #print(command)
     proc = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
     )
@@ -66,6 +67,7 @@ def read_via_xrootd(server, path, from_das=True):
         print("    voms-proxy-init --voms cms")
         print("    source /cvmfs/cms.cern.ch/cmsset_default.sh")
     result = [server + r.rstrip().decode("utf-8") for r in result]
+    #print(result)
     return result
 
 
@@ -73,8 +75,8 @@ class SamplesInfo(object):
     def __init__(self, **kwargs):
         self.year = kwargs.pop("year", "2016")
         self.xrootd = kwargs.pop("xrootd", True)
-        self.server = kwargs.pop("server", "root://xrootd.rcac.purdue.edu/")
-        self.timeout = kwargs.pop("timeout", 60)
+        self.server = kwargs.pop("server", "root://eos.cms.rcac.purdue.edu/")
+        self.timeout = kwargs.pop("timeout", 300)
         self.debug = kwargs.pop("debug", False)
         datasets_from = kwargs.pop("datasets_from", "purdue")
 
@@ -88,7 +90,7 @@ class SamplesInfo(object):
             from config.datasets_pisa import datasets
 
         self.paths = datasets[self.year]
-
+        
         if "2016" in self.year:
             self.lumi = 35900.0
         elif "2017" in self.year:
@@ -120,7 +122,7 @@ class SamplesInfo(object):
         self.metadata = res["metadata"]
         self.data_entries = res["data_entries"]
 
-    def load_sample(self, sample, use_dask=False, client=None):
+    def load_sample(self, sample, use_dask=True, client=None):
         if (sample not in self.paths) or (self.paths[sample] == ""):
             # print(f"Couldn't load {sample}! Skipping.")
             return {
@@ -136,6 +138,7 @@ class SamplesInfo(object):
         data_entries = 0
 
         if self.xrootd:
+            
             all_files = read_via_xrootd(self.server, self.paths[sample])
         elif self.paths[sample].endswith(".root"):
             all_files = [self.paths[sample]]
@@ -144,11 +147,11 @@ class SamplesInfo(object):
             all_files = all_files + glob.glob(
                 self.server + self.paths[sample] + "/**/**/*.root"
             )
-
+        
         if self.debug:
             all_files = [all_files[0]]
 
-        # print(f"Loading {sample}: {len(all_files)} files")
+        print(f"Loading {sample}: {len(all_files)} files")
 
         sumGenWgts = 0
         nGenEvts = 0
@@ -159,6 +162,7 @@ class SamplesInfo(object):
             if not client:
                 client = get_client()
             if "data" in sample:
+                print(all_files[0])
                 work = client.map(self.get_data, all_files, priority=100)
             else:
                 work = client.map(self.get_mc, all_files, priority=100)
@@ -172,6 +176,7 @@ class SamplesInfo(object):
         else:
             for f in all_files:
                 if "data" in sample:
+                    
                     data_entries += self.get_data(f)["data_entries"]
                 else:
                     ret = self.get_mc(f)
@@ -189,17 +194,19 @@ class SamplesInfo(object):
             "data_entries": data_entries,
             "is_missing": False,
         }
-
+        print("Loading complete")
     def get_data(self, f):
         ret = {}
-        file = uproot.open(f, timeout=self.timeout)
-        tree = file["Events"]
+        tree = uproot.open(f, timeout=self.timeout)["Events"]
         ret["data_entries"] = tree.num_entries
         return ret
 
     def get_mc(self, f):
         ret = {}
-        tree = uproot.open(f, timeout=self.timeout)["Runs"]
+        
+        print("Reading " +f)
+        file = uproot.open(f, timeout=self.timeout)
+        tree = file["Runs"]
         if ("NanoAODv6" in f) or ("NANOV10" in f):
             ret["sumGenWgts"] = tree["genEventSumw_"].array()[0]
             ret["nGenEvts"] = tree["genEventCount_"].array()[0]
@@ -207,6 +214,7 @@ class SamplesInfo(object):
             ret["sumGenWgts"] = tree["genEventSumw"].array()[0]
             ret["nGenEvts"] = tree["genEventCount"].array()[0]
         return ret
+
 
     def finalize(self):
         if self.is_mc:
@@ -216,9 +224,10 @@ class SamplesInfo(object):
             numevents = self.metadata["nGenEvts"]
             if isinstance(cross_sections[self.sample], dict):
                 xsec = cross_sections[self.sample][self.year]
+                print(self.lumi, xsec, N)
             else:
                 xsec = cross_sections[self.sample]
-            # print(self.lumi, xsec, N)
+                print(self.lumi, xsec, N)
             if N > 0:
                 self.lumi_weights[self.sample] = xsec * self.lumi / N
             else:

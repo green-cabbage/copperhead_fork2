@@ -25,8 +25,8 @@ if __name__ == "__main__":
     )
     print("Client created")
 
-    file_name = "ewk_lljj_mll105_160_ptj0_NANOV10_2018.root"
-    file_path = f"{os.getcwd()}/tests/samples/{file_name}"
+    file_path = "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/nanoAODv6_private/FSRmyNanoProdMc2017_NANOV4b/DYJetsToLL_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIISummer16MiniAODv3_FSRmyNanoProdMc2017_NANOV4b_017_realistic_v14-v1/191012_174011/0000/myNanoProdMc2017_NANO_190.root"
+    #file_path = f"{os.getcwd()}/tests/samples/ewk_lljj_mll105_160_ptj0_NANOV10_2018.root"
     dataset = {"test": file_path}
 
     samp_info = SamplesInfo(xrootd=False)

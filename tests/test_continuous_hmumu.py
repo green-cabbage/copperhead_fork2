@@ -14,6 +14,7 @@ from stage1.preprocessor import SamplesInfo
 from stage1.processor import DimuonProcessor
 from stage2.postprocessor import process_partitions
 from stage3.plotter import plotter
+from stage3.fitter import fitter
 from test_tools import almost_equal
 
 import dask
@@ -25,38 +26,41 @@ __all__ = ["Client"]
 parameters = {
     "ncpus": 1,
     "years": [2018],
-    "datasets": ["ggh_localTest"],
+    "datasets": ["ggHmumu"],
+    "signals": ["ggHmumu"],
     "channels": ["vbf"],
     "regions": ["h-peak"],
     "hist_vars": ["dimuon_mass"],
     "plot_vars": ["dimuon_mass"],
-    "save_plots": True,
     "return_hist": True,
     "plot_ratio": True,
+    "save_plots": True,
     "plots_path": f"{os.getcwd()}/tests/output/",
+    "save_fits": True,
+    "fits_path": f"{os.getcwd()}/tests/output/",
     "variables_lookup": variables_lookup,
-    "grouping": {"ggh_localTest": "ggH"},
-    "plot_groups": {"stack": ["ggH"], "step": [], "errorbar": []},
+    "grouping": {"ggHmumu": "Hmumu"},
+    "plot_groups": {"stack": ["Hmumu"], "step": [], "errorbar": []},
 }
 
 if __name__ == "__main__":
     tick = time.time()
 
     client = dask.distributed.Client(
-        processes=True, n_workers=1, threads_per_worker=1, memory_limit="2.9GB"
+        processes=True, n_workers=1, threads_per_worker=1, memory_limit="5GB"
     )
     print("Client created")
 
     file_name = "ewk_lljj_mll105_160_ptj0_NANOV10_2018.root"
     file_path = f"{os.getcwd()}/tests/samples/{file_name}"
-    dataset = {"ggH_localTest": file_path}
+    dataset = {"ggHmumu": file_path}
 
     # Stage 1
     samp_info = SamplesInfo(xrootd=False)
     samp_info.paths = dataset
     samp_info.year = "2018"
-    samp_info.load("ggH_localTest", use_dask=False)
-    samp_info.lumi_weights["ggH_localTest"] = 1.0
+    samp_info.load("ggHmumu", use_dask=False)
+    samp_info.lumi_weights["ggHmumu"] = 1.0
     print(samp_info.fileset)
 
     executor_args = {"client": client, "use_dataframes": True, "retries": 0}
@@ -95,7 +99,7 @@ if __name__ == "__main__":
     #)
 
     # Stage 3
-    print(out_hist)
+    out_fit = fitter(client, parameters, df=df)
     out_plot = plotter(client, parameters, out_hist)
     print(out_plot[0])
     #assert almost_equal(out_plot[0], 701.8071994)

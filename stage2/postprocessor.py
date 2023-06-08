@@ -38,20 +38,20 @@ def process_partitions(client, parameters, df):
     datasets = df.dataset.unique()
     # delete previously generated outputs to prevent partial overwrite
     delete_existing_stage2_hists(datasets, years, parameters)
-    delete_existing_stage2_parquet(datasets, years, parameters)
+    #delete_existing_stage2_parquet(datasets, years, parameters)
 
     # prepare parameters for parallelization
     argset = {
         "year": years,
         "dataset": datasets,
     }
+    df=df.compute()
     if isinstance(df, pd.DataFrame):
         argset["df"] = [df]
     elif isinstance(df, dd.DataFrame):
         argset["df"] = [(i, df.partitions[i]) for i in range(df.npartitions)]
-
     # perform categorization, evaluate mva models, fill histograms
-    hist_info_dfs = parallelize(on_partition, argset, client, parameters)
+    hist_info_dfs = parallelize(on_partition, argset, client, parameters,seq=True)
 
     # return info for debugging
     hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True)
@@ -74,7 +74,7 @@ def on_partition(args, parameters):
     # convert from Dask DF to Pandas DF
     if isinstance(df, dd.DataFrame):
         df = df.compute()
-
+        print(df)
     # preprocess
     wgts = [c for c in df.columns if "wgt" in c]
     df.loc[:, wgts] = df.loc[:, wgts].fillna(0)
@@ -113,7 +113,7 @@ def on_partition(args, parameters):
         df.jet1_has_matched_gen_nominal.fillna(False, inplace=True)
         df.jet2_has_matched_gen_nominal.fillna(False, inplace=True)
         df["two_matched_jets"] = (
-            df.jet1_has_matched_gen_nominal & df.jet2_has_matched_gen_nominal
+            (df.jet1_has_matched_gen_nominal==True) & (df.jet2_has_matched_gen_nominal==True)
         )
         df.loc[
             (df.channel_nominal == "vbf") & (~df.two_matched_jets), "dataset"

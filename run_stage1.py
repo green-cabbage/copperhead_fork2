@@ -107,22 +107,22 @@ parameters = {
     "label": args.label,
     "local_cluster": local_cluster,
     "slurm_cluster_ip": slurm_cluster_ip,
-    "global_path": "/depot/cms/hmm/copperhead/",
+    "global_path": "/depot/cms/hmm/vscheure/",
     #
     # < input data settings >
     # 'xrootd': True,
-    # 'server': 'root://xrootd.rcac.purdue.edu/', # Purdue xrootd
+    #'server': 'root://xrootd.rcac.purdue.edu/', # Purdue xrootd
     # 'server': 'root://cmsxrootd.fnal.gov/', # FNAL xrootd
-    "xrootd": False,
-    "server": "/mnt/hadoop/",
+    "xrootd": True,
+    "server": "root://eos.cms.rcac.purdue.edu/",
     "datasets_from": "purdue",
     "chunksize": int(args.chunksize),
     "maxchunks": mch,
     #
     # < processing settings >
-    "regions": ["h-sidebands", "h-peak"],  # , "z-peak"]
+    "regions": ["h-sidebands", "h-peak" , "z-peak"],
     "pt_variations": pt_variations,
-    "do_btag_syst": False,
+    "do_btag_syst": True,
     "save_output": True,
     "do_timer": False,
 }
@@ -140,7 +140,7 @@ def submit_job(parameters):
     out_dir += "/" + parameters["year"]
     mkdir(out_dir)
 
-    executor_args = {"client": parameters["client"], "retries": 0}
+    executor_args = {"client": parameters["client"], "retries": 2}
     processor_args = {
         "samp_info": parameters["samp_infos"],
         "do_timer": parameters["do_timer"],
@@ -156,6 +156,7 @@ def submit_job(parameters):
         schema=NanoAODSchema,
         chunksize=parameters["chunksize"],
         maxchunks=parameters["maxchunks"],
+        xrootdtimeout=1200,
     )
 
     try:
@@ -197,7 +198,7 @@ if __name__ == "__main__":
         #     'test_file',
         # ],
         "data": [
-            # 'test_file_data_A',
+            #'test_file_data_A',
             "data_A",
             "data_B",
             "data_C",

@@ -12,7 +12,7 @@ __all__ = ["dask"]
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-y", "--years", nargs="+", help="Years to process", default=["2018"]
+    "-y", "--year", nargs="+", help="Years to process", default=["2018"]
 )
 parser.add_argument(
     "-sl",
@@ -21,6 +21,14 @@ parser.add_argument(
     default=None,
     action="store",
     help="Slurm cluster port (if not specified, will create a local cluster)",
+)
+parser.add_argument(
+    "-l",
+    "--label",
+    dest="label",
+    default="test",
+    action="store",
+    help="Unique run label (to create output path)",
 )
 args = parser.parse_args()
 
@@ -40,21 +48,39 @@ else:
 parameters = {
     # < general settings >
     "slurm_cluster_ip": slurm_cluster_ip,
-    "years": args.years,
-    "global_path": "/depot/cms/hmm/copperhead/",
-    "label": "test",
-    "channels": ["vbf"],
-    "regions": ["h-peak", "h-sidebands"],
+    "years": args.year,
+    "global_path": "/depot/cms/hmm/vscheure/",
+    "label": args.label,
+     "channels": ["ggh_0jets","ggh_2orMoreJets","vbf"],
+    "regions": ["h-peak","h-sidebands"],
     "syst_variations": ["nominal"],
     #
     # < plotting settings >
-    "plot_vars": [],  # "dimuon_mass"],
+    "plot_vars": ["dimuon_mass","dimuon_dR","njets","mu1_pt","mu1_eta","jet1_pt"],  # "dimuon_mass"],
     "variables_lookup": variables_lookup,
     "save_plots": True,
     "plot_ratio": True,
-    "plots_path": "./plots/2022apr10/",
-    "dnn_models": {
-        "vbf": ["pytorch_test"],
+    "plots_path": "plots/",
+   "dnn_models": {
+        #"vbf": ["pytorch_test"],
+        # "vbf": ["pytorch_test"],
+        # "vbf": ["pytorch_jun27"],
+        "vbf": ["pytorch_jun27"],
+        #"vbf": ["pytorch_jul12"],  # jun27 is best
+        # "vbf": ["pytorch_aug7"],
+        # "vbf": [
+        #    #"pytorch_sep4",
+        #    #"pytorch_sep2_vbf_vs_dy",
+        #    #"pytorch_sep2_vbf_vs_ewk",
+        #    #"pytorch_sep2_vbf_vs_dy+ewk",
+        #    #"pytorch_sep2_ggh_vs_dy",
+        #    #"pytorch_sep2_ggh_vs_ewk",
+        #    #"pytorch_sep2_ggh_vs_dy+ewk",
+        #    #"pytorch_sep2_vbf+ggh_vs_dy",
+        #    #"pytorch_sep2_vbf+ggh_vs_ewk",
+        #    #"pytorch_sep2_vbf+ggh_vs_dy+ewk",
+        # ],
+        # "vbf": ["pytorch_may24_pisa"],
     },
     "bdt_models": {},
     #
@@ -74,7 +100,12 @@ parameters["grouping"] = {
     "data_H": "Data",
     "dy_m105_160_amc": "DY",
     "dy_m105_160_vbf_amc": "DY",
-    "ewk_lljj_mll105_160_py_dipole": "EWK",
+    "dy_m105_160_amc_01j": "DY_01J",
+    "dy_m105_160_vbf_amc_01j": "DY_01J",
+    "dy_m105_160_amc_2j": "DY_01J",
+    "dy_m105_160_vbf_amc_2j": "DY_2J",
+    # "ewk_lljj_mll105_160_py_dipole": "EWK",
+    "ewk_lljj_mll105_160_ptj0": "EWK",
     "ttjets_dl": "TT+ST",
     "ttjets_sl": "TT+ST",
     "ttw": "TT+ST",
@@ -91,7 +122,11 @@ parameters["grouping"] = {
     "wzz": "VVV",
     "zzz": "VVV",
     "ggh_amcPS": "ggH",
-    "vbf_powheg_dipole": "VBF",
+    # "vbf_powheg_dipole": "VBF",
+    "vbf_powheg_dipole_01j": "VBF_01J",
+    # "vbf_powheg_dipole_0j": "VBF_0J",
+    # "vbf_powheg_dipole_1j": "VBF_1J",
+    "vbf_powheg_dipole_2j": "VBF_2J",
 }
 # parameters["grouping"] = {"vbf_powheg_dipole": "VBF",}
 

@@ -7,7 +7,7 @@ from coffea.processor import dask_executor
 from stage1.processor import DimuonProcessor
 
 dask.config.set({"temporary-directory": "/tmp/dask-temp/"})
-dask.config.set({"distributed.worker.timeouts.connect": "60s"})
+dask.config.set({"distributed.worker.timeouts.connect": "1200s"})
 
 __all__ = [
     "pytest",
