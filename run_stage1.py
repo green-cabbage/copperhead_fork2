@@ -49,6 +49,14 @@ parser.add_argument(
     help="Unique run label (to create output path)",
 )
 parser.add_argument(
+    "-d",
+    "--datasets",
+    dest="datasets",
+    default="UL",
+    action="store",
+    help="Wich datasets file to use (either UL or purdue)",
+)
+parser.add_argument(
     "-ch",
     "--chunksize",
     dest="chunksize",
@@ -115,7 +123,7 @@ parameters = {
     # 'server': 'root://cmsxrootd.fnal.gov/', # FNAL xrootd
     "xrootd": True,
     "server": "root://eos.cms.rcac.purdue.edu/",
-    "datasets_from": "purdue",
+    "datasets_from": args.datasets,
     "chunksize": int(args.chunksize),
     "maxchunks": mch,
     #
@@ -208,24 +216,25 @@ if __name__ == "__main__":
             "data_G",
             "data_H",
         ],
-        "signal": [
-            "ggh_amcPS",
-            "vbf_powhegPS",
-            "vbf_powheg_herwig",
-            "vbf_powheg_dipole",
-            "tth",
-            "wph",
-            "wmh",
-            "zh",
-        ],
+        #"signal": [
+           # "ggh_amcPS",
+            #"vbf_powhegPS",
+            #"vbf_powheg_herwig",
+            #"vbf_powheg_dipole",
+            #"tth",
+            #"wph",
+            #"wmh",
+            #"zh",
+        #],
         "main_mc": [
-            "dy_m105_160_amc",
+            "dy"
+            #"dy_m105_160_amc",
             # "dy_m105_160_mg",
-            "dy_m105_160_vbf_amc",
+            #"dy_m105_160_vbf_amc",
             # "ewk_lljj_mll105_160_py",
-            "ewk_lljj_mll105_160_ptj0",
-            "ewk_lljj_mll105_160_py_dipole",
-            "ttjets_dl",
+            #"ewk_lljj_mll105_160_ptj0",
+            #"ewk_lljj_mll105_160_py_dipole",
+            #"ttjets_dl",
             # "ewk_m50"
         ],
         "other_mc": [
@@ -257,7 +266,7 @@ if __name__ == "__main__":
                 # continue
                 datasets_data.append(sample)
             else:
-                continue
+                #continue
                 # if (group != "main_mc") & (group != "signal"):
                 # if (group != "signal"):
                 # if (group != "main_mc"):

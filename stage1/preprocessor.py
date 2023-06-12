@@ -16,7 +16,7 @@ def load_sample(dataset, parameters):
     args = {
         "year": parameters["year"],
         "server": parameters["server"],
-        "datasets_from": "purdue",
+        "datasets_from": parameters["datasets_from"],
         "debug": DEBUG,
         "xrootd": xrootd,
         "timeout": 300,
@@ -31,7 +31,7 @@ def load_samples(datasets, parameters):
     args = {
         "year": parameters["year"],
         "server": parameters["server"],
-        "datasets_from": "purdue",
+        "datasets_from": parameters["datasets_from"],
         "debug": DEBUG,
     }
     samp_info_total = SamplesInfo(**args)
@@ -78,7 +78,7 @@ class SamplesInfo(object):
         self.server = kwargs.pop("server", "root://eos.cms.rcac.purdue.edu/")
         self.timeout = kwargs.pop("timeout", 300)
         self.debug = kwargs.pop("debug", False)
-        datasets_from = kwargs.pop("datasets_from", "purdue")
+        datasets_from = kwargs.pop("datasets_from", "UL")
 
         self.parameters = {k: v[self.year] for k, v in parameters.items()}
 
@@ -86,6 +86,8 @@ class SamplesInfo(object):
 
         if "purdue" in datasets_from:
             from config.datasets import datasets
+        if "UL" in datasets_from:
+            from config.datasets_someUL import datasets
         elif "pisa" in datasets_from:
             from config.datasets_pisa import datasets
 

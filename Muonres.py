@@ -6,6 +6,9 @@ import pandas as pd
 from python.math_tools import p4_sum, delta_r
 from stage1.corrections.geofit import apply_geofit
 from scipy.optimize import curve_fit
+import sys
+import ROOT
+from stage3.fit_models import doubleCB
 
 def mass_resolution(df):
     # Returns absolute mass resolution!
@@ -86,13 +89,14 @@ def fill_muons(output, mu1, mu2):
     output["dimuon_mass_res"] = mass_resolution(output)
     
     
-fname = "/mnt/hadoop/store/group/local/hmm/FSRnano18MC_NANOV10b/GluGluHToMuMu_M125_TuneCP5_PSweights_13TeV_amcatnloFXFX_pythia8/RunIISummer16MiniAODv3_FSRnano18MC_NANOV10b_018_realistic_v15-v2/200408_225342/0000/nano18MC_NANO_1.root"
+fname = "root://eos.cms.rcac.purdue.edu//store/mc/RunIISummer20UL17NanoAODv9/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/130000/A9F4CE6E-5AA7-7044-91B4-45F8B4E2B570.root"
 #fname = "tests/samples/ewk_lljj_mll105_160_ptj0_NANOV10_2018.root"
 
 events = NanoEventsFactory.from_root(
     fname,
     schemaclass=NanoAODSchema.v6,
-    metadata={"dataset": "GluGluHToMuMu"},
+    metadata={"dataset": "DY"},
+    entry_stop=10000,
 ).events()
 
 events.Muon["genPt"] = events.Muon.matched_gen.pt
@@ -200,10 +204,23 @@ for Category in EtaCats:
     #etahist = plt.hist(output_cat.mu1_eta)
     #plt.show()
     Mass = output_cat["dimuon_mass"]
+    Mass_all = output["dimuon_mass"]
     GenMass = getGenMass(mu1_cat,mu2_cat)
     Residuals = (Mass-GenMass)/GenMass
     #Residuals_cleaned =[]
-
+    if sys.argv[1]=="zpeak":
+        hist,bin_edges,patches =plt.hist(Mass_all,80,range=[55,140])
+        bin_centres = (bin_edges[:-1] + bin_edges[1:])/2.
+        x = ROOT.RooRealVar("x", "x", 55, 130)
+        xframe = x.frame()
+        data = ROOT.RooDataSet.from_numpy({"x": Mass_all}, [x])
+        doubleCB.fitTo(data)
+        xframe2 = x.frame()
+        data.plotOn(xframe2)
+        doubleCB.plotOn(xframe2)
+        xframe2.Draw()
+        #plt.show()
+        #sys.exit()
     #for value in Residuals:
     #   if (abs(value)-np.mean(Residuals)) < 1 & (np.isnan(value)==False) :
     #       Residuals_cleaned.append(value)
