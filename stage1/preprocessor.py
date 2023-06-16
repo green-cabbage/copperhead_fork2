@@ -93,8 +93,12 @@ class SamplesInfo(object):
 
         self.paths = datasets[self.year]
         
-        if "2016" in self.year:
-            self.lumi = 35900.0
+        if "2016preVFP" in self.year:
+            self.lumi = 19500.0
+        elif "2016postVFP" in self.year:
+            self.lumi = 16800.0
+        elif "2016" in self.year:
+            self.lumi = 36300.0
         elif "2017" in self.year:
             self.lumi = 41530.0
         elif "2018" in self.year:
