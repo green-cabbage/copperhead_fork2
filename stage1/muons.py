@@ -75,11 +75,14 @@ def mass_resolution(is_mc, evaluator, df, year):
     # Returns absolute mass resolution!
     dpt1 = (df.mu1_ptErr * df.dimuon_mass) / (2 * df.mu1_pt)
     dpt2 = (df.mu2_ptErr * df.dimuon_mass) / (2 * df.mu2_pt)
-
-    if is_mc:
-        label = f"res_calib_MC_{year}"
+    if "2016" in year:
+        yearstr = "2016"
     else:
-        label = f"res_calib_Data_{year}"
+        yearstr=year #Work around before there are seperate new files for pre and postVFP
+    if is_mc:
+        label = f"res_calib_MC_{yearstr}"
+    else:
+        label = f"res_calib_Data_{yearstr}"
     calibration = np.array(
         evaluator[label](
             df.mu1_pt.values, abs(df.mu1_eta.values), abs(df.mu2_eta.values)

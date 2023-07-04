@@ -56,6 +56,7 @@ def load_dataframe(client, parameters, inputs=[], dataset=None):
     ncpus = parameters.get("ncpus", 1)
     custom_npartitions_dict = parameters.get("custom_npartitions", {})
     custom_npartitions = 0
+    print ("loadDataframe")
     if dataset in custom_npartitions_dict.keys():
         custom_npartitions = custom_npartitions_dict[dataset]
 
@@ -67,17 +68,23 @@ def load_dataframe(client, parameters, inputs=[], dataset=None):
         else:
             df_future = []
             for inp in inputs:
+                print(inp)
                 df_future.append(load_pandas_from_parquet(inp))
         # Merge dataframes
         try:
+            print(custom_npartitions)
+            
             df = dd.concat([d for d in df_future if d.shape[1] > 0])
         except Exception:
             return None
+        print("concat done")
+        print(df.npartitions)
         if custom_npartitions > 0:
             df = df.repartition(npartitions=custom_npartitions)
         elif df.npartitions > 2 * ncpus:
+            print("repartitioning")
             df = df.repartition(npartitions=2 * ncpus)
-
+            print("repartitioning done")
     elif isinstance(inputs, pd.DataFrame):
         df = dd.from_pandas(inputs, npartitions=ncpus)
 
@@ -92,18 +99,21 @@ def load_dataframe(client, parameters, inputs=[], dataset=None):
     else:
         print("Wrong input type:", type(inputs))
         return None
-
+  
     return df
 
 
 def load_pandas_from_parquet(path):
     df = dd.from_pandas(pd.DataFrame(), npartitions=1)
+    
     df = dd.read_parquet(path)
+    print("havedd")
     if len(path) > 0:
-        try:
-            df = dd.read_parquet(path)
-        except Exception:
-            return df
+        #try:
+        df = dd.read_parquet(path)
+        print("havedd")
+        #except Exception:
+            #return df
     return df
 
 

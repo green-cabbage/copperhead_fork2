@@ -384,9 +384,9 @@ def bwZGammaPlusLinear(x, tag):
 def doubleCB(x, tag):
     mean = rt.RooRealVar("mean" + tag, "mean", 125.0, 120.0, 130.0)
     sigma = rt.RooRealVar("sigma" + tag, "sigma", 2, 0.0, 5.0)
-    alpha1 = rt.RooRealVar("alpha1" + tag, "alpha1", 2, 0.001, 25)
+    alpha1 = rt.RooRealVar("alpha1" + tag, "alpha1", 1.0, 0.01, 15)
     n1 = rt.RooRealVar("n1" + tag, "n1", 1.5, 0, 25)
-    alpha2 = rt.RooRealVar("alpha2" + tag, "alpha2", 2.0, 0.001, 25)
+    alpha2 = rt.RooRealVar("alpha2" + tag, "alpha2", 1.0, 0.01, 15)
     n2 = rt.RooRealVar("n2" + tag, "n2", 1.5, 0, 25)
     model = rt.RooDoubleCB("dcb" + tag, "dcb", x, mean, sigma, alpha1, n1, alpha2, n2)
     return model, [mean, sigma, alpha1, n1, alpha2, n2]

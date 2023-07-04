@@ -9,12 +9,12 @@ from stage1.corrections.rochester import apply_roccor
 from stage1.corrections.fsr_recovery import fsr_recovery
 from scipy.optimize import curve_fit
 import sys
-import ROOT
-ROOT.gSystem.Load("stage3/lib/RooDoubleCB/RooDoubleCB_cxx")
-from stage3.fit_models import doubleCB
-from stage3.fit_models import BWxDCB
+
+
+from ROOT import *
+gSystem.Load("stage3/lib/RooDoubleCB/RooDoubleCB_cxx")
 from coffea.lookup_tools import txt_converters, rochester_lookup
-from stage3.fit_models import Voigtian
+
 
 
 rochester_data = txt_converters.convert_rochester_file(
@@ -23,30 +23,98 @@ rochester_data = txt_converters.convert_rochester_file(
 roccor_lookup = rochester_lookup.rochester_lookup(rochester_data)
 
 
-def fitDCB(Mass):
-    x = ROOT.RooRealVar("x", "x", 105, 150)
-    data = ROOT.RooDataSet.from_pandas({"x": Mass}, [x])
+def fitDCB(Mass,histname=""):
+    x = RooRealVar("x", "x", 110, 140)
+    if histname == "":
+        x.setBins(80)
+        data = RooDataSet.from_pandas({"x": Mass}, [x])
+        data =  RooDataHist("dh","binned version of data",RooArgSet(x),data)
+    else:
+        file = TFile.Open("/home/vscheure/CMSSW_10_6_28/src/Muons/MuonExercise2/histos2ggH.root", "read")
+        datahist = file.Get("demo/"+histname)
+        data = RooDataHist(histname,histname,x,datahist)
+        #c = ROOT.TCanvas("bluwfbvb","khgvewf", 800,600)
+        #c.cd()
+        #xframe = x.frame(Title="DCB fit to "+str(sys.argv[1])+" peak (MiniAOD without geofit)")
+        #data.plotOn(xframe, DrawOption="F",FillColor="kRed")
+        #c.Update()
+        #ff=input()
     DCB=doubleCB(x,"test")
     result= DCB[0].fitTo(data)
-    return data,x,DCB
+    xframe2 = x.frame(Title="DCB fit to "+str(sys.argv[1])+" peak (NanoAOD without geofit)")
+    data.plotOn(xframe2, DrawOption="F",FillColor="kRed")
+    xframe2.Draw()
+    fDCB[0].plotOn(xframe2)
+
+
+    xframe2.Draw()
+    return data,x,DCB[0],DCB[1][0],DCB[1][1]
     
 def fitVoigtian(Mass):
-    x = ROOT.RooRealVar("x", "x", 65, 125)
-    data = ROOT.RooDataSet.from_pandas({"x": Mass}, [x])
+    x =RooRealVar("x", "x", 65, 125)
+    data = RooDataSet.from_pandas({"x": Mass}, [x])
     Voigt=Voigtian(x,"test")
     result= Voigt[0].fitTo(data)
     return data,x,Voigt
     
-def fitBWDCB(Mass):
-    x = ROOT.RooRealVar("x", "x", 65, 125)
-    x.setBins(100)
-    data = ROOT.RooDataSet.from_pandas({"x": Mass}, [x])
-    datahist =  ROOT.RooDataHist("dh","binned version of data",ROOT.RooArgSet(x),data)
-    BWDCB=BWxDCB(x,"test")
-    l = ROOT.RooLinkedList()
-    l.Add(ROOT.RooFit.Range(70,110))
-    result= BWDCB[0].fitTo(datahist,l)
-    return data,x,BWDCB
+def fitBWDCB(Mass, histname):
+    
+    
+    t = RooRealVar("t","t",70,110)
+ 
+ 
+    gSystem.Load("RooDoubleCB/RooDoubleCB_cxx")
+    mean = RooRealVar("mean" , "mean",0)
+    sigma = RooRealVar("sigma" , "sigma", 2, .5, 4.0)
+    alpha1 = RooRealVar("alpha1" , "alpha1", 2, 0.00, 25)
+    n1 = RooRealVar("n1" , "n1", 10, -25, 25)
+    alpha2 = RooRealVar("alpha2" , "alpha2", 2.0, 0.00, 25)
+    n2 = RooRealVar("n2" , "n2", 25, -65, 65)
+    DCB = RooDoubleCB("dcb" , "dcb", t, mean, sigma, alpha1, n1, alpha2, n2)
+
+
+    bwWidth = RooRealVar("bwz_Width" , "widthZ", 2.5, 0, 30)
+    bwmZ = RooRealVar("bwz_mZ" , "mZ", 91.19, 90, 92)
+    expParam = RooRealVar("bwz_expParam" , "expParam", -1e-03, -1e-02, 1e-02)
+
+    bwWidth.setConstant(True)
+    bwmZ.setConstant(True)
+
+    BWZ=RooBreitWigner(
+        "BWZ",
+        "BWZ",
+        t, bwmZ, bwWidth
+    )
+ 
+    # C o n s t r u c t   c o n v o l u t i o n   p d f 
+    #---------------------------------------
+ 
+ 
+    # Set #bins to be used for FFT sampling to 10000
+    t.setBins(10000,"cache")
+ 
+    #Construct landau (x) gauss
+    lxg = RooFFTConvPdf("lxg","landau (X) gauss",t,BWZ,DCB)
+    if histname == "":
+        t.setBins(80)
+        data = RooDataSet.from_pandas({"t": Mass}, [t])
+        datahist =  RooDataHist("dh","binned version of data",RooArgSet(t),data)
+    else:
+        file = TFile.Open("/home/vscheure/CMSSW_10_6_28/src/Muons/MuonExercise2/histos2data.root", "read")
+        data = file.Get("demo/"+histname)
+        datahist = RooDataHist(histname,histname,t,data)
+    l = RooLinkedList()
+    r=RooFit.Range(70,110)
+    l.Add(r)
+    result= lxg.fitTo(datahist,l)
+    xframe2 = t.frame(Title="DCB fit to "+str(sys.argv[1])+" peak (NanoAOD without geofit)")
+    datahist.plotOn(xframe2, DrawOption="F",FillColor="kRed", )
+    lxg.plotOn(xframe2)
+    xframe2.Draw()
+
+
+    
+    return xframe2,data,t,lxg,mean,sigma
 def gauss(x, A,mu,sigma):
     return A*np.exp(-(x-mu)**2/(2.*sigma**2))    
 def mass_resolution(df):
@@ -77,8 +145,8 @@ def getGenMass(obj1,obj2):
     return result.mass
    
 def fill_muons(output, mu1, mu2):
-    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso"]
-    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso"]
+    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso", "mu1_charge"]
+    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso", "mu2_charge"]
     dimuon_variable_names = [
         "dimuon_mass",
         "dimuon_ebe_mass_res",
@@ -93,6 +161,7 @@ def fill_muons(output, mu1, mu2):
         "dimuon_rap",
         "dimuon_cos_theta_cs",
         "dimuon_phi_cs",
+
     ]
     v_names = mu1_variable_names + mu2_variable_names + dimuon_variable_names
 
@@ -104,7 +173,9 @@ def fill_muons(output, mu1, mu2):
     for v in ["pt", "ptErr", "eta", "phi"]:
         output[f"mu1_{v}"] = mu1[v]
         output[f"mu2_{v}"] = mu2[v]
-
+    output["lumiID"] = mu1.lumiID
+    output["runID"] = mu1.runID
+    output["eventID"] = mu1.eventID
     output["mu1_iso"] = mu1.pfRelIso04_all
     output["mu2_iso"] = mu2.pfRelIso04_all
     output["mu1_pt_over_mass"] = output.mu1_pt / output.dimuon_mass
@@ -128,8 +199,8 @@ def fill_muons(output, mu1, mu2):
     output["dimuon_mass_res"] = mass_resolution(output)
  
 if sys.argv[1]=="data":
-    fname = "root://cmsxrootd.fnal.gov///store/data/Run2018A/SingleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2550000/00EBBD1F-032C-9B49-A998-7645C9966432.root"
-   
+    #fname = "root://cmsxrootd.fnal.gov///store/data/Run2018A/SingleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2550000/00EBBD1F-032C-9B49-A998-7645C9966432.root"
+    fname = "root://cmsxrootd.fnal.gov///store/data/Run2018A/SingleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2550000/02D6A1FE-C8EB-1A48-8B31-149FDFB64893.root"
 if sys.argv[1] =="Z":
     fname = "root://cmsxrootd.fnal.gov///store/mc/RunIISummer20UL18NanoAODv9/DY1JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/120000/3F74AD49-80AE-9B4B-9B30-CE5E644724E4.root"
 if (sys.argv[1] =="Higgs") or   (sys.argv[1] =="cats"):
@@ -140,9 +211,10 @@ events = NanoEventsFactory.from_root(
     fname,
     schemaclass=NanoAODSchema.v6,
     #metadata={"dataset": "DY"},
-    #entry_stop=200000,
+    #entry_stop=10000,
 ).events()
-
+print(events.fields)
+print(events.events.fields)
 
 #has_fsr = fsr_recovery(events)
 #events["Muon", "pt"] = events.Muon.pt_fsr
@@ -150,13 +222,13 @@ events = NanoEventsFactory.from_root(
 #events["Muon", "phi"] = events.Muon.phi_fsr
 #events["Muon", "pfRelIso04_all"] = events.Muon.iso_fsr
 
-#numevents= len(events)
-#mask = np.ones(numevents, dtype=bool)
+numevents= len(events)#
+mask = np.ones(numevents, dtype=bool)
 #apply_geofit(events, "2018", mask)
 #events["Muon", "pt"] = events.Muon.pt_gf
 
-apply_roccor(events, roccor_lookup, 1)
-events["Muon", "pt"] = events.Muon.pt_roch
+#apply_roccor(events, roccor_lookup, 1)
+#events["Muon", "pt"] = events.Muon.pt_roch
 
 #events.Muon["genPt"] = events.Muon.matched_gen.pt
 GenMu_columns = ["pt",
@@ -179,10 +251,22 @@ muon_columns = [
                 "mass",
                 "pfRelIso04_all",
                 "mediumId",
+                "isGlobal",
                 #"genPartIdx"
                 
             ]
 muons = ak.to_pandas(events.Muon[muon_columns])
+eventID = ak.to_pandas(events.event)
+eventID.rename(columns={"values":"eventID"}, inplace =True)
+runID = ak.to_pandas(events.run)
+runID.rename(columns={"values":"runID"}, inplace =True)
+print(eventID)
+print(runID)
+lumiID = ak.to_pandas(events.luminosityBlock)
+lumiID.rename(columns={"values":"lumiID"}, inplace =True)
+
+IDs = eventID.join(runID)
+IDs = IDs.join(lumiID)
 if sys.argv[1] != "data":
     GenMuonsPt = ak.to_pandas(events.Muon.matched_gen.pt)
     GenMuonsPt.rename(columns={"values":"genpt"}, inplace =True)
@@ -201,11 +285,14 @@ if sys.argv[1] != "data":
     #print(GenMuons)
 
     muons = muons.join(GenMuons)
+
+muons = muons.join(IDs)
 muons["selection"] = (
                 (muons.pt > 20)
                 & (abs(muons.eta < 2.4))
                 & (muons.pfRelIso04_all < 0.25)
-                & muons["mediumId"]
+                & (muons["isGlobal"])
+               
             )
 # Count muons
 nmuons = (
@@ -216,6 +303,7 @@ nmuons = (
             )
 
 #print(nmuons)
+
 
 # Find opposite-sign muons
 mm_charge = muons.loc[muons.selection, "charge"].groupby("entry").prod()
@@ -231,40 +319,66 @@ mu2 = muons.loc[muons.pt.groupby("entry").idxmin()]
 mu1.index = mu1.index.droplevel("subentry")
 mu2.index = mu2.index.droplevel("subentry")
 
+
 fill_muons(output,mu1,mu2)
+print(output.keys())
+Analysis_DF = output[["runID", "lumiID", "eventID","mu1_charge", "mu1_pt","mu2_charge", "mu2_pt", "dimuon_mass"]]
+#mu2_tmp = mu2
+#mu2_tmp.rename(columns={"pt":"mu2_pt"}, inplace =True)
+#print(mu2_tmp)
+#Analysis_DF.join(mu2_tmp["mu2_pt"])
+with pd.option_context('display.float_format', '{:0.20f}'.format):
+    Analysis_DF.to_csv("eventnumberedptNano.csv")
 output= output[output.event_selection==True]
 print(output)
 EtaCats = [[0.0,0.9,0.0,0.9],[0.0,0.9,0.9,1.8],[0.0,0.9,1.8,2.4], [0.9,1.8,0.0,0.9], [0.9,1.8,0.9,1.8], [0.9,1.8,1.8,2.4],[1.8,2.4,0.0,0.9],[1.8,2.4,0.9,1.8],[1.8,2.4,1.8,2.4]]
 nbins=80
+EtaCats  = [[0.0,0.9,0.0,0.9],[0.0,0.9,1.8,2.4],[1.8,2.4,1.8,2.4]]
+#EtaCats  = [[0.0,0.9,1.8,2.4]]
 if(sys.argv[2]=="cats"):
     for Category in EtaCats:
         if (Category[0] == 0.0) & (Category[2] == 0.0):
             name = "Barrel-Barrel"
+            histname = "RecDimuonMass1BB"
         if (Category[0] == 0.0) & (Category[2] == 0.9):
             name = "Barrel-Overlap"
         if (Category[0] == 0.0) & (Category[2] == 1.8):
             name = "Barrel-Endcap"
+            histname = "RecDimuonMass1BE"
         if (Category[0] == 0.9) & (Category[2] == 0.0):
             name = "Overlap-Barrel"
         if (Category[0] == 0.9) & (Category[2] == 0.9):
             name = "Overlap-Overlap"
         if (Category[0] == 0.9) & (Category[2] == 1.8):
             name = "Overlap-Endcap"
-        if (Category[0] == 1.8) & (Category[2] == 0.0):
+        if (((Category[0] == 1.8) & (Category[2] == 0.0)) or ((Category[0] == 0.9) & (Category[2] == 1.8))):
             name = "Endcap-Barrel"
         if (Category[0] == 1.8) & (Category[2] == 0.9):
             name = "Endcap-Overlap"
         if (Category[0] == 1.8) & (Category[2] == 1.8):
             name = "Endcap-Endcap"
+            histname = "RecDimuonMass1EE"
+        
         output["Muoncat"] = ((abs(output.mu1_eta)>Category[0]) &(abs(output.mu2_eta)>Category[2]) & (abs(output.mu1_eta)<Category[1])& (abs(output.mu2_eta)<Category[3]))
+        output["Muoncat2"]= ((abs(output.mu1_eta)>Category[2]) &(abs(output.mu2_eta)>Category[0]) & (abs(output.mu1_eta)<Category[3])& (abs(output.mu2_eta)<Category[1]))
         mu1["Muoncat"] = ((abs(mu1.eta)>Category[0]) & (abs(mu1.eta)<Category[1]))
         mu1_cat = mu1[mu1.Muoncat==True]
         mu2["Muoncat"] = ((abs(mu2.eta)>Category[2]) & (abs(mu2.eta)<Category[3]))
         mu2_cat = mu2[mu2.Muoncat==True]
         output_cat = output[output.Muoncat==True]
-        #etahist = plt.hist(output_cat.mu1_eta)
+        output_cat2 = output[output.Muoncat2==True]
+        if name=="Barrel-Endcap":
+            output_cat = output_cat.append(output_cat2)
+        #etahist = plbat.hist(output_cat.mu1_eta)
         #plt.show()
+        #print(output_cat)
+        MassBE = output_cat["dimuon_mass"]
+        MassEB = output_cat2["dimuon_mass"]
         Mass = output_cat["dimuon_mass"]
+        print(MassBE)
+        print(MassEB)
+        print(Mass)
+       
         if sys.argv[1]!="data":
             GenMass = getGenMass(mu1_cat,mu2_cat)
             Residuals = (Mass-GenMass)/GenMass
@@ -324,18 +438,16 @@ if(sys.argv[2]=="cats"):
         del mu2_cat
         Mass_all = output["dimuon_mass"]
         if sys.argv[1]=="Higgs":
-            data,x,fitfunc = fitDCB(Mass)
+            #print("doing nothing")
+            #print(histname)
+            #if name == "Endcap-Barrel":
+            data,x,fitfunc,mean,sigma = fitDCB(Mass,histname)
         if sys.argv[1]=="Z" or sys.argv[1]=="data":
-            data,x,fitfunc = fitBWDCB(Mass)
-        c = ROOT.TCanvas("blub","blub", 800,600)
+            xframe,data,x,fitfunc,mean,sigma = fitBWDCB(Mass, histname)
+        c = TCanvas("blub","blub", 800,600)
         c.cd()
-        xframe2 = x.frame(Title="DCB fit to "+str(sys.argv[1])+" peak (NanoAOD with Geofit)")
-        data.plotOn(xframe2, DrawOption="F",FillColor="kRed")
-        fitfunc[0].plotOn(xframe2)
-
-
-        xframe2.Draw()
-        fit_vals=fitfunc[1]
+        #xframe.Draw()
+        fit_vals=[mean,sigma]
         #pt.Draw()
         #c.Update()
         textnumber = fit_vals[0].getVal()
@@ -346,20 +458,20 @@ if(sys.argv[2]=="cats"):
             textnumber2 = round(textnumber2,2)
             text2=  "Resolution from fit: "+ str(textnumber2)
         if sys.argv[1]=="Z" or sys.argv[1]=="data":
-            textnumber2 = fit_vals[2].getVal()
+            textnumber2 = fit_vals[1].getVal()
             textnumber2 = round(textnumber2,2)
             text2= "Resolution from fit: "+ str(textnumber2)
-        latex= ROOT.TLatex()
+        latex= TLatex()
         latex.SetNDC()
         latex.SetTextAlign(11)
         latex.SetTextFont(42)
         latex.SetTextSize(0.04)
         latex.DrawLatex(0.48, 0.81,text )
         latex.DrawLatex(0.48, 0.75,text2 )
-        c.SaveAs("Resolutionfrom"+name+str(sys.argv[1])+"Peak_roccor.png")
+        c.SaveAs("ResolutionfromMINIAOD"+name+str(sys.argv[1])+"Peak_nocor.png")
         print("-----------------------------------")
-        print(fit_vals[0].getVal())
-        print(fit_vals[1].getVal())
+        print(str(fit_vals[0].getVal()))
+        print(str(fit_vals[1].getVal()))
         #print("Higgs mass resolution from fit: "+fit_vals)
         print("-----------------------------------")
         

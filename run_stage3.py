@@ -51,7 +51,7 @@ parameters = {
     "years": args.year,
     "global_path": "/depot/cms/hmm/vscheure/",
     "label": args.label,
-     "channels": ["ggh_0jets","ggh_2orMoreJets","vbf"],
+     "channels": ["vbf"],
     "regions": ["h-peak","h-sidebands"],
     "syst_variations": ["nominal"],
     #
@@ -61,11 +61,11 @@ parameters = {
     "save_plots": True,
     "plot_ratio": True,
     "plots_path": "plots/",
-   "dnn_models": {
+  # "dnn_models": {
         #"vbf": ["pytorch_test"],
         # "vbf": ["pytorch_test"],
         # "vbf": ["pytorch_jun27"],
-        "vbf": ["pytorch_jun27"],
+       # "vbf": ["pytorch_jun27"],
         #"vbf": ["pytorch_jul12"],  # jun27 is best
         # "vbf": ["pytorch_aug7"],
         # "vbf": [
@@ -81,12 +81,12 @@ parameters = {
         #    #"pytorch_sep2_vbf+ggh_vs_dy+ewk",
         # ],
         # "vbf": ["pytorch_may24_pisa"],
-    },
-    "bdt_models": {},
+    #},
+    #"bdt_models": {},
     #
     # < templates and datacards >
-    "save_templates": True,
-    "templates_vars": [],  # "dimuon_mass"],
+   # "save_templates": True,
+    #"templates_vars": [],  # "dimuon_mass"],
 }
 
 parameters["grouping"] = {
@@ -98,40 +98,46 @@ parameters["grouping"] = {
     "data_F": "Data",
     "data_G": "Data",
     "data_H": "Data",
-    "dy_m105_160_amc": "DY",
-    "dy_m105_160_vbf_amc": "DY",
-    "dy_m105_160_amc_01j": "DY_01J",
-    "dy_m105_160_vbf_amc_01j": "DY_01J",
-    "dy_m105_160_amc_2j": "DY_01J",
-    "dy_m105_160_vbf_amc_2j": "DY_2J",
+    "dy_M-50": "DY",
+    "dy_M-50_01j": "DY_01jets",
+    "dy_M-50_2j": "DY_2jets",
+    #"dy_1j": "DY",
+    #"dy_2j": "DY",
+    #"dy_m105_160_amc": "DY",
+    #"dy_m105_160_vbf_amc": "DY",
+    #"dy_m105_160_amc_01j": "DY_01J",
+    #"dy_m105_160_vbf_amc_01j": "DY_01J",
+    #"dy_m105_160_amc_2j": "DY_01J",
+    #"dy_m105_160_vbf_amc_2j": "DY_2J",
     # "ewk_lljj_mll105_160_py_dipole": "EWK",
-    "ewk_lljj_mll105_160_ptj0": "EWK",
+    "ewk_lljj_mll50_mjj120": "EWK",
     "ttjets_dl": "TT+ST",
-    "ttjets_sl": "TT+ST",
-    "ttw": "TT+ST",
-    "ttz": "TT+ST",
-    "st_tw_top": "TT+ST",
-    "st_tw_antitop": "TT+ST",
-    "ww_2l2nu": "VV",
+    #"ttjets_sl": "TT+ST",
+    #"ttw": "TT+ST",
+    #"ttz": "TT+ST",
+    #"st_tw_top": "TT+ST",
+    #"st_tw_antitop": "TT+ST",
+    #"ww_2l2nu": "VV",
     "wz_2l2q": "VV",
-    "wz_1l1nu2q": "VV",
+    #"wz_1l1nu2q": "VV",
     "wz_3lnu": "VV",
     "zz": "VV",
-    "www": "VVV",
-    "wwz": "VVV",
-    "wzz": "VVV",
-    "zzz": "VVV",
-    "ggh_amcPS": "ggH",
-    # "vbf_powheg_dipole": "VBF",
-    "vbf_powheg_dipole_01j": "VBF_01J",
+    #"www": "VVV",
+    #"wwz": "VVV",
+    #"wzz": "VVV",
+    #"zzz": "VVV",
+    #"ggh_amcPS": "ggH",
+    #"ggh_powheg": "ggH",
+     "vbf_powheg": "VBF",
+    #"vbf_powheg_dipole_01j": "VBF_01J",
     # "vbf_powheg_dipole_0j": "VBF_0J",
     # "vbf_powheg_dipole_1j": "VBF_1J",
-    "vbf_powheg_dipole_2j": "VBF_2J",
+   # "vbf_powheg_dipole_2j": "VBF_2J",
 }
 # parameters["grouping"] = {"vbf_powheg_dipole": "VBF",}
 
 parameters["plot_groups"] = {
-    "stack": ["DY", "EWK", "TT+ST", "VV", "VVV"],
+    "stack": ["DY","DY_01jets","DY_2jets", "EWK", "TT+ST", "VV", "VVV"],
     "step": ["VBF", "ggH"],
     "errorbar": ["Data"],
 }
@@ -160,12 +166,12 @@ if __name__ == "__main__":
     print(f"Connected to cluster! #CPUs = {parameters['ncpus']}")
 
     # add MVA scores to the list of variables to plot
-    dnn_models = list(parameters["dnn_models"].values())
-    bdt_models = list(parameters["bdt_models"].values())
-    for models in dnn_models + bdt_models:
-        for model in models:
-            parameters["plot_vars"] += ["score_" + model]
-            parameters["templates_vars"] += ["score_" + model]
+    #dnn_models = list(parameters["dnn_models"].values())
+    #bdt_models = list(parameters["bdt_models"].values())
+    #for models in dnn_models + bdt_models:
+       #for model in models:
+            #parameters["plot_vars"] += ["score_" + model]
+            #parameters["templates_vars"] += ["score_" + model]
 
     parameters["datasets"] = parameters["grouping"].keys()
 
@@ -174,8 +180,8 @@ if __name__ == "__main__":
     print(yields)
 
     # save templates to ROOT files
-    yield_df = to_templates(client, parameters)
-    print(yield_df)
+    #yield_df = to_templates(client, parameters)
+    #print(yield_df)
 
     # make datacards
-    build_datacards("score_pytorch_test", yield_df, parameters)
+    #build_datacards("score_pytorch_test", yield_df, parameters)

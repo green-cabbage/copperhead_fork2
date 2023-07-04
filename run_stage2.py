@@ -79,12 +79,12 @@ parameters = {
     "save_unbinned": True,
     #
     # < MVA settings >
-    "models_path": "/depot/cms/hmm/copperhead/trained_models/",
-   "dnn_models": {
+   # "models_path": "/depot/cms/hmm/copperhead/trained_models/",
+  # "dnn_models": {
         #"vbf": ["pytorch_test"],
         # "vbf": ["pytorch_test"],
         # "vbf": ["pytorch_jun27"],
-        "vbf": ["pytorch_jun27"],
+        #"vbf": ["pytorch_jun27"],
         #"vbf": ["pytorch_jul12"],  # jun27 is best
         # "vbf": ["pytorch_aug7"],
         # "vbf": [
@@ -100,45 +100,49 @@ parameters = {
         #    #"pytorch_sep2_vbf+ggh_vs_dy+ewk",
         # ],
         # "vbf": ["pytorch_may24_pisa"],
-    },
+   # },
     # "mva_categorizer": "3layers_64_32_16_all_feat",
     # "vbf_mva_cutoff": 0.5,
-    "bdt_models": {
+   # "bdt_models": {
         # "vbf": ["bdt_sep13"],
-    },
-    "mva_bins_original": mva_bins,
+    #},
+    #"mva_bins_original": mva_bins,
 }
 
 parameters["datasets"] = [
-    "data_A",
-    "data_B",
-    "data_C",
-    "data_D",
-    "data_E",
-    "data_F",
-    "data_G",
-    "data_H",
-    #"dy",
-    "dy_m105_160_amc",
-    "dy_m105_160_vbf_amc",
-    "ewk_lljj_mll105_160_py_dipole",
-    "ttjets_dl",
-    "ttjets_sl",
-    "ttw",
-    "ttz",
-    "st_tw_top",
-    "st_tw_antitop",
+    #"data_A",
+    #"data_B",
+    #"data_C",
+    #"data_D",
+    #"data_E",
+    #"data_F",
+    #"data_G",
+    #"data_H",
+    #"dy_M-50",
+    #"dy_M-100To200",
+    #"dy_1j",
+    #"dy_2j",
+    #"dy_m105_160_amc",
+    #"dy_m105_160_vbf_amc",
+    #"ewk_lljj_mll105_160_py_dipole",
+    #"ewk_lljj_mll50_mjj120",
+    #"ttjets_dl",
+    #"ttjets_sl",
+    #"ttw",
+    #"ttz",
+    ##"st_tw_top",
+    #"st_tw_antitop",
     "ww_2l2nu",
     "wz_2l2q",
     "wz_1l1nu2q",
     "wz_3lnu",
     "zz",
-    "www",
-    "wwz",
-    "wzz",
-    "zzz",
-    "ggh_amcPS",
-    "vbf_powheg_dipole",
+    #"www",
+    #"wwz",
+    #wzz",
+    #"zzz",
+    #"ggh_powheg",
+    #"vbf_powheg",
 ]
 # using one small dataset for debugging
 #parameters["datasets"] = ["ggh_localTest"]
@@ -155,7 +159,7 @@ if __name__ == "__main__":
             dashboard_address=dashboard_address,
             n_workers=ncpus_local,
             threads_per_worker=1,
-            memory_limit="8GB",
+            memory_limit="16GB",
         )
     else:
         print(
@@ -167,13 +171,14 @@ if __name__ == "__main__":
     print(f"Connected to cluster! #CPUs = {parameters['ncpus']}")
 
     # add MVA scores to the list of variables to create histograms from
-    dnn_models = list(parameters["dnn_models"].values())
-    bdt_models = list(parameters["bdt_models"].values())
-    for models in dnn_models + bdt_models:
-       for model in models:
-            parameters["hist_vars"] += ["score_" + model]
-
+    #dnn_models = list(parameters["dnn_models"].values())
+    #bdt_models = list(parameters["bdt_models"].values())
+    #for models in dnn_models + bdt_models:
+       #for model in models:
+            #parameters["hist_vars"] += ["score_" + model]
+    
     # prepare lists of paths to parquet files (stage1 output) for each year and dataset
+    #client = None
     all_paths = {}
     for year in parameters["years"]:
         all_paths[year] = {}
@@ -187,19 +192,20 @@ if __name__ == "__main__":
                 f"{parameters['label']}/stage1_output/{year}/"
                 f"{dataset}/")
             all_paths[year][dataset] = paths
-
+            print(all_paths)
     # run postprocessing
     for year in parameters["years"]:
         print(f"Processing {year}")
         
         for dataset, path in tqdm.tqdm(all_paths[year].items()):
-            #print(dataset)
+            print(path)
             if len(path) == 0:
                 continue
 
             # read stage1 outputs
             df = load_dataframe(client, parameters, inputs=[path], dataset=dataset)
-            print(df.compute())
+            print("have df, starting to compute")
+            #print(df.compute())
             if not isinstance(df, dd.DataFrame):
                 continue
 

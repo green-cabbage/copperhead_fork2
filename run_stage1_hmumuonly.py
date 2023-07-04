@@ -38,7 +38,7 @@ parser.add_argument(
     dest="year",
     default="2018",
     action="store",
-    help="Year to process (2016preVFP, 2016postVFP, 2017 or 2018)",
+    help="Year to process (2016, 2017 or 2018)",
 )
 parser.add_argument(
     "-l",
@@ -47,14 +47,6 @@ parser.add_argument(
     default="test",
     action="store",
     help="Unique run label (to create output path)",
-)
-parser.add_argument(
-    "-d",
-    "--datasets",
-    dest="datasets",
-    default="UL",
-    action="store",
-    help="Wich datasets file to use (either UL or purdue)",
 )
 parser.add_argument(
     "-ch",
@@ -82,7 +74,6 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-
 node_ip = "128.211.149.133"  # hammer-c000
 # node_ip = '128.211.149.140' # hammer-c007
 dash_local = f"{node_ip}:34875"
@@ -115,20 +106,20 @@ parameters = {
     "label": args.label,
     "local_cluster": local_cluster,
     "slurm_cluster_ip": slurm_cluster_ip,
-    "global_path": "/depot/cms/hmm/vscheure/",
+    "global_path": "/depot/cms/hmm/vscheure",
     #
     # < input data settings >
     # 'xrootd': True,
-    #'server': 'root://xrootd.rcac.purdue.edu/', # Purdue xrootd
-    'server': 'root://cmsxrootd.fnal.gov/', # FNAL xrootd
-    "xrootd": True,
-    #"server": "root://eos.cms.rcac.purdue.edu/",
-    "datasets_from": args.datasets,
+    # 'server': 'root://xrootd.rcac.purdue.edu/', # Purdue xrootd
+    # 'server': 'root://cmsxrootd.fnal.gov/', # FNAL xrootd
+    "xrootd": False,
+    "server": "/mnt/hadoop",
+    "datasets_from": "purdue",
     "chunksize": int(args.chunksize),
     "maxchunks": mch,
     #
     # < processing settings >
-    "regions": ["h-sidebands", "h-peak" , "z-peak"],
+    "regions": ["h-sidebands", "h-peak"],  # , "z-peak"]
     "pt_variations": pt_variations,
     "do_btag_syst": False,
     "save_output": True,
@@ -148,7 +139,7 @@ def submit_job(parameters):
     out_dir += "/" + parameters["year"]
     mkdir(out_dir)
 
-    executor_args = {"client": parameters["client"], "retries": 2}
+    executor_args = {"client": parameters["client"], "retries": 0}
     processor_args = {
         "samp_info": parameters["samp_infos"],
         "do_timer": parameters["do_timer"],
@@ -164,7 +155,6 @@ def submit_job(parameters):
         schema=NanoAODSchema,
         chunksize=parameters["chunksize"],
         maxchunks=parameters["maxchunks"],
-        xrootdtimeout=1200,
     )
 
     try:
@@ -203,58 +193,51 @@ if __name__ == "__main__":
     # datasets to process (split into groups for convenience)
     smp = {
         # 'single_file': [
-        #     'test_file',
+        #     'ggh_amcPS',
         # ],
-        "data": [
-            #'test_file_data_A',
-            #"data_A",
-            #"data_B",
-            #"data_C",
-            "data_D",
-            #"data_E",
-            #"data_F",
-            #"data_G",
-            #"data_H",
-       ],
+        # "data": [
+        #     # 'test_file_data_A',
+        #     "data_A",
+        #     "data_B",
+        #     "data_C",
+        #     "data_D",
+        #     "data_E",
+        #     "data_F",
+        #     "data_G",
+        #     "data_H",
+        # ],
         "signal": [
-            #"ggh_powheg",
-            #"vbf_powheg",
-           # "ggh_amcPS",
+            "ggh_localTest",
             #"vbf_powhegPS",
-            #"vbf_powheg_herwig",
-            #"vbf_powheg_dipole",
-            #"tth",
-            #"wph",
-            #"wmh",
-            #"zh",
+            # "vbf_powheg_herwig",
+            # "vbf_powheg_dipole",
+            # "tth",
+            # "wph",
+            # "wmh",
+            # "zh",
         ],
-        "main_mc": [
-            #"dy_M-50",
-            #"dy_M-100To200",
-            #"dy_1j",
-            #"dy_2j",
-            #"dy_m105_160_amc",
-            # "dy_m105_160_mg",
-            #"dy_m105_160_vbf_amc",
-            #"ewk_lljj_mll50_mjj120",
-            # "ewk_lljj_mll105_160_py",
-            #"ewk_lljj_mll105_160_ptj0",
-            #"ewk_lljj_mll105_160_py_dipole",
-            #"ttjets_dl",
-            # "ewk_m50"
-        ],
-        "other_mc": [
-            #"ttjets_dl",
-            #"ttz",
-            #"ttw",
-            #"st_tw_top",
-            #"st_tw_antitop",
-            #"ww_2l2nu",
-            #"wz_2l2q",
-            #"wz_3lnu",
-            #"wz_1l1nu2q",
-            #"zz",
-       ],
+        # "main_mc": [
+        #     "dy_m105_160_amc",
+        #     # "dy_m105_160_mg",
+        #     "dy_m105_160_vbf_amc",
+        #     # "ewk_lljj_mll105_160_py",
+        #     "ewk_lljj_mll105_160_ptj0",
+        #     "ewk_lljj_mll105_160_py_dipole",
+        #     "ttjets_dl",
+        #     # "ewk_m50"
+        # ],
+        # "other_mc": [
+        #     "ttjets_sl",
+        #     "ttz",
+        #     "ttw",
+        #     "st_tw_top",
+        #     "st_tw_antitop",
+        #     "ww_2l2nu",
+        #     "wz_2l2q",
+        #     "wz_3lnu",
+        #     "wz_1l1nu2q",
+        #     "zz",
+        # ],
     }
 
     # select which datasets to process
@@ -282,7 +265,7 @@ if __name__ == "__main__":
     to_process = {"MC": datasets_mc, "DATA": datasets_data}
     for lbl, datasets in to_process.items():
         if len(datasets) == 0:
-            print("No datasets!!")
+            print("No data, doing nothing.")
             continue
         print(f"Processing {lbl}")
 
@@ -293,7 +276,7 @@ if __name__ == "__main__":
 
         tick2 = time.time()
         # run main processing
-        delete_existing_stage1_output(datasets, parameters)
+        # delete_existing_stage1_output(datasets, parameters)
         out = submit_job(parameters)
         timings[f"process {lbl}"] = time.time() - tick2
 
