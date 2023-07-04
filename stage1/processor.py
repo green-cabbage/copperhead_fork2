@@ -59,7 +59,7 @@ class DimuonProcessor(processor.ProcessorABC):
         self.do_roccor = True
         self.do_fsr = True
         self.do_geofit = True
-        self.auto_pu = True
+        self.auto_pu = False
         self.do_nnlops = True
         self.do_pdf = True
         self.do_btag_syst = kwargs.get("do_btag_syst", True)
@@ -477,7 +477,7 @@ class DimuonProcessor(processor.ProcessorABC):
         ] = "h-sidebands"
         output.loc[((mass > 115.03) & (mass < 135.03)), "region"] = "h-peak"
         output["dataset"] = dataset
-        output["year"] = int(self.year)
+        output["year"] = self.year
 
         for wgt in weights.df.columns:
             skip_saving = (
@@ -786,7 +786,11 @@ class DimuonProcessor(processor.ProcessorABC):
         self.extractor.add_weight_sets([f"* * {puid_filename}"])
         # Calibration of event-by-event mass resolution
         for mode in ["Data", "MC"]:
-            label = f"res_calib_{mode}_{self.year}"
+            if "2016" in self.year:
+                yearstr = "2016"
+            else:
+                yearstr=self.year #Work around before there are seperate new files for pre and postVFP
+            label = f"res_calib_{mode}_{yearstr}"
             path = self.parameters["res_calib_path"]
             file_path = f"{path}/{label}.root"
             self.extractor.add_weight_sets([f"{label} {label} {file_path}"])

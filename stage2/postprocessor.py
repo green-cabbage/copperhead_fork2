@@ -45,13 +45,14 @@ def process_partitions(client, parameters, df):
         "year": years,
         "dataset": datasets,
     }
-    df=df.compute()
+    #df=df.compute()
     if isinstance(df, pd.DataFrame):
         argset["df"] = [df]
     elif isinstance(df, dd.DataFrame):
         argset["df"] = [(i, df.partitions[i]) for i in range(df.npartitions)]
     # perform categorization, evaluate mva models, fill histograms
-    hist_info_dfs = parallelize(on_partition, argset, client, parameters,seq=True)
+    print("starting parallelize")
+    hist_info_dfs = parallelize(on_partition, argset, client, parameters,seq=False)
 
     # return info for debugging
     hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True)

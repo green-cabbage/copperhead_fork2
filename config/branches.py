@@ -128,6 +128,8 @@ proc_columns = (
 )
 
 branches = {
+    "2016preVFP": proc_columns + branches_2016,
+    "2016postVFP": proc_columns + branches_2016,
     "2016": proc_columns + branches_2016,
     "2017": proc_columns + branches_2017,
     "2018": proc_columns + branches_2018,

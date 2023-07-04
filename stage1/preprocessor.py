@@ -63,6 +63,7 @@ def read_via_xrootd(server, path, from_das=False):
     )
     result = proc.stdout.readlines()
     if proc.stderr.readlines():
+        print(proc.stderr.readlines())
         print("Loading error! This may help:")
         print("    voms-proxy-init --voms cms")
         print("    source /cvmfs/cms.cern.ch/cmsset_default.sh")
@@ -73,7 +74,7 @@ def read_via_xrootd(server, path, from_das=False):
 
 class SamplesInfo(object):
     def __init__(self, **kwargs):
-        self.year = kwargs.pop("year", "2016")
+        self.year = kwargs.pop("year", "2016preVFP")
         self.xrootd = kwargs.pop("xrootd", True)
         self.server = kwargs.pop("server", "root://eos.cms.rcac.purdue.edu/")
         self.timeout = kwargs.pop("timeout", 300)
@@ -97,8 +98,8 @@ class SamplesInfo(object):
             self.lumi = 19500.0
         elif "2016postVFP" in self.year:
             self.lumi = 16800.0
-        elif "2016" in self.year:
-            self.lumi = 36300.0
+        #elif "2016" in self.year:
+            #self.lumi = 36300.0
         elif "2017" in self.year:
             self.lumi = 41530.0
         elif "2018" in self.year:
