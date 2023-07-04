@@ -1,9 +1,10 @@
 cross_sections = {
     "test_file": 1,
-    "dy": 5379.0, #UL
+    "dy_M-50": 5379.0, #UL, fromXSDB
+    "dy_M-100To200": 254.2,  #UL, fromXSDB
     "dy_0j": 4620.52,
-    "dy_1j": 922.5,  #UL
-    "dy_2j": 338.26,
+    "dy_1j": 922.5,  #UL, fromXSDB
+    "dy_2j": 293.6,  #UL, fromXSDB
     "dy_m105_160_mg": 47.17,
     "dy_m105_160_vbf_mg": {"2016": 1.77, "2017": 2.04, "2018": 2.03},
     "dy_m105_160_amc": 47.17,
@@ -11,21 +12,21 @@ cross_sections = {
     "ewk_lljj_mll105_160": {"2016": 0.0508896, "2017": 0.0508896, "2018": 0.0508896},
     "ewk_lljj_mll105_160_py": {"2016": 0.0508896, "2017": 0.0508896, "2018": 0.0508896},
     "ewk_lljj_mll105_160_ptj0": {"2016": 0.07486, "2017": 0.0789, "2018": 0.0789},
-    "ewk_lljj_mll50_mjj120": {"2016": 1.664, "2017": 1.664, "2018": 1.664},
+    "ewk_lljj_mll50_mjj120":1.664,
     "ewk_lljj_mll105_160_py_dipole": {"2016": 0.07486, "2017": 0.0789, "2018": 0.0789},
     "ewk_m50": 3.998,
     "st_top": 136.02,
     "st_t_top": 3.40,
     "st_t_antitop": 80.95,
-    "st_tw_top": 35.85,
-    "st_tw_antitop": 35.85,
+    "st_tw_top": 32.51, #UL, fromXSDB
+    "st_tw_antitop": 32.45, #UL, fromXSDB
     "ttjets_dl": 86.65,
     "ttjets_sl": 358.57,
-    "ww_2l2nu": 12.178,
-    "wz_3lnu": 4.102,
-    "wz_2l2q": 5.606,
-    "wz_1l1nu2q": 7.031227,
-    "zz": 0.5664,
+    "ww_2l2nu": 11.09, #UL, fromXSDB
+    "wz_3lnu": 5.22, #UL, fromXSDB (averaged)
+    "wz_2l2q": 6.45, #UL, fromXSDB (averaged)
+    "wz_1l1nu2q": 9.12, #UL, fromXSDB
+    "zz": 12.17, #UL, fromXSDB
     "ttw": 0.2001,
     "ttz": 0.2529,
     "www": 0.2086,
@@ -41,6 +42,7 @@ cross_sections = {
     "ggh_localTest": 0.01057,
     "vbf": 0.0008210722,
     "vbf_sync": 0.0008210722,
+    "vbf_powheg": 0.0008210722,
     "vbf_powheg_herwig": 0.0008210722,
     "vbf_powheg_dipole": 0.0008210722,
     "vbf_powheg": 0.0008210722,
