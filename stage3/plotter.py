@@ -62,6 +62,7 @@ class Entry(object):
 
 
 def plotter(client, parameters, hist_df=None, timer=None):
+    print(parameters)
     if hist_df is None:
         arg_load = {
             "year": parameters["years"],
@@ -101,8 +102,11 @@ def plot(args, parameters={}):
     if var_name in variables_lookup.keys():
         var = parameters["variables_lookup"][var_name]
     else:
-        var = Variable(var_name, var_name, 50, 0, 5)
-
+        if "score" in var_name:
+            var = Variable(var_name, var_name, 20, 0, 5)
+        else:
+            var = Variable(var_name, var_name, 20, 0, 5)
+            
     if hist.shape[0] == 0:
         return
 
@@ -136,13 +140,13 @@ def plot(args, parameters={}):
 
         plottables_df = get_plottables(hist, entry, year, var_name, slicer)
         plottables = plottables_df["hist"].values.tolist()
-        print(plottables_df)
+        if len(plottables) == 0:
+            continue
+        #print(plottables_df)
         sumw2 = plottables_df["sumw2"].values.tolist()
         labels = plottables_df["label"].values.tolist()
         total_yield += sum([p.sum() for p in plottables])
 
-        if len(plottables) == 0:
-            continue
 
         yerr = np.sqrt(sum(plottables).values()) if entry.yerr else None
 
@@ -170,7 +174,7 @@ def plot(args, parameters={}):
                 )
 
     ax1.set_yscale("log")
-    ax1.set_ylim(0.01, 1e9)
+    ax1.set_ylim(0.001, 1e9)
     ax1.legend(prop={"size": "x-small"})
 
     if parameters["plot_ratio"]:
@@ -250,6 +254,8 @@ def plot(args, parameters={}):
 
 def get_plottables(hist, entry, year, var_name, slicer):
     slicer[var_name] = slice(None)
+    #print(entry)
+    #print(entry.groups)
     slicer_value = slicer.copy()
     slicer_sumw2 = slicer.copy()
     slicer_value["val_sumw2"] = "value"
@@ -259,13 +265,13 @@ def get_plottables(hist, entry, year, var_name, slicer):
 
     for group in entry.groups:
         group_entries = [e for e, g in entry.entry_dict.items() if (group == g)]
-
+        print(group_entries)
         hist_values_group = []
         hist_sumw2_group = []
        
-        print(hist.loc[hist.dataset.isin(group_entries),"hist"].values)
+        #print(hist.loc[hist.dataset.isin(group_entries),"hist"].values)
         for h in hist.loc[hist.dataset.isin(group_entries),"hist"].values:
-            print("done")
+            #print(h[slicer_value].project(var_name))
             if not pd.isna(h[slicer_value].project(var_name).sum()):
                 hist_values_group.append(h[slicer_value].project(var_name))
                 hist_sumw2_group.append(h[slicer_sumw2].project(var_name))
@@ -275,7 +281,7 @@ def get_plottables(hist, entry, year, var_name, slicer):
             continue
 
         nevts = sum(hist_values_group).sum()
-        print(plottables_df)
+        #print(plottables_df)
         if nevts > 0:
             plottables_df = plottables_df.append(
                 pd.DataFrame(

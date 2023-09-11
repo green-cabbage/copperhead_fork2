@@ -36,7 +36,7 @@ def categorize_by_score(df, scores, mode="uniform", **kwargs):
                 df.loc[cut, "category"] = cat_name
 
 
-def categorize_dnn_output(df, score_name, channel, region, year):
+def categorize_dnn_output(df, score_name, channel, region, year, yearstr):
     # Run 2 (VBF yields)
     target_yields = {
         "2016": [
@@ -87,24 +87,33 @@ def categorize_dnn_output(df, score_name, channel, region, year):
     }
 
     bins = [df[score_name].max()]
-
+    #print(bins)
+    #print(channel)
+    #print(region)
+    #print(year)
+    
     slicer = (
-        (df.channel_nominal == channel) & (df.region == region) & (df.year == int(year))
+        (df.channel_nominal == channel) & (df.region == region) & (df.year == yearstr)
     )
     df_sorted = (
         df.loc[slicer, :]
         .sort_values(by=score_name, ascending=False)
         .reset_index(drop=True)
     )
+    #print(df.loc[slicer, :][score_name])
     df_sorted["wgt_cumsum"] = df_sorted.wgt_nominal.cumsum()
-
+    #print(df_sorted)
     tot_yield = 0
     last_yield = 0
+    #print(target_yields)
     for yi in reversed(target_yields[year]):
         tot_yield += yi
+        #print(yi)
         for i in range(df_sorted.shape[0] - 1):
             value = df_sorted.loc[i, "wgt_cumsum"]
             value1 = df_sorted.loc[i + 1, "wgt_cumsum"]
+            #print(value)
+            #print(value1)
             if (value < tot_yield) & (value1 > tot_yield):
                 if abs(last_yield - tot_yield) < 1e-06:
                     continue

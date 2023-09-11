@@ -70,6 +70,7 @@ training_features_nomass = [
 def prepare_features(df, parameters, variation="nominal", add_year=False):
     global training_features
     if add_year:
+        
         features = training_features + ["year"]
     else:
         features = training_features
@@ -139,8 +140,7 @@ def evaluate_mva_categorizer(df, model_name, score_name, parameters):
 
 
 def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
-    features = prepare_features(df, parameters, variation, add_year=True)
-
+    features = prepare_features(df, parameters, variation, add_year=False)
     try:
         df = df.compute()
     except Exception:
@@ -199,7 +199,7 @@ def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
 def evaluate_pytorch_dnn_pisa(
     df, variation, model_name, parameters, score_name, channel
 ):
-    features = prepare_features(df, parameters, variation, add_year=True)
+    features = prepare_features(df, parameters, variation, add_year=False)
 
     try:
         df = df.compute()

@@ -35,6 +35,7 @@ args = parser.parse_args()
 # Dask client settings
 use_local_cluster = args.slurm_port is None
 node_ip = "128.211.149.133"
+node_ip = "128.211.149.140"
 
 if use_local_cluster:
     ncpus_local = 40
@@ -51,8 +52,11 @@ parameters = {
     "years": args.year,
     "global_path": "/depot/cms/hmm/vscheure/",
     "label": args.label,
+     #"channels": ["ggh_0jets"],#"ggh_2orMoreJets","vbf"],
      "channels": ["vbf"],
     "regions": ["h-peak","h-sidebands"],
+    #"regions": ["h-sidebands"],
+    #"regions": ["z-peak"],
     "syst_variations": ["nominal"],
     #
     # < plotting settings >
@@ -61,12 +65,12 @@ parameters = {
     "save_plots": True,
     "plot_ratio": True,
     "plots_path": "plots/",
-  # "dnn_models": {
-        #"vbf": ["pytorch_test"],
+   "dnn_models": {
+        "vbf": ["ValerieDNNtest2"],
         # "vbf": ["pytorch_test"],
-        # "vbf": ["pytorch_jun27"],
-       # "vbf": ["pytorch_jun27"],
-        #"vbf": ["pytorch_jul12"],  # jun27 is best
+        #"vbf": ["pytorch_jun27"],
+       #"vbf": ["pytorch_jun27"],
+       # "vbf": ["pytorch_jul12"],  # jun27 is best
         # "vbf": ["pytorch_aug7"],
         # "vbf": [
         #    #"pytorch_sep4",
@@ -81,7 +85,7 @@ parameters = {
         #    #"pytorch_sep2_vbf+ggh_vs_dy+ewk",
         # ],
         # "vbf": ["pytorch_may24_pisa"],
-    #},
+    },
     #"bdt_models": {},
     #
     # < templates and datacards >
@@ -90,17 +94,21 @@ parameters = {
 }
 
 parameters["grouping"] = {
-    "data_A": "Data",
-    "data_B": "Data",
-    "data_C": "Data",
-    "data_D": "Data",
-    "data_E": "Data",
-    "data_F": "Data",
-    "data_G": "Data",
-    "data_H": "Data",
+    #"data_A": "Data",
+    #"data_B": "Data",
+    #"data_C": "Data",
+    #"data_D": "Data",
+    #"data_E": "Data",
+    #"data_F": "Data",
+    #"data_G": "Data",
+    #"data_H": "Data",
     "dy_M-50": "DY",
+    #"dy_M-50_nocut": "DY_nocut",
+    "dy_M-100To200": "DY-M100",
     "dy_M-50_01j": "DY_01jets",
     "dy_M-50_2j": "DY_2jets",
+    "dy_M-100To200_01j": "DY_01jets",
+    "dy_M-100To200_2j": "DY_2jets",
     #"dy_1j": "DY",
     #"dy_2j": "DY",
     #"dy_m105_160_amc": "DY",
@@ -112,12 +120,12 @@ parameters["grouping"] = {
     # "ewk_lljj_mll105_160_py_dipole": "EWK",
     "ewk_lljj_mll50_mjj120": "EWK",
     "ttjets_dl": "TT+ST",
-    #"ttjets_sl": "TT+ST",
+    "ttjets_sl": "TT+ST",
     #"ttw": "TT+ST",
     #"ttz": "TT+ST",
     #"st_tw_top": "TT+ST",
     #"st_tw_antitop": "TT+ST",
-    #"ww_2l2nu": "VV",
+    "ww_2l2nu": "VV",
     "wz_2l2q": "VV",
     #"wz_1l1nu2q": "VV",
     "wz_3lnu": "VV",
@@ -137,8 +145,9 @@ parameters["grouping"] = {
 # parameters["grouping"] = {"vbf_powheg_dipole": "VBF",}
 
 parameters["plot_groups"] = {
-    "stack": ["DY","DY_01jets","DY_2jets", "EWK", "TT+ST", "VV", "VVV"],
+    "stack": ["DY","DY-M100","DY_01jets","DY_2jets", "EWK", "TT+ST", "VV", "VVV"],
     "step": ["VBF", "ggH"],
+    #"step": ["DY_nocut"],
     "errorbar": ["Data"],
 }
 
@@ -166,16 +175,18 @@ if __name__ == "__main__":
     print(f"Connected to cluster! #CPUs = {parameters['ncpus']}")
 
     # add MVA scores to the list of variables to plot
-    #dnn_models = list(parameters["dnn_models"].values())
+    dnn_models = list(parameters["dnn_models"].values())
+    bdt_models = []
     #bdt_models = list(parameters["bdt_models"].values())
-    #for models in dnn_models + bdt_models:
-       #for model in models:
-            #parameters["plot_vars"] += ["score_" + model]
+    for models in dnn_models + bdt_models:
+       for model in models:
+            parameters["plot_vars"] += ["score_" + model]
             #parameters["templates_vars"] += ["score_" + model]
 
     parameters["datasets"] = parameters["grouping"].keys()
 
     # make plots
+    print(parameters)
     yields = plotter(client, parameters)
     print(yields)
 

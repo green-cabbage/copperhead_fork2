@@ -84,7 +84,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 node_ip = "128.211.149.133"  # hammer-c000
-# node_ip = '128.211.149.140' # hammer-c007
+node_ip = '128.211.149.140' # hammer-c007
 dash_local = f"{node_ip}:34875"
 
 
@@ -121,6 +121,7 @@ parameters = {
     # 'xrootd': True,
     #'server': 'root://xrootd.rcac.purdue.edu/', # Purdue xrootd
     'server': 'root://cmsxrootd.fnal.gov/', # FNAL xrootd
+    #'server': 'root://cms-xrd-global.cern.ch/',
     "xrootd": True,
     #"server": "root://eos.cms.rcac.purdue.edu/",
     "datasets_from": args.datasets,
@@ -128,7 +129,7 @@ parameters = {
     "maxchunks": mch,
     #
     # < processing settings >
-    "regions": ["h-sidebands", "h-peak" , "z-peak"],
+    "regions": ["h-sidebands", "h-peak" ],
     "pt_variations": pt_variations,
     "do_btag_syst": False,
     "save_output": True,
@@ -164,7 +165,7 @@ def submit_job(parameters):
         schema=NanoAODSchema,
         chunksize=parameters["chunksize"],
         maxchunks=parameters["maxchunks"],
-        xrootdtimeout=1200,
+        xrootdtimeout=2400,
     )
 
     try:
@@ -210,14 +211,14 @@ if __name__ == "__main__":
             #"data_A",
             #"data_B",
             #"data_C",
-            "data_D",
+            #"data_D",
             #"data_E",
             #"data_F",
             #"data_G",
             #"data_H",
        ],
         "signal": [
-            #"ggh_powheg",
+           #"ggh_powheg",
             #"vbf_powheg",
            # "ggh_amcPS",
             #"vbf_powhegPS",
@@ -231,6 +232,7 @@ if __name__ == "__main__":
         "main_mc": [
             #"dy_M-50",
             #"dy_M-100To200",
+            #"dy_M-50_nocut",
             #"dy_1j",
             #"dy_2j",
             #"dy_m105_160_amc",
@@ -244,11 +246,12 @@ if __name__ == "__main__":
             # "ewk_m50"
         ],
         "other_mc": [
-            #"ttjets_dl",
+            "ttjets_dl",
+            "ttjets_sl",
             #"ttz",
             #"ttw",
-            #"st_tw_top",
-            #"st_tw_antitop",
+            "st_tw_top",
+            "st_tw_antitop",
             #"ww_2l2nu",
             #"wz_2l2q",
             #"wz_3lnu",

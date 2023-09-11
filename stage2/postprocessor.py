@@ -39,8 +39,10 @@ def process_partitions(client, parameters, df):
     # delete previously generated outputs to prevent partial overwrite
     delete_existing_stage2_hists(datasets, years, parameters)
     #delete_existing_stage2_parquet(datasets, years, parameters)
-
+    print(df.year)
     # prepare parameters for parallelization
+
+    print(years)
     argset = {
         "year": years,
         "dataset": datasets,
@@ -60,9 +62,14 @@ def process_partitions(client, parameters, df):
 
 
 def on_partition(args, parameters):
+    
     year = args["year"]
+    print(year)
+    if "2016" in year:
+        year = 2016
     dataset = args["dataset"]
     df = args["df"]
+
     if "mva_bins" not in parameters:
         parameters["mva_bins"] = {}
 
@@ -71,16 +78,18 @@ def on_partition(args, parameters):
     if isinstance(df, tuple):
         npart = df[0]
         df = df[1]
-
+    
     # convert from Dask DF to Pandas DF
     if isinstance(df, dd.DataFrame):
         df = df.compute()
-        print(df)
+        
     # preprocess
+    df.loc[df['year'] == "2016postVFP", 'year'] = 2016
+    df.loc[df['year'] == "2016preVFP", 'year'] = 2016
+    #print(df)
     wgts = [c for c in df.columns if "wgt" in c]
     df.loc[:, wgts] = df.loc[:, wgts].fillna(0)
     df.fillna(-999.0, inplace=True)
-
     df = df[(df.dataset == dataset) & (df.year == year)]
 
     # VBF filter
@@ -104,6 +113,7 @@ def on_partition(args, parameters):
     # < categorization into channels (ggH, VBF, etc.) >
     # split_into_channels(df, v="nominal", vbf_mva_cutoff=vbf_mva_cutoff)
     split_into_channels(df, v="nominal")
+
     regions = [r for r in parameters["regions"] if r in df.region.unique()]
     channels = [
         c for c in parameters["channels"] if c in df["channel_nominal"].unique()
@@ -122,7 +132,7 @@ def on_partition(args, parameters):
         df.loc[
             (df.channel_nominal == "vbf") & (df.two_matched_jets), "dataset"
         ] = f"{dataset}_2j"
-
+    #print(df)
     # < evaluate here MVA scores after categorization, if needed >
     syst_variations = parameters.get("syst_variations", ["nominal"])
     dnn_models = parameters.get("dnn_models", {})
@@ -155,7 +165,7 @@ def on_partition(args, parameters):
                     channel,
                 )
                 """
-
+        #print(df)
         # evaluate XGBoost BDTs
         for channel, models in bdt_models.items():
             if channel not in parameters["channels"]:
@@ -165,7 +175,7 @@ def on_partition(args, parameters):
                 df.loc[df[f"channel_{v}"] == channel, score_name] = evaluate_bdt(
                     df[df[f"channel_{v}"] == channel], v, model, parameters, score_name
                 )
-
+    #print(df)
     # < add secondary categorization / binning here >
     # ...
 
@@ -202,6 +212,7 @@ def on_partition(args, parameters):
         hist_info_row = make_histograms(
             df, var_name, year, dataset, regions, channels, npart, parameters
         )
+        #print(hist_info_row)
         if hist_info_row is not None:
             hist_info_rows.append(hist_info_row)
         if "dy" in dataset:
