@@ -3,6 +3,7 @@ from python.variable import Variable
 
 variables = []
 variables.append(Variable("dimuon_mass", r"$m_{\mu\mu}$ [GeV]", 50, 110, 150))
+variables.append(Variable("LHEMass", r"$m_{genleplep}$ [GeV]", 50, 110, 150))
 variables.append(
     Variable("dimuon_pisa_mass_res", r"$\Delta M_{\mu\mu}$ [GeV]", 30, 0, 20)
 )
@@ -106,6 +107,7 @@ variables.append(Variable("met", r"$E_{T}^{miss.}$ [GeV]", 50, 0, 200))
 variables.append(Variable("btag_wgt", r"b-tag weight", 50, 0, 2))
 variables.append(Variable("event", "event", 100, 0, 10000000))
 variables.append(Variable("run", "run", 1, 0, 1))
+variables.append(Variable("score_ValerieDNNtest2", "score_ValerieDNNtest2",20,0,2))
 
 variables_lookup = {}
 for v in variables:

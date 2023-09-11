@@ -1,6 +1,7 @@
 cross_sections = {
-    "test_file": 1,
-    "dy_M-50": 5379.0, #UL, fromXSDB
+    "test": 6200.0,
+    "dy_M-50": 6195.8, #UL, fromXSDB (averaged)
+    "dy_M-50_nocut": 6450.0,
     "dy_M-100To200": 254.2,  #UL, fromXSDB
     "dy_0j": 4620.52,
     "dy_1j": 922.5,  #UL, fromXSDB

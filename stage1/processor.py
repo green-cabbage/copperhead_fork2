@@ -11,6 +11,7 @@ from coffea.btag_tools import BTagScaleFactor
 from coffea.lumi_tools import LumiMask
 
 from python.timer import Timer
+from python.math_tools import p4_sum
 from stage1.weights import Weights
 from stage1.corrections.pu_reweight import pu_lookups, pu_evaluator
 from stage1.corrections.l1prefiring_weights import l1pf_weights
@@ -38,6 +39,8 @@ from config.jec_parameters import jec_parameters
 from config.variables import variables
 from config.branches import branches
 
+from config.cross_sections import cross_sections
+
 
 class DimuonProcessor(processor.ProcessorABC):
     def __init__(self, **kwargs):
@@ -51,6 +54,7 @@ class DimuonProcessor(processor.ProcessorABC):
             return
         self.year = self.samp_info.year
         self.lumi_weights = self.samp_info.lumi_weights
+        self.lumi = self.samp_info.lumi
 
         # load parameters (cuts, paths to external files, etc.)
         self.parameters = {k: v[self.year] for k, v in parameters.items()}
@@ -73,7 +77,7 @@ class DimuonProcessor(processor.ProcessorABC):
 
         # mass regions to save
         self.regions = kwargs.get("regions", ["h-peak", "h-sidebands"])
-
+        print(variables)
         # variables to save
         self.vars_to_save = set([v.name for v in variables])
 
@@ -96,12 +100,96 @@ class DimuonProcessor(processor.ProcessorABC):
         # Initialize timer
         if self.timer:
             self.timer.update()
-        print(df)
+        #print(df)
         # Dataset name (see definitions in config/datasets.py)
         dataset = df.metadata["dataset"]
         is_mc = "data" not in dataset
         numevents = len(df)
+        
+        
+        # ------------------------------------------------------------#
+        # Apply LHE cuts for DY sample stitching
+        # ------------------------------------------------------------#
+        df["exclude_LHE"] = False
+        df["LHEMass"] = 0 
+        if dataset == "dy_M-50":# or dataset =="test":
+            # Get LHE Particles and calculate LHE mass for all DY events
+            LHE_columns = ["pt",
+               "eta",
+               "phi",
+               "mass",
+               "pdgId",]
+            LHEInfo = df.LHEPart[LHE_columns]
+            LHEParts = ak.to_pandas(LHEInfo)
+            #LHEParts.rename(columns={"pt":"genpt"}, inplace =True)
+            #LHEParts.rename(columns={"eta":"geneta"}, inplace =True)
+            #LHEParts.rename(columns={"phi":"genphi"}, inplace =True)
+            #LHEParts.rename(columns={"mass":"genmass"}, inplace =True)
+            LHEParts["ele"] = (abs(LHEParts.pdgId) == 11)
+            LHEParts["muons"] = (abs(LHEParts.pdgId) == 13) 
+            LHEParts["tau"] = (abs(LHEParts.pdgId )== 15)
+    
+            LHEmuons=LHEParts[LHEParts["muons"]]
+            LHEeles=LHEParts[LHEParts["ele"]]
+            LHEtaus=LHEParts[LHEParts["tau"]]
+            LHELeptons = pd.concat([LHEmuons,LHEeles,LHEtaus])
+            LHElep1 = LHELeptons.loc[LHELeptons.pdgId.groupby("entry").idxmax()]
+            LHElep2 = LHELeptons.loc[LHELeptons.pdgId.groupby("entry").idxmin()]
 
+            LHElep1.index = LHElep1.index.droplevel("subentry")
+            LHElep2.index = LHElep2.index.droplevel("subentry")
+
+            LHEMass = p4_sum(LHElep1,LHElep2).mass
+            LHELeptons["LHEMass"] = LHEMass
+            #apply cut
+            #if dataset == "dy_M-50":
+            #passLHECutLow = (LHEMass>100)
+            #passLHECutHigh = (LHEMass<200)
+            #LHEMass["selection"] = (passLHECutLow & passLHECutHigh)
+            #xsec = cross_sections[dataset]
+            #xsecDY = cross_sections["dy_M-50"]
+            #xsecDY100 = cross_sections["dy_M-100To200"]
+            #print (xsec)
+            #self.lumi_weights["dy_M-50"] = 0.00008137
+            #self.lumi_weights["dy_M-100To200"] = 0.000034586  
+            #print("set lumi weights")
+
+            
+            #NEventsafterCutDY = xsecDY100/xsecDY*(xsecDY*self.lumi/self.lumi_weights["dy_M-50"])
+            #NEventsDY100 = xsecDY100*self.lumi/self.lumi_weights["dy_M-100To200"]
+            #print(NEventsafterCutDY)
+            #print(self.lumi_weights)
+            #print(len(df))
+            #print(len(LHEParts))
+            #print(len(LHELeptons))
+            #print(len(LHEMass))
+            LHEMass = LHEMass.to_frame(name="LHEMass")
+            LHEMassVal =  LHEMass["LHEMass"]
+            #if dataset == "dy_M-50":
+               #LHEMass.loc[((LHEMassVal > 100) & (LHEMassVal < 200)), "new_lumi_weights"] = xsecDY*self.lumi/(NEventsafterCutDY+NEventsDY100)
+               #LHEMass.loc[((LHEMassVal < 100) & (LHEMassVal > 200)), "new_lumi_weights"] =  self.lumi_weights["dy_M-50"]
+            LHEMass["exclude_LHE"] = False
+            if dataset == "dy_M-50" or dataset == "test":
+                LHEMass.loc[((LHEMassVal > 100) & (LHEMassVal < 200)), "exclude_LHE"] = True
+                #LHEMass.loc[((LHEMassVal < 100) & (LHEMassVal > 200)), "exclude_LHE"] =  False
+            #if dataset == "dy_M-100To200":
+                #print("updated lumi weights DY")
+                #df["new_lumi_weights"] = xsecDY*self.lumi/(NEventsafterCutDY+NEventsDY100)
+                #LHEMass["new_lumi_weights"] = xsecDY100*self.lumi/(NEventsafterCutDY+NEventsDY100)
+            #self.lumi_weights["test"] = xsecDY100*self.lumi/(NEventsafterCutDY+NEventsDY100)
+            #print(self.lumi_weights["dy_M-50"])
+            #print(LHEMass["new_lumi_weights"])
+            #df["new_lumi_weights"] = LHEMass["new_lumi_weights"]
+            print(LHEMassVal)
+            df["exclude_LHE"] = LHEMass["exclude_LHE"]
+            df["LHEMass"] = LHEMassVal
+            print(df["LHEMass"])
+            
+            
+
+        
+
+        
         # ------------------------------------------------------------#
         # Apply HLT, lumimask, genweights, PU weights
         # and L1 prefiring weights
@@ -113,7 +201,8 @@ class DimuonProcessor(processor.ProcessorABC):
         output.index.name = "entry"
         output["npv"] = df.PV.npvs
         output["met"] = df.MET.pt
-
+        output["LHEMass"] = df["LHEMass"]
+        print( output["LHEMass"])
         # Separate dataframe to keep track on weights
         # and their systematic variations
         weights = Weights(output)
@@ -124,6 +213,9 @@ class DimuonProcessor(processor.ProcessorABC):
             mask = np.ones(numevents, dtype=bool)
             genweight = df.genWeight
             weights.add_weight("genwgt", genweight)
+            #if dataset == "DY_M-50":
+                #weights.add_weight("lumi", df["new_lumi_weights"])
+            #else:
             weights.add_weight("lumi", self.lumi_weights[dataset])
 
             pu_wgts = pu_evaluator(
@@ -269,19 +361,24 @@ class DimuonProcessor(processor.ProcessorABC):
 
             # Find events with at least one good primary vertex
             good_pv = ak.to_pandas(df.PV).npvsGood > 0
+            LHE_Cut = ak.to_pandas(df.exclude_LHE)
+            LHE_Cut = LHE_Cut.product(axis=1)
 
             # Define baseline event selection
             output["two_muons"] = nmuons == 2
             output["event_selection"] = (
                 mask
+                & (LHE_Cut ==False)
                 & (hlt > 0)
                 & (flags > 0)
                 & (nmuons == 2)
                 & (mm_charge == -1)
                 & electron_veto
                 & good_pv
-            )
+                
 
+            )
+            #print(output["event_selection"])
             # --------------------------------------------------------#
             # Select two leading-pT muons
             # --------------------------------------------------------#
@@ -320,8 +417,6 @@ class DimuonProcessor(processor.ProcessorABC):
             if self.timer:
                 self.timer.add_checkpoint("Event & muon selection")
 
-        # ------------------------------------------------------------#
-        # Fill GEN jet variables
         # ------------------------------------------------------------#
 
         if is_mc:
@@ -501,7 +596,8 @@ class DimuonProcessor(processor.ProcessorABC):
         output = output.reindex(sorted(output.columns), axis=1)
         output.columns = ["_".join(col).strip("_") for col in output.columns.values]
         output = output[output.region.isin(self.regions)]
-
+        print(output["LHEMass"])
+        print(output["dimuon_mass"])
         to_return = None
         if self.apply_to_output is None:
             to_return = output
