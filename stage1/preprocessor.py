@@ -22,7 +22,7 @@ def load_sample(dataset, parameters):
         "timeout": 300,
     }
     samp_info = SamplesInfo(**args)
-    samp_info.load(dataset, use_dask=False, client=parameters["client"])
+    samp_info.load(dataset, use_dask=True, client=parameters["client"])
     samp_info.finalize()
     return {dataset: samp_info}
 
@@ -149,7 +149,9 @@ class SamplesInfo(object):
             all_files = read_via_xrootd(self.server, self.paths[sample])
         elif self.paths[sample].endswith(".root"):
             all_files = [self.paths[sample]]
+            print ("root directly")
         else:
+      
             all_files = glob.glob(self.server + self.paths[sample] + "/**/**/**/*.root")
             all_files = all_files + glob.glob(
                 self.server + self.paths[sample] + "/**/**/*.root"
@@ -159,7 +161,17 @@ class SamplesInfo(object):
             all_files = [all_files[0]]
 
         print(f"Loading {sample}: {len(all_files)} files")
-
+        print(all_files[0])
+        filelist=[]
+        all_files_clean=[]
+        for f in all_files:
+            filename = f.split("/")[-1]
+            print(filename)
+            #print(filelist)
+            if filename not in filelist:
+                filelist.append(filename)
+                all_files_clean.append(f)
+        print(f"Removed double files: {len(all_files_clean)} files")
         sumGenWgts = 0
         nGenEvts = 0
 
@@ -169,10 +181,9 @@ class SamplesInfo(object):
             if not client:
                 client = get_client()
             if "data" in sample:
-                print(all_files[0])
-                work = client.map(self.get_data, all_files, priority=100)
+                work = client.map(self.get_data, all_files_clean, priority=100)
             else:
-                work = client.map(self.get_mc, all_files, priority=100)
+                work = client.map(self.get_mc, all_files_clean, priority=100)
             for w in work:
                 ret = w.result()
                 if "data" in sample:
@@ -181,7 +192,7 @@ class SamplesInfo(object):
                     sumGenWgts += ret["sumGenWgts"]
                     nGenEvts += ret["nGenEvts"]
         else:
-            for f in all_files:
+            for f in all_files_clean:
                 if "data" in sample:
                     
                     data_entries += self.get_data(f)["data_entries"]
@@ -193,7 +204,7 @@ class SamplesInfo(object):
         metadata["sumGenWgts"] = sumGenWgts
         metadata["nGenEvts"] = nGenEvts
 
-        files = {"files": all_files, "treename": "Events"}
+        files = {"files": all_files_clean, "treename": "Events"}
         return {
             "sample": sample,
             "metadata": metadata,
@@ -207,10 +218,9 @@ class SamplesInfo(object):
         tree = uproot.open(f, timeout=self.timeout)["Events"]
         ret["data_entries"] = tree.num_entries
         return ret
-
+    
     def get_mc(self, f):
         ret = {}
-        
         print("Reading " +f)
         file = uproot.open(f, timeout=self.timeout)
         tree = file["Runs"]
@@ -231,10 +241,10 @@ class SamplesInfo(object):
             numevents = self.metadata["nGenEvts"]
             if isinstance(cross_sections[self.sample], dict):
                 xsec = cross_sections[self.sample][self.year]
-                print(self.lumi, xsec, N)
+                print(self.lumi, xsec, N, numevents)
             else:
                 xsec = cross_sections[self.sample]
-                print(self.lumi, xsec, N)
+                print(self.lumi, xsec, N, numevents)
             if N > 0:
                 self.lumi_weights[self.sample] = xsec * self.lumi / N
             else:
