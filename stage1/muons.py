@@ -69,6 +69,51 @@ def fill_muons(processor, output, mu1, mu2, is_mc):
         output["dimuon_cos_theta_cs_pisa"],
         output["dimuon_phi_cs_pisa"],
     ) = cs_variables_pisa(mu1, mu2)
+def fill_muons_Simple(processor, output, mu1, mu2, is_mc):
+    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso"]
+    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso"]
+    dimuon_variable_names = [
+        "dimuon_mass",
+        "dimuon_pt",
+        "dimuon_pt_log",
+        "dimuon_eta",
+        "dimuon_phi",
+        "dimuon_dEta",
+        "dimuon_dPhi",
+        "dimuon_dR",
+        "dimuon_rap",
+    ]
+    v_names = mu1_variable_names + mu2_variable_names + dimuon_variable_names
+
+    # Initialize columns for muon variables
+    for n in v_names:
+        output[n] = 0.0
+
+    # Fill single muon variables
+    for v in ["pt", "eta", "phi"]:
+        output[f"mu1_{v}"] = mu1[v]
+        output[f"mu2_{v}"] = mu2[v]
+
+    #output["mu1_iso"] = mu1.pfRelIso04_all
+    #output["mu2_iso"] = mu2.pfRelIso04_all
+    #output["mu1_pt_over_mass"] = output.mu1_pt / output.dimuon_mass
+    #output["mu2_pt_over_mass"] = output.mu2_pt / output.dimuon_mass
+
+    # Fill dimuon variables
+    mm = p4_sum(mu1, mu2)
+    for v in ["pt", "eta", "phi", "mass"]:
+        name = f"dimuon_{v}"
+        output[name] = mm[v]
+        output[name] = output[name].fillna(-999.0)
+
+    output["dimuon_pt_log"] = np.log(output.dimuon_pt)
+
+    mm_deta, mm_dphi, mm_dr = delta_r(mu1.eta, mu2.eta, mu1.phi, mu2.phi)
+
+    output["dimuon_dEta"] = mm_deta
+    output["dimuon_dPhi"] = mm_dphi
+    output["dimuon_dR"] = mm_dr
+
 
 
 def mass_resolution(is_mc, evaluator, df, year):
