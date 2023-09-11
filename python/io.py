@@ -36,6 +36,20 @@ def save_stage1_output_to_parquet(output, out_dir):
         mkdir(f"{out_dir}/{dataset}")
         df.to_parquet(path=f"{out_dir}/{dataset}/{name}.parquet")
 
+def save_stage1_output_to_csv(output, out_dir):
+    name = None
+    for key, task in get_worker().tasks.items():
+        if task.state == "executing":
+            name = key[-32:]
+    if not name:
+        return
+    for dataset in output.dataset.unique():
+        df = output[output.dataset == dataset]
+        if df.shape[0] == 0:
+            return
+        mkdir(f"{out_dir}/{dataset}")
+        df.to_csv(f"{out_dir}/{dataset}/{name}.csv")
+
 
 def delete_existing_stage1_output(datasets, parameters):
     global_path = parameters.get("global_path", None)
