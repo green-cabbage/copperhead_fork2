@@ -29,7 +29,8 @@ def process_partitions(client, parameters, df):
     ignore_columns += [c for c in df.columns if "pdf_" in c]
 
     df = df[[c for c in df.columns if c not in ignore_columns]]
-
+    if parameters["regions"] == "none":
+        df = df.loc[df['region'] != "none", 'region'] = "none"
     for key in ["channels", "regions", "syst_variations", "hist_vars", "datasets"]:
         if key in parameters:
             parameters[key] = list(set(parameters[key]))
