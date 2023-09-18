@@ -23,10 +23,10 @@ parameters.update(
         "jet_pt_cut": for_all_years(25.0),
         "jet_eta_cut": for_all_years(4.7),
         "jet_id": {"2016preVFP": "loose","2016postVFP": "loose", "2017": "tight", "2018": "tight"},
-        "jet_puid": {"2016preVFP": "loose","2016postVFP": "loose", "2017": "2017corrected", "2018": "loose"},
+        "jet_puid": {"2016preVFP": "loose","2016postVFP": "loose", "2017": "loose", "2018": "loose"},
         "min_dr_mu_jet": for_all_years(0.4),
-        "btag_loose_wp": {"2016preVFP": 0.2217,"2016postVFP": 0.2217 ,"2017": 0.1522, "2018": 0.1241},
-        "btag_medium_wp": {"2016preVFP": 0.6321,"2016postVFP": 0.6321, "2017": 0.4941, "2018": 0.4184},
+        "btag_loose_wp": {"2016preVFP": 0.2027,"2016postVFP": 0.1918 ,"2017": 0.1355, "2018": 0.1208},
+        "btag_medium_wp": {"2016preVFP": 0.6001,"2016postVFP": 0.4847, "2017": 0.4506, "2018": 0.4168},
         "softjet_dr2": for_all_years(0.16),
     }
 )
@@ -54,18 +54,24 @@ parameters["roccor_file"] = {
 
 parameters["nnlops_file"] = for_all_years("data/NNLOPS_reweight.root")
 
+#parameters["btag_sf_csv"] = { #preUL
+#    "2016preVFP": "data/btag/DeepCSV_2016LegacySF_V1.csv",
+#    "2016postVFP": "data/btag/DeepCSV_2016LegacySF_V1.csv",
+#    "2017": "data/btag/DeepCSV_94XSF_V5_B_F.csv",
+#    "2018": "data/btag/DeepCSV_102XSF_V1.csv",
+#}
 parameters["btag_sf_csv"] = {
-    "2016preVFP": "data/btag/DeepCSV_2016LegacySF_V1.csv",
-    "2016postVFP": "data/btag/DeepCSV_2016LegacySF_V1.csv",
-    "2017": "data/btag/DeepCSV_94XSF_V5_B_F.csv",
-    "2018": "data/btag/DeepCSV_102XSF_V1.csv",
+    "2016preVFP": "data/btag/DeepCSV_106XUL16preVFPSF_v1.csv",
+    "2016postVFP": "data/btag/DeepCSV_106XUL16postVFPSF_v2.csv",
+    "2017": "data/btag/DeepCSV_106XUL17SF.csv",
+    "2018": "data/btag/DeepCSV_106XUL18SF_V1p1.csv",
 }
 
 parameters["pu_file_data"] = {
-    "2016preVFP": "data/pileup/PileupData_GoldenJSON_Full2016.root",
-    "2016postVFP": "data/pileup/PileupData_GoldenJSON_Full2016.root",
-    "2017": "data/pileup/puData2017_withVar.root",
-    "2018": "data/pileup/puData2018_withVar.root",
+    "2016preVFP": "data/pileup/puData2016_UL_withVar.root",
+    "2016postVFP": "data/pileup/puData2016_UL_withVar.root",
+    "2017": "data/pileup/puData2017_UL_withVar.root",
+    "2018": "data/pileup/puData2018_UL_withVar.root",
 }
 
 parameters["pu_file_mc"] = {
@@ -167,7 +173,7 @@ parameters["muSFFileList"] = {
 }
 
 parameters["zpt_weights_file"] = for_all_years("data/zpt_weights.histo.json")
-parameters["puid_sf_file"] = for_all_years("data/PUIDMaps.root")
+parameters["puid_sf_file"] = for_all_years("data/PUID_106XTraining_ULRun2_EffSFandUncties_v1.root")
 parameters["res_calib_path"] = for_all_years("data/res_calib/")
 
 parameters["sths_names"] = for_all_years(

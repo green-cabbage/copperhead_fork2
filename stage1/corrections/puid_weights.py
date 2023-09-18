@@ -2,6 +2,14 @@ import numpy as np
 
 
 def puid_weights(evaluator, year, jets, pt_name, jet_puid_opt, jet_puid, numevents):
+    if year == "2016preVFP":
+        yearname = "UL2016APV"
+    if year == "2016postVFP":
+        yearname = "UL2016"
+    if year == "2017":
+        yearname = "UL2017"
+    if year == "2018":
+        yearname = "UL2018"
     if "2017corrected" in jet_puid_opt:
         h_eff_name_L = f"h2_eff_mc{year}_L"
         h_sf_name_L = f"h2_eff_sf{year}_L"
@@ -63,8 +71,8 @@ def puid_weights(evaluator, year, jets, pt_name, jet_puid_opt, jet_puid, numeven
     else:
         wp_dict = {"loose": "L", "medium": "M", "tight": "T"}
         wp = wp_dict[jet_puid_opt]
-        h_eff_name = f"h2_eff_mc{year}_{wp}"
-        h_sf_name = f"h2_eff_sf{year}_{wp}"
+        h_eff_name = f"h2_eff_mc{yearname}_{wp}_Systuncty"
+        h_sf_name = f"h2_eff_sf{yearname}_{wp}_Systuncty"
         puid_eff = evaluator[h_eff_name](jets[pt_name], jets.eta)
         puid_sf = evaluator[h_sf_name](jets[pt_name], jets.eta)
         jets_passed = (jets[pt_name] > 25) & (jets[pt_name] < 50) & jet_puid
