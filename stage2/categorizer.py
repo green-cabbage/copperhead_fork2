@@ -1,5 +1,5 @@
-def split_into_channels(df, v="", nochannels=False):
-    df[f"njets_{v}"].fillna(0, inplace=True)
+def split_into_channels(df, v="", nochannels=False, ggHsplit = True):
+    df.loc[df[f"njets_{v}"] ==-999, f"njets_{v}"] = 0.0
     df.loc[:, f"channel_{v}"] = "none"
     if nochannels == False:
         df.loc[
@@ -13,16 +13,23 @@ def split_into_channels(df, v="", nochannels=False):
             & (df[f"jet1_pt_{v}"] > 35),
             f"channel_{v}",
         ] = "vbf"
-        df.loc[
-            (df[f"channel_{v}"] == "none") & (df[f"njets_{v}"] < 1), f"channel_{v}"
-        ] = "ggh_0jets"
-        df.loc[
-            (df[f"channel_{v}"] == "none") & (df[f"njets_{v}"] == 1), f"channel_{v}"
-        ] = "ggh_1jet"
-        df.loc[
-            (df[f"channel_{v}"] == "none") & (df[f"njets_{v}"] > 1), f"channel_{v}"
-        ] = "ggh_2orMoreJets"
-
+        if ggHsplit ==True:
+            df.loc[
+                (df[f"channel_{v}"] == "none") & (df[f"njets_{v}"] < 1), f"channel_{v}"
+            ] = "ggh_0jets"
+            df.loc[
+                (df[f"channel_{v}"] == "none") & (df[f"njets_{v}"] == 1.0), f"channel_{v}"
+            ] = "ggh_1jet"
+            df.loc[
+                (df[f"channel_{v}"] == "none") & (df[f"njets_{v}"] > 1), f"channel_{v}"
+            ] = "ggh_2orMoreJets"
+        else:
+            print("-------------")
+            print("not splitting ggH")
+            print("-------------")
+            df.loc[
+                (df[f"channel_{v}"] == "none"), f"channel_{v}"
+            ] = "ggh"
 
 def categorize_by_score(df, scores, mode="uniform", **kwargs):
     nbins = kwargs.pop("nbins", 4)

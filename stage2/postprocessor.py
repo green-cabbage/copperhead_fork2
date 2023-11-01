@@ -29,8 +29,7 @@ def process_partitions(client, parameters, df):
     ignore_columns += [c for c in df.columns if "pdf_" in c]
 
     df = df[[c for c in df.columns if c not in ignore_columns]]
-    if parameters["regions"] == "none":
-        df = df.loc[df['region'] != "none", 'region'] = "none"
+
     for key in ["channels", "regions", "syst_variations", "hist_vars", "datasets"]:
         if key in parameters:
             parameters[key] = list(set(parameters[key]))
@@ -66,8 +65,8 @@ def on_partition(args, parameters):
     
     year = args["year"]
     print(year)
-    if "2016" in year:
-        year = 2016
+    #if "2016" in year:
+        #year = 2016
     dataset = args["dataset"]
     df = args["df"]
 
@@ -87,7 +86,8 @@ def on_partition(args, parameters):
     # preprocess
     df.loc[df['year'] == "2016postVFP", 'year'] = 2016
     df.loc[df['year'] == "2016preVFP", 'year'] = 2016
-    #print(df)
+    if parameters["regions"] == ["none"]:
+        df.loc[df['region'] != "none", 'region'] = 'none'
     wgts = [c for c in df.columns if "wgt" in c]
     df.loc[:, wgts] = df.loc[:, wgts].fillna(0)
     df.fillna(-999.0, inplace=True)
@@ -113,15 +113,16 @@ def on_partition(args, parameters):
 
     # < categorization into channels (ggH, VBF, etc.) >
     # split_into_channels(df, v="nominal", vbf_mva_cutoff=vbf_mva_cutoff)
-    split_into_channels(df, v="nominal")
-
+    split_into_channels(df, v="nominal",ggHsplit=False)
+    if parameters["channels"] == ["none"]:
+        df.loc[df['channel_nominal'] != "none", 'channel_nominal'] = 'none'
     regions = [r for r in parameters["regions"] if r in df.region.unique()]
     channels = [
         c for c in parameters["channels"] if c in df["channel_nominal"].unique()
     ]
 
     # split DY by genjet multiplicity
-    if "dy" in dataset:
+    if "dyblub" in dataset:
         df.jet1_has_matched_gen_nominal.fillna(False, inplace=True)
         df.jet2_has_matched_gen_nominal.fillna(False, inplace=True)
         df["two_matched_jets"] = (
@@ -216,7 +217,7 @@ def on_partition(args, parameters):
         #print(hist_info_row)
         if hist_info_row is not None:
             hist_info_rows.append(hist_info_row)
-        if "dy" in dataset:
+        if "dyblub" in dataset:
             for suff in ["01j", "2j"]:
                 hist_info_row = make_histograms(
                     df,
