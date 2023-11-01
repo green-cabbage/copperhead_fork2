@@ -7,7 +7,7 @@ import pandas as pd
 import coffea.processor as processor
 from coffea.lookup_tools import extractor
 from coffea.lookup_tools import txt_converters, rochester_lookup
-from coffea.btag_tools import BTagScaleFactor
+#from coffea.btag_tools import BTagScaleFactor
 from coffea.lumi_tools import LumiMask
 
 from python.timer import Timer
@@ -25,7 +25,7 @@ from stage1.corrections.stxs_uncert import add_stxs_variations, stxs_lookups
 from stage1.corrections.lhe_weights import lhe_weights
 from stage1.corrections.pdf_variations import add_pdf_variations
 from stage1.corrections.qgl_weights import qgl_weights
-from stage1.corrections.btag_weights import btag_weights
+from stage1.corrections.btag_weights import btag_weights_json
 
 # from stage1.corrections.puid_weights import puid_weights
 
@@ -40,6 +40,8 @@ from config.variables import variables
 from config.branches import branches
 
 from config.cross_sections import cross_sections
+import pdb
+import correctionlib
 
 
 class DimuonProcessor(processor.ProcessorABC):
@@ -63,7 +65,7 @@ class DimuonProcessor(processor.ProcessorABC):
         self.do_roccor = True
         self.do_fsr = True
         self.do_geofit = True
-        self.auto_pu = False
+        self.auto_pu = True
         self.do_nnlops = True
         self.do_pdf = True
         self.do_btag_syst = kwargs.get("do_btag_syst", True)
@@ -77,7 +79,7 @@ class DimuonProcessor(processor.ProcessorABC):
 
         # mass regions to save
         self.regions = kwargs.get("regions", ["h-peak", "h-sidebands"])
-        print(variables)
+        #print(variables)
         # variables to save
         self.vars_to_save = set([v.name for v in variables])
 
@@ -103,6 +105,8 @@ class DimuonProcessor(processor.ProcessorABC):
         #print(df)
         # Dataset name (see definitions in config/datasets.py)
         dataset = df.metadata["dataset"]
+        #print(df.Pileup.nTrueInt)
+        #print(np.array(df.Pileup.nTrueInt)),
         is_mc = "data" not in dataset
         numevents = len(df)
         
@@ -141,49 +145,15 @@ class DimuonProcessor(processor.ProcessorABC):
 
             LHEMass = p4_sum(LHElep1,LHElep2).mass
             LHELeptons["LHEMass"] = LHEMass
-            #apply cut
-            #if dataset == "dy_M-50":
-            #passLHECutLow = (LHEMass>100)
-            #passLHECutHigh = (LHEMass<200)
-            #LHEMass["selection"] = (passLHECutLow & passLHECutHigh)
-            #xsec = cross_sections[dataset]
-            #xsecDY = cross_sections["dy_M-50"]
-            #xsecDY100 = cross_sections["dy_M-100To200"]
-            #print (xsec)
-            #self.lumi_weights["dy_M-50"] = 0.00008137
-            #self.lumi_weights["dy_M-100To200"] = 0.000034586  
-            #print("set lumi weights")
-
-            
-            #NEventsafterCutDY = xsecDY100/xsecDY*(xsecDY*self.lumi/self.lumi_weights["dy_M-50"])
-            #NEventsDY100 = xsecDY100*self.lumi/self.lumi_weights["dy_M-100To200"]
-            #print(NEventsafterCutDY)
-            #print(self.lumi_weights)
-            #print(len(df))
-            #print(len(LHEParts))
-            #print(len(LHELeptons))
-            #print(len(LHEMass))
             LHEMass = LHEMass.to_frame(name="LHEMass")
             LHEMassVal =  LHEMass["LHEMass"]
-            #if dataset == "dy_M-50":
-               #LHEMass.loc[((LHEMassVal > 100) & (LHEMassVal < 200)), "new_lumi_weights"] = xsecDY*self.lumi/(NEventsafterCutDY+NEventsDY100)
-               #LHEMass.loc[((LHEMassVal < 100) & (LHEMassVal > 200)), "new_lumi_weights"] =  self.lumi_weights["dy_M-50"]
+
             LHEMass["exclude_LHE"] = False
             if dataset == "dy_M-50" or dataset == "test":
                 LHEMass.loc[((LHEMassVal > 100) & (LHEMassVal < 200)), "exclude_LHE"] = True
-                #LHEMass.loc[((LHEMassVal < 100) & (LHEMassVal > 200)), "exclude_LHE"] =  False
-            #if dataset == "dy_M-100To200":
-                #print("updated lumi weights DY")
-                #df["new_lumi_weights"] = xsecDY*self.lumi/(NEventsafterCutDY+NEventsDY100)
-                #LHEMass["new_lumi_weights"] = xsecDY100*self.lumi/(NEventsafterCutDY+NEventsDY100)
-            #self.lumi_weights["test"] = xsecDY100*self.lumi/(NEventsafterCutDY+NEventsDY100)
-            #print(self.lumi_weights["dy_M-50"])
-            #print(LHEMass["new_lumi_weights"])
-            #df["new_lumi_weights"] = LHEMass["new_lumi_weights"]
-            print(LHEMassVal)
             df["exclude_LHE"] = LHEMass["exclude_LHE"]
             df["LHEMass"] = LHEMassVal
-            print(df["LHEMass"])
+
             
             
 
@@ -202,7 +172,7 @@ class DimuonProcessor(processor.ProcessorABC):
         output["npv"] = df.PV.npvs
         output["met"] = df.MET.pt
         output["LHEMass"] = df["LHEMass"]
-        print( output["LHEMass"])
+        #print( output["LHEMass"])
         # Separate dataframe to keep track on weights
         # and their systematic variations
         weights = Weights(output)
@@ -213,13 +183,10 @@ class DimuonProcessor(processor.ProcessorABC):
             mask = np.ones(numevents, dtype=bool)
             genweight = df.genWeight
             weights.add_weight("genwgt", genweight)
-            #if dataset == "DY_M-50":
-                #weights.add_weight("lumi", df["new_lumi_weights"])
-            #else:
             weights.add_weight("lumi", self.lumi_weights[dataset])
-
+            #print(df.Pileup.nTrueInt)
             pu_wgts = pu_evaluator(
-                self.pu_lookups,
+                #self.pu_lookups,
                 self.parameters,
                 numevents,
                 np.array(df.Pileup.nTrueInt),
@@ -295,7 +262,7 @@ class DimuonProcessor(processor.ProcessorABC):
             # GeoFit correction
             if self.do_geofit and ("dxybs" in df.Muon.fields):
                 apply_geofit(df, self.year, ~has_fsr)
-                df["Muon", "pt"] = df.Muon.pt_fsr
+                df["Muon", "pt"] = df.Muon.pt_gf
 
             if self.timer:
                 self.timer.add_checkpoint("Muon corrections")
@@ -596,8 +563,8 @@ class DimuonProcessor(processor.ProcessorABC):
         output = output.reindex(sorted(output.columns), axis=1)
         output.columns = ["_".join(col).strip("_") for col in output.columns.values]
         output = output[output.region.isin(self.regions)]
-        print(output["LHEMass"])
-        print(output["dimuon_mass"])
+        #print(output["LHEMass"])
+        #print(output["dimuon_mass"])
         to_return = None
         if self.apply_to_output is None:
             to_return = output
@@ -796,10 +763,10 @@ class DimuonProcessor(processor.ProcessorABC):
             weights.add_weight("qgl_wgt", qgl_wgts, how="all")
 
             # --- Btag weights --- #
-            bjet_sel_mask = output.event_selection & two_jets & vbf_cut
+            bjet_sel_mask = output.event_selection #& two_jets & vbf_cut
 
-            btag_wgt, btag_syst = btag_weights(
-                self, self.btag_lookup, self.btag_systs, jets, weights, bjet_sel_mask
+            btag_wgt, btag_syst = btag_weights_json(
+                self, self.btag_systs, jets, weights, bjet_sel_mask, self.btag_json
             )
             weights.add_weight("btag_wgt", btag_wgt)
 
@@ -857,13 +824,15 @@ class DimuonProcessor(processor.ProcessorABC):
         # Muon scale factors
         self.musf_lookup = musf_lookup(self.parameters)
         # Pile-up reweighting
-        self.pu_lookups = pu_lookups(self.parameters)
+        #self.pu_lookups = pu_lookups(self.parameters)
         # Btag weights
-        self.btag_lookup = BTagScaleFactor(
-            self.parameters["btag_sf_csv"],
-            BTagScaleFactor.RESHAPE,
-            "iterativefit,iterativefit,iterativefit",
-        )
+        #self.btag_csv = BTagScaleFactor(
+            #self.parameters["btag_sf_csv"],
+            #BTagScaleFactor.RESHAPE,
+            #"iterativefit,iterativefit,iterativefit",
+        #)
+        self.btag_json =  correctionlib.CorrectionSet.from_file(self.parameters["btag_sf_json"],)
+
         # STXS VBF cross-section uncertainty
         self.stxs_acc_lookups, self.powheg_xsec_lookup = stxs_lookups()
 
