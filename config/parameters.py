@@ -60,11 +60,20 @@ parameters["nnlops_file"] = for_all_years("data/NNLOPS_reweight.root")
 #    "2017": "data/btag/DeepCSV_94XSF_V5_B_F.csv",
 #    "2018": "data/btag/DeepCSV_102XSF_V1.csv",
 #}
+parameters["btag_sf_json"] = {
+    #"2016preVFP": "data/btag/DeepCSV_106XUL16preVFPSF_v1.csv",
+    #"2016postVFP": "data/btag/DeepCSV_106XUL16postVFPSF_v2.csv",
+    "2016preVFP": "/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/BTV/2016preVFP_UL/btagging.json.gz",
+    "2016postVFP": "/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/BTV/2016postVFP_UL/btagging.json.gz",
+    "2017": "/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/BTV/2017_UL/btagging.json.gz",
+    "2018": "/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/BTV/2018_UL/btagging.json.gz",
+}
 parameters["btag_sf_csv"] = {
-    "2016preVFP": "data/btag/DeepCSV_106XUL16preVFPSF_v1.csv",
-    "2016postVFP": "data/btag/DeepCSV_106XUL16postVFPSF_v2.csv",
+
+    "2016preVFP": "data/btag/DeepCSV_2016LegacySF_V1.csv",
+    "2016postVFP": "data/btag/DeepCSV_2016LegacySF_V1.csv",
     "2017": "data/btag/DeepCSV_106XUL17SF.csv",
-    "2018": "data/btag/DeepCSV_106XUL18SF_V1p1.csv",
+    "2018": "data/btag/DeepCSV_106XUL18SF.csv",
 }
 
 parameters["pu_file_data"] = {

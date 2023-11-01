@@ -108,6 +108,7 @@ variables.append(Variable("btag_wgt", r"b-tag weight", 50, 0, 2))
 variables.append(Variable("event", "event", 100, 0, 10000000))
 variables.append(Variable("run", "run", 1, 0, 1))
 variables.append(Variable("score_ValerieDNNtest2", "score_ValerieDNNtest2",20,0,2))
+variables.append(Variable("score_ValerieDNNtest3", "score_ValerieDNNtest3",20,0,2))
 
 variables_lookup = {}
 for v in variables:

@@ -19,6 +19,7 @@ def pu_lookups(parameters, mode="nom", auto=[]):
             pu_hist_mc = uproot.open(parameters["pu_file_mc"])["pu_mc"].values()
         else:
             pu_hist_mc = np.histogram(auto, bins=range(nbins + 1))[0]
+        
 
         lookup = dense_lookup.dense_lookup(pu_reweight(pu_hist_data, pu_hist_mc), edges)
         if Version(coffea.__version__) < Version("0.7.6"):
@@ -28,6 +29,7 @@ def pu_lookups(parameters, mode="nom", auto=[]):
 
 
 def pu_reweight(pu_hist_data, pu_hist_mc):
+    #print(pu_hist_mc)
     pu_arr_mc_ = np.zeros(len(pu_hist_mc))
     for ibin, value in enumerate(pu_hist_mc):
         pu_arr_mc_[ibin] = max(value, 0)
@@ -39,7 +41,7 @@ def pu_reweight(pu_hist_data, pu_hist_mc):
     pu_arr_mc_ref = pu_arr_mc_
     pu_arr_mc = pu_arr_mc_ / pu_arr_mc_.sum()
     pu_arr_data = pu_arr_data / pu_arr_data.sum()
-
+    #print(pu_arr_mc)
     weights = np.ones(len(pu_hist_mc))
     weights[pu_arr_mc != 0] = pu_arr_data[pu_arr_mc != 0] / pu_arr_mc[pu_arr_mc != 0]
     maxw = min(weights.max(), 5.0)
@@ -72,9 +74,10 @@ def checkIntegral(wgt1, wgt2, ref):
     return (myint - refint) / refint
 
 
-def pu_evaluator(lookups, parameters, numevents, ntrueint, auto_pu):
+def pu_evaluator(parameters, numevents, ntrueint, auto_pu):
     if auto_pu:
         lookups = pu_lookups(parameters, auto=ntrueint)
+        #print("Hello")
     pu_weights = {}
     for var, lookup in lookups.items():
         pu_weights[var] = np.ones(numevents)
