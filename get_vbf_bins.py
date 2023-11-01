@@ -5,7 +5,7 @@ from python.io import load_dataframe
 
 parameters = {
     "global_path": "/depot/cms/hmm/vscheure/",
-    "label": "UL16_stitchingtest5",
+    "label": "testenwSF",
     "channels": ["vbf"],
     "custom_npartitions": {
         "vbf_powheg": 1,
@@ -16,18 +16,20 @@ parameters = {
 dataset = "vbf_powheg"
 #model_name = "pytorch_may18"
 #model_name = "pytorch_may24_pisa"
-model_name = "ValerieDNNtest2"
+model_name = "ValerieDNNtest3"
 score_name = f"score_{model_name}_nominal"
 channel = "vbf"
 region = "h-peak"
 
 #for year in ["2016", "2017", "2018"]:
-for year in ["2016"]:
+for year in ["2017","2018"]:
     print(year)
     if year == "2016":
         yearstr = "2016postVFP"
+    else:
+        yearstr = year
     #paths = glob.glob(f"/depot/cms/hmm/coffea/{year}_2022apr6/{dataset}/*.parquet")
-    paths = glob.glob(f"/depot/cms/hmm/vscheure/UL16_stitchingtest5/stage1_output/{yearstr}/{dataset}/*.parquet")
+    paths = glob.glob(f"/depot/cms/hmm/vscheure/testenwSF/stage1_output/{yearstr}/{dataset}/*.parquet")
 
     df = load_dataframe(None, parameters, inputs=paths, dataset=dataset)
     df = df.compute()
