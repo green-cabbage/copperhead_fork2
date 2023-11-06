@@ -239,7 +239,7 @@ def plot(args, parameters={}):
         ax2.set_xlabel(var.caption, loc="right")
         ax2.legend(prop={"size": "x-small"})
 
-    hep.cms.label(ax=ax1, data=True, label="Preliminary", year=year)
+    hep.cms.label(ax=ax1, data=True, label="Work in progress", year=year)
 
     save_plots = parameters.get("save_plots", False)
     if save_plots:

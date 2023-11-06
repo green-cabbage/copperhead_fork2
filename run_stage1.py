@@ -10,6 +10,7 @@ from stage1.preprocessor import load_samples
 from python.io import (
     mkdir,
     save_stage1_output_to_parquet,
+    save_stage1_output_to_csv,
     delete_existing_stage1_output,
 )
 from config.jec_parameters import jec_parameters as jec_pars
@@ -83,9 +84,10 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-node_ip = "128.211.149.133"  # hammer-c000
-node_ip = '128.211.149.140' # hammer-c007
-dash_local = f"{node_ip}:34875"
+#node_ip = "128.211.149.133"  # hammer-c000
+#node_ip = '128.211.149.140' # hammer-c007
+node_ip = "10.5.11.70"
+dash_local = f"{node_ip}:8787"
 
 
 if args.slurm_port is None:
@@ -120,10 +122,10 @@ parameters = {
     # < input data settings >
     # 'xrootd': True,
     #'server': 'root://xrootd.rcac.purdue.edu/', # Purdue xrootd
-    'server': 'root://cmsxrootd.fnal.gov/', # FNAL xrootd
+    #'server': 'root://cmsxrootd.fnal.gov/', # FNAL xrootd
     #'server': 'root://cms-xrd-global.cern.ch/',
     "xrootd": True,
-    #"server": "root://eos.cms.rcac.purdue.edu/",
+    "server": "root://eos.cms.rcac.purdue.edu/",
     "datasets_from": args.datasets,
     "chunksize": int(args.chunksize),
     "maxchunks": mch,
@@ -131,7 +133,7 @@ parameters = {
     # < processing settings >
     "regions": ["h-sidebands", "h-peak" ],
     "pt_variations": pt_variations,
-    "do_btag_syst": False,
+    "do_btag_syst": True,
     "save_output": True,
     "do_timer": False,
 }
@@ -191,10 +193,10 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=40,
-            dashboard_address=dash_local,
+            n_workers=32,
+            #dashboard_address=dash_local,
             threads_per_worker=1,
-            memory_limit="12GB",
+            memory_limit="6GB",
         )
     else:
         # connect to existing Slurm cluster
@@ -208,17 +210,17 @@ if __name__ == "__main__":
         # ],
         "data": [
             #'test_file_data_A',
-            #"data_A",
-            #"data_B",
-            #"data_C",
-            #"data_D",
-            #"data_E",
-            #"data_F",
-            #"data_G",
-            #"data_H",
+            "data_A",
+            "data_B",
+            "data_C",
+            "data_D",
+            "data_E",
+            "data_F",
+            "data_G",
+            "data_H",
        ],
         "signal": [
-           #"ggh_powheg",
+            #"ggh_powheg",
             #"vbf_powheg",
            # "ggh_amcPS",
             #"vbf_powhegPS",
@@ -246,12 +248,12 @@ if __name__ == "__main__":
             # "ewk_m50"
         ],
         "other_mc": [
-            "ttjets_dl",
-            "ttjets_sl",
+            #"ttjets_dl",
+            #"ttjets_sl",
             #"ttz",
             #"ttw",
-            "st_tw_top",
-            "st_tw_antitop",
+            #"st_tw_top",
+            #"st_tw_antitop",
             #"ww_2l2nu",
             #"wz_2l2q",
             #"wz_3lnu",
@@ -300,7 +302,7 @@ if __name__ == "__main__":
         out = submit_job(parameters)
         timings[f"process {lbl}"] = time.time() - tick2
 
-        print(out)
+        #print(out)
 
     elapsed = round(time.time() - tick, 3)
     print(f"Finished everything in {elapsed} s.")

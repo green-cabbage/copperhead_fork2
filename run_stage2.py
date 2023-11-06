@@ -42,7 +42,7 @@ node_ip = "128.211.149.133"
 node_ip = "128.211.149.140"
 
 if use_local_cluster:
-    ncpus_local = 40
+    ncpus_local = 32
     slurm_cluster_ip = ""
     dashboard_address = f"{node_ip}:34875"
 else:
@@ -56,9 +56,11 @@ parameters = {
     "global_path": "/depot/cms/hmm/vscheure",
     "years": args.year,
     "label": args.label,
-    #"channels": ["ggh_0jets","ggh_1jets","ggh_2orMoreJets","vbf"],
+    #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
+    #"channels": ["ggh"],
     "channels": ["vbf"],
-    "regions": ["h-peak","h-sidebands"],
+    "regions": ["h-sidebands","h-peak"],
+    #"regions": ["h-peak"],
     
     "syst_variations": ["nominal"],
     # "custom_npartitions": {
@@ -66,7 +68,7 @@ parameters = {
     # },
     #
     # < settings for histograms >
-    "hist_vars":  ["dimuon_mass","dimuon_dR","njets","mu1_pt","dimuon_mass_res","mu1_eta","jet1_pt"],
+    "hist_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","dimuon_mass_res","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
     "variables_lookup": variables_lookup,
     "save_hists": True,
     #
@@ -83,7 +85,8 @@ parameters = {
     # < MVA settings >
     "models_path": "/depot/cms/hmm/vscheure/data/trained_models/",
     "dnn_models": {
-        "vbf": ["ValerieDNNtest2"],
+        "vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
+        #"ggh": ["ggHtest2"]
         # "vbf": ["pytorch_test"],
         # "vbf": ["pytorch_jun27"],
         #"vbf": ["pytorch_jun27"],
@@ -114,16 +117,16 @@ parameters = {
 }
 
 parameters["datasets"] = [
-    #"data_A",
-    #"data_B",
-    #"data_C",
-    #"data_D",
-    #"data_E",
-    #"data_F",
-    #"data_G",
-    #"data_H",
+    "data_A",
+    "data_B",
+    "data_C",
+    "data_D",
+    "data_E",
+    "data_F",
+    "data_G",
+    "data_H",
     "dy_M-50",
-    #"dy_M-50_nocut",
+    "dy_M-50_nocut",
     "dy_M-100To200",
     #"dy_1j",
     #"dy_2j",
@@ -146,7 +149,7 @@ parameters["datasets"] = [
     #"wwz",
     #wzz",
     #"zzz",
-    #"ggh_powheg",
+    "ggh_powheg",
     "vbf_powheg",
 ]
 # using one small dataset for debugging
@@ -161,10 +164,10 @@ if __name__ == "__main__":
         )
         client = Client(
             processes=True,
-            dashboard_address=dashboard_address,
+            #dashboard_address=dashboard_address,
             n_workers=ncpus_local,
             threads_per_worker=1,
-            memory_limit="16GB",
+            memory_limit="8GB",
         )
     else:
         print(
@@ -216,4 +219,4 @@ if __name__ == "__main__":
                 continue
             # run processing sequence (categorization, mva, histograms)
             info = process_partitions(client, parameters, df)
-            print(info)
+            #print(info)
