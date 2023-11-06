@@ -2,7 +2,7 @@ import itertools
 from functools import partial
 
 
-def parallelize(func, argset, client, parameters={}, seq=False):
+def parallelize(func, argset, client, parameters={}, seq=True):
     """
     `func`: the function to be executed in parallel.
     `argset`: a dictionary that contains a list of possible values for each of the `func` arguments.

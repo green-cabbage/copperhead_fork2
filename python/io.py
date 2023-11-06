@@ -82,7 +82,7 @@ def load_dataframe(client, parameters, inputs=[], dataset=None):
         else:
             df_future = []
             for inp in inputs:
-                print(inp)
+                #print(inp)
                 df_future.append(load_pandas_from_parquet(inp))
         # Merge dataframes
         try:
@@ -91,14 +91,14 @@ def load_dataframe(client, parameters, inputs=[], dataset=None):
             df = dd.concat([d for d in df_future if d.shape[1] > 0])
         except Exception:
             return None
-        print("concat done")
-        print(df.npartitions)
+        #print("concat done")
+        #print(df.npartitions)
         if custom_npartitions > 0:
             df = df.repartition(npartitions=custom_npartitions)
         elif df.npartitions > 2 * ncpus:
-            print("repartitioning")
+            #print("repartitioning")
             df = df.repartition(npartitions=2 * ncpus)
-            print("repartitioning done")
+            #print("repartitioning done")
     elif isinstance(inputs, pd.DataFrame):
         df = dd.from_pandas(inputs, npartitions=ncpus)
 
@@ -121,11 +121,11 @@ def load_pandas_from_parquet(path):
     df = dd.from_pandas(pd.DataFrame(), npartitions=1)
     
     df = dd.read_parquet(path)
-    print("havedd")
+    #print("havedd")
     if len(path) > 0:
         #try:
         df = dd.read_parquet(path)
-        print("havedd")
+        #print("havedd")
         #except Exception:
             #return df
     return df
