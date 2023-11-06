@@ -42,12 +42,30 @@ def categorize_by_score(df, scores, mode="uniform", **kwargs):
                 cut_hi = score.quantile((i + 1) / nbins)
                 cut = (df.channel == channel) & (score > cut_lo) & (score < cut_hi)
                 df.loc[cut, "category"] = cat_name
+        
 
 
+                
+                
 def categorize_dnn_output(df, score_name, channel, region, year, yearstr):
     # Run 2 (VBF yields)
     target_yields = {
         "2016": [
+            0.35455259,
+            0.50239086,
+            0.51152889,
+            0.52135985,
+            0.5282209,
+            0.54285134,
+            0.54923751,
+            0.56504687,
+            0.57204477,
+            0.58273066,
+            0.5862248,
+            0.59568793,
+            0.60871905,
+        ],
+                "2016postVFP": [
             0.35455259,
             0.50239086,
             0.51152889,
@@ -131,4 +149,4 @@ def categorize_dnn_output(df, score_name, channel, region, year, yearstr):
                 last_yield = tot_yield
     bins.append(0.0)
     bins = sorted(bins)
-    print(bins)
+    #print(bins)

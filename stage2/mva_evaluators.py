@@ -34,6 +34,27 @@ training_features = [
     "nsoftjets5",
     "htsoft2",
 ]
+training_features_ggh = [
+    "mu1_pt_over_mass",
+    "mu2_pt_over_mass",
+    "mu1_eta",
+    "mu2_eta",
+    "dimuon_pt",
+    "dimuon_eta",
+    "dimuon_pisa_mass_res",
+    "dimuon_cos_theta_cs_pisa",
+    "dimuon_phi_cs_pisa",
+    "jet1_pt",
+    "jet2_pt",
+    "jj_mass",
+    "jj_dEta",
+    "jj_dPhi",
+    "mmj1_dEta",
+    "mmj1_dPhi",
+    "mmj_min_dEta",
+    "mmj_min_dPhi",
+    "zeppenfeld",
+]
 
 training_features_mass = [
     "dimuon_mass",
@@ -67,11 +88,13 @@ training_features_nomass = [
 ]
 
 
-def prepare_features(df, parameters, variation="nominal", add_year=False):
+def prepare_features(df, parameters, channel, variation="nominal", add_year=False):
     global training_features
     if add_year:
         
         features = training_features + ["year"]
+    if channel == "ggh":
+        features = training_features_ggh
     else:
         features = training_features
     features_var = []
@@ -125,6 +148,7 @@ def evaluate_mva_categorizer(df, model_name, score_name, parameters):
             continue
         df_i.loc[df_i.region != "h-peak", "dimuon_mass"] = 125.0
         df_i = (df_i[features] - scalers["mean"]) / scalers["std"]
+        #df_i = df_i[features]
         df_i = torch.tensor(df_i.values).float()
 
         dnn_model = MvaCategorizer(model_name, len(features), 3, [64, 32, 16])
@@ -135,12 +159,12 @@ def evaluate_mva_categorizer(df, model_name, score_name, parameters):
         dnn_model.eval()
 
         df.loc[eval_filter, score_name] = dnn_model(df_i).detach().numpy()
-
+        
     return df[score_name]
 
 
 def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
-    features = prepare_features(df, parameters, variation, add_year=False)
+    features = prepare_features(df, parameters, channel, variation, add_year=False)
     try:
         df = df.compute()
     except Exception:
@@ -151,7 +175,7 @@ def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
 
     df.loc[:, score_name] = 0
 
-    nfolds = 4
+    nfolds = 1
     for i in range(nfolds):
         # train_folds = [(i + f) % nfolds for f in [0, 1]]
         # val_folds = [(i + f) % nfolds for f in [2]]
@@ -166,10 +190,16 @@ def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
         scalers = np.load(scalers_path)
         df_i = df.loc[eval_filter, :]
         if df_i.shape[0] == 0:
+            #print('error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             continue
         df_i.loc[df_i.region != "h-peak", "dimuon_mass"] = 125.0
         df_i[features] = df_i[features].fillna(-99).astype(float)
+        #
+        df_i.loc[:, "mu1_pt_over_mass"] = df_i.mu1_pt / df_i.dimuon_mass
+        df_i.loc[:, "mu2_pt_over_mass"] = df_i.mu2_pt / df_i.dimuon_mass
         df_i = (df_i[features] - scalers[0]) / scalers[1]
+        #df_i = df_i[features]
+        #print(df_i[features])
         df_i = torch.tensor(df_i.values).float()
 
         dnn_model = Net(len(features))
@@ -192,7 +222,8 @@ def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
         sys.exit()
         """
         df.loc[eval_filter, score_name] = np.arctanh((dnn_model(df_i).detach().numpy()))
-
+        #print(dnn_model(df_i).detach().numpy())
+    #print(df[score_name])
     return df[score_name]
 
 

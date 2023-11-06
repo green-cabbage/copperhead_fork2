@@ -39,10 +39,10 @@ def process_partitions(client, parameters, df):
     # delete previously generated outputs to prevent partial overwrite
     delete_existing_stage2_hists(datasets, years, parameters)
     #delete_existing_stage2_parquet(datasets, years, parameters)
-    print(df.year)
+    #print(df.year)
     # prepare parameters for parallelization
 
-    print(years)
+    #print(years)
     argset = {
         "year": years,
         "dataset": datasets,
@@ -64,7 +64,7 @@ def process_partitions(client, parameters, df):
 def on_partition(args, parameters):
     
     year = args["year"]
-    print(year)
+    #print(year)
     #if "2016" in year:
         #year = 2016
     dataset = args["dataset"]
@@ -84,8 +84,8 @@ def on_partition(args, parameters):
         df = df.compute()
         
     # preprocess
-    df.loc[df['year'] == "2016postVFP", 'year'] = 2016
-    df.loc[df['year'] == "2016preVFP", 'year'] = 2016
+    #df.loc[df['year'] == "2016postVFP", 'year'] = 2016
+    #df.loc[df['year'] == "2016preVFP", 'year'] = 2016
     if parameters["regions"] == ["none"]:
         df.loc[df['region'] != "none", 'region'] = 'none'
     wgts = [c for c in df.columns if "wgt" in c]
@@ -113,7 +113,7 @@ def on_partition(args, parameters):
 
     # < categorization into channels (ggH, VBF, etc.) >
     # split_into_channels(df, v="nominal", vbf_mva_cutoff=vbf_mva_cutoff)
-    split_into_channels(df, v="nominal",ggHsplit=False)
+    split_into_channels(df, v="nominal",ggHsplit=True)
     if parameters["channels"] == ["none"]:
         df.loc[df['channel_nominal'] != "none", 'channel_nominal'] = 'none'
     regions = [r for r in parameters["regions"] if r in df.region.unique()]
@@ -122,7 +122,7 @@ def on_partition(args, parameters):
     ]
 
     # split DY by genjet multiplicity
-    if "dyblub" in dataset:
+    if "dy" in dataset:
         df.jet1_has_matched_gen_nominal.fillna(False, inplace=True)
         df.jet2_has_matched_gen_nominal.fillna(False, inplace=True)
         df["two_matched_jets"] = (
@@ -200,7 +200,8 @@ def on_partition(args, parameters):
                 parameters["mva_bins"].update(
                     {
                         model_name: {
-                            "2016": list(range(len(mva_bins))),
+                            "2016preVFP": list(range(len(mva_bins))),
+                            "2016postVFP": list(range(len(mva_bins))),
                             "2017": list(range(len(mva_bins))),
                             "2018": list(range(len(mva_bins))),
                         }
@@ -217,7 +218,7 @@ def on_partition(args, parameters):
         #print(hist_info_row)
         if hist_info_row is not None:
             hist_info_rows.append(hist_info_row)
-        if "dyblub" in dataset:
+        if "dy" in dataset:
             for suff in ["01j", "2j"]:
                 hist_info_row = make_histograms(
                     df,
