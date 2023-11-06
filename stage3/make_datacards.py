@@ -8,7 +8,14 @@ rename_regions = {
 }
 signal_groups = ["VBF", "ggH"]
 rate_syst_lookup = {
-    "2016": {
+    "2016preVFP": {
+        "XsecAndNorm2016DYJ2": {"DY_2J": 1.1291},
+        "XsecAndNorm2016EWK": {"EWK": 1.06131},
+        "XsecAndNormTT+ST": {"TT+ST": 1.182},
+        "XsecAndNormVV": {"VV": 1.13203},
+        "XsecAndNormggH": {"ggH": 1.38206},
+    },
+        "2016postVFP": {
         "XsecAndNorm2016DYJ2": {"DY_2J": 1.1291},
         "XsecAndNorm2016EWK": {"EWK": 1.06131},
         "XsecAndNormTT+ST": {"TT+ST": 1.182},
@@ -31,7 +38,16 @@ rate_syst_lookup = {
     },
 }
 lumi_syst = {
-    "2016": {
+    "2016preVFP": {
+        "uncor2016": 2.2,
+        "xyfac": 0.9,
+        "len": 0.0,
+        "bb": 0.4,
+        "beta": 0.5,
+        "calib": 0.0,
+        "ghost": 0.4,
+    },
+        "2016postVFP": {
         "uncor2016": 2.2,
         "xyfac": 0.9,
         "len": 0.0,
