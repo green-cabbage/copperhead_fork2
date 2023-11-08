@@ -7,6 +7,7 @@ import dask.dataframe as dd
 
 from python.io import load_dataframe
 from stage2.postprocessor import process_partitions
+from stage3.fitter import run_fits
 
 from config.mva_bins import mva_bins
 from config.variables import variables_lookup
@@ -42,7 +43,7 @@ node_ip = "128.211.149.133"
 node_ip = "128.211.149.140"
 
 if use_local_cluster:
-    ncpus_local = 32
+    ncpus_local = 4
     slurm_cluster_ip = ""
     dashboard_address = f"{node_ip}:34875"
 else:
@@ -58,9 +59,11 @@ parameters = {
     "label": args.label,
     #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
     #"channels": ["ggh"],
-    "channels": ["vbf"],
-    "regions": ["h-sidebands","h-peak"],
-    #"regions": ["h-peak"],
+    "channels": ["ggh"],
+    "mva_channels": ["ggh"],
+    "cats_by_score": True,
+    #"regions": ["h-sidebands","h-peak"],
+    "regions": ["h-peak"],
     
     "syst_variations": ["nominal"],
     # "custom_npartitions": {
@@ -85,8 +88,9 @@ parameters = {
     # < MVA settings >
     "models_path": "/depot/cms/hmm/vscheure/data/trained_models/",
     "dnn_models": {
-        "vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
-        #"ggh": ["ggHtest2"]
+        #"vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
+        "ggh": ["ggHtest2"]
+        #"vbf": ["ValerieDNNtest3"]
         # "vbf": ["pytorch_test"],
         # "vbf": ["pytorch_jun27"],
         #"vbf": ["pytorch_jun27"],
@@ -214,9 +218,11 @@ if __name__ == "__main__":
             # read stage1 outputs
             df = load_dataframe(client, parameters, inputs=[path], dataset=dataset)
             print("have df, starting to compute")
-            #print(df.compute())
+            print(df.compute())
             if not isinstance(df, dd.DataFrame):
+                print("Dataframe not in correct format")
                 continue
             # run processing sequence (categorization, mva, histograms)
-            info = process_partitions(client, parameters, df)
+            info, df = process_partitions(client, parameters, df)
             #print(info)
+            run_fits(client, parameters, df)

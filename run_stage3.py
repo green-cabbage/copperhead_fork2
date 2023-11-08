@@ -60,8 +60,8 @@ parameters = {
     "years": args.year,
     "global_path": "/depot/cms/hmm/vscheure/",
     "label": args.label,
-     "channels": ["vbf"],
-    #"channels": ["ggh"],
+     #"channels": ["vbf"],
+    "channels": ["ggh"],
       #"channels": ["ggh_0jets"],
      #"channels": ["none"],
     #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
@@ -79,8 +79,8 @@ parameters = {
     "plot_ratio": True,
     "plots_path": f"{args.plotsdir}/",
    "dnn_models": {
-       "vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
-    #"ggh": ["ggHtest2"],
+       #"vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
+    "ggh": ["ggHtest2"],
        
        
         #"none": ["ValerieDNNtest2"],
@@ -106,7 +106,7 @@ parameters = {
     #"bdt_models": {},
     #
     # < templates and datacards >
-    "save_templates": True,
+    "save_templates": False,
     "templates_vars": [  "score_ValerieDNNtest3"],
 }
 
@@ -219,3 +219,4 @@ if __name__ == "__main__":
 
     # make datacards
     build_datacards("score_ValerieDNNtest3", yield_df, parameters)
+    

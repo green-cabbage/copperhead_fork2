@@ -3,8 +3,8 @@ import pandas as pd
 
 from python.workflow import parallelize
 from python.io import mkdir
-from stage2.fit_plots import plot
-from stage2.fit_models import chebyshev, doubleCB, bwZ, bwGamma, bwZredux, bernstein
+from stage3.fit_plots import plot
+from stage3.fit_models import chebyshev, doubleCB, bwZ, bwGamma, bwZredux, bernstein
 
 rt.RooMsgService.instance().setGlobalKillBelow(rt.RooFit.ERROR)
 
@@ -67,7 +67,7 @@ def fitter(args, parameters={}):
     mkdir(save_path)
 
     df = df[(df.channel == args["channel"]) & (df.category == args["category"])]
-    norm = df.lumi_wgt.sum()
+    norm = df.wgt_nominal.sum()
 
     the_fitter = Fitter(
         fitranges={"low": 110, "high": 150, "SR_left": 120, "SR_right": 130},

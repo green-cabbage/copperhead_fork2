@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 import torch
-from stage2.mva_models import Net, NetPisaRun2, NetPisaRun2Combination, MvaCategorizer
+from stage2.mva_models import Net,NetSimple, NetPisaRun2, NetPisaRun2Combination, MvaCategorizer
 
 
 training_features = [
@@ -201,8 +201,10 @@ def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
         #df_i = df_i[features]
         #print(df_i[features])
         df_i = torch.tensor(df_i.values).float()
-
-        dnn_model = Net(len(features))
+        if channel == "ggh":
+            dnn_model = NetSimple(len(features))
+        else:
+            dnn_model = Net(len(features))
         #model_path = f"{parameters['models_path']}/{channel}/models/model_{model}_{i}.pt"
         model_path = f"{parameters['models_path']}/{model}/{model}_{i}.pt"
         #print(torch.load(model_path,map_location=torch.device("cpu")).keys())

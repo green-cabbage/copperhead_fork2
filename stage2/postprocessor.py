@@ -8,7 +8,7 @@ from python.io import (
     delete_existing_stage2_parquet,
     save_stage2_output_parquet,
 )
-from stage2.categorizer import split_into_channels
+from stage2.categorizer import (split_into_channels, categorize_by_score)
 from stage2.mva_evaluators import (
     evaluate_pytorch_dnn,
     # evaluate_pytorch_dnn_pisa,
@@ -54,11 +54,14 @@ def process_partitions(client, parameters, df):
         argset["df"] = [(i, df.partitions[i]) for i in range(df.npartitions)]
     # perform categorization, evaluate mva models, fill histograms
     print("starting parallelize")
-    hist_info_dfs = parallelize(on_partition, argset, client, parameters,seq=False)
-
+    all_dfs = parallelize(on_partition, argset, client, parameters,seq=False)
+    hist_info_dfs = all_dfs[0]
+    dfs = all_dfs[1]
     # return info for debugging
+    df_new = pd.concat(dfs)
+    print(list(df.columns))
     hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True)
-    return hist_info_df_full
+    return hist_info_df_full, df_new
 
 
 def on_partition(args, parameters):
@@ -113,7 +116,7 @@ def on_partition(args, parameters):
 
     # < categorization into channels (ggH, VBF, etc.) >
     # split_into_channels(df, v="nominal", vbf_mva_cutoff=vbf_mva_cutoff)
-    split_into_channels(df, v="nominal",ggHsplit=True)
+    split_into_channels(df, v="nominal",ggHsplit=False)
     if parameters["channels"] == ["none"]:
         df.loc[df['channel_nominal'] != "none", 'channel_nominal'] = 'none'
     regions = [r for r in parameters["regions"] if r in df.region.unique()]
@@ -155,6 +158,9 @@ def on_partition(args, parameters):
                     score_name,
                     channel,
                 )
+                #print(channel)
+                #print(score_name)
+                #print(df[df[f"channel_{v}"] == channel][f"score_{model}_{v}"])
                 """
                 df.loc[
                     df[f"channel_{v}"] == channel, score_name
@@ -197,6 +203,7 @@ def on_partition(args, parameters):
                     cut = (df[score_name] > lo) & (df[score_name] <= hi)
                     df.loc[cut, "bin_number"] = i
                 df[score_name] = df["bin_number"]
+                #print(df[score_name])
                 parameters["mva_bins"].update(
                     {
                         model_name: {
@@ -207,7 +214,11 @@ def on_partition(args, parameters):
                         }
                     }
                 )
-
+    
+    #For ggh: categorise by score based on signal eff
+    if parameters["cats_by_score"]:
+        categorize_by_score(df, dnn_models, mode = "fixed_ggh")
+    #print(df[df[f"channel_{v}"] == channel]["category"])
     # < convert desired columns to histograms >
     # not parallelizing for now - nested parallelism leads to a lock
     hist_info_rows = []
@@ -244,7 +255,7 @@ def on_partition(args, parameters):
         save_unbinned(df, dataset, year, npart, channels, parameters)
 
     # < return some info for diagnostics & tests >
-    return hist_info_df
+    return [hist_info_df, df]
 
 
 def save_unbinned(df, dataset, year, npart, channels, parameters):
