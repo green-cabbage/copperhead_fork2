@@ -210,14 +210,14 @@ if __name__ == "__main__":
         # ],
         "data": [
             #'test_file_data_A',
-            "data_A",
-            "data_B",
-            "data_C",
-            "data_D",
-            "data_E",
-            "data_F",
-            "data_G",
-            "data_H",
+            #"data_A",
+            #"data_B",
+            #"data_C",
+            #"data_D",
+            #"data_E",
+            #"data_F",
+            #"data_G",
+            #"data_H",
        ],
         "signal": [
             #"ggh_powheg",
@@ -248,8 +248,8 @@ if __name__ == "__main__":
             # "ewk_m50"
         ],
         "other_mc": [
-            #"ttjets_dl",
-            #"ttjets_sl",
+            "ttjets_dl",
+            "ttjets_sl",
             #"ttz",
             #"ttw",
             #"st_tw_top",

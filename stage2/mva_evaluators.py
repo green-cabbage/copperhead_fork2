@@ -34,27 +34,7 @@ training_features = [
     "nsoftjets5",
     "htsoft2",
 ]
-training_features_ggh = [
-    "mu1_pt_over_mass",
-    "mu2_pt_over_mass",
-    "mu1_eta",
-    "mu2_eta",
-    "dimuon_pt",
-    "dimuon_eta",
-    "dimuon_pisa_mass_res",
-    "dimuon_cos_theta_cs_pisa",
-    "dimuon_phi_cs_pisa",
-    "jet1_pt",
-    "jet2_pt",
-    "jj_mass",
-    "jj_dEta",
-    "jj_dPhi",
-    "mmj1_dEta",
-    "mmj1_dPhi",
-    "mmj_min_dEta",
-    "mmj_min_dPhi",
-    "zeppenfeld",
-]
+training_features = ['dimuon_cos_theta_cs', 'dimuon_dEta', 'dimuon_dPhi', 'dimuon_dR', 'dimuon_eta', 'dimuon_phi', 'dimuon_phi_cs', 'dimuon_pt', 'dimuon_pt_log', 'jet1_eta_nominal', 'jet1_phi_nominal', 'jet1_pt_nominal', 'jet1_qgl_nominal', 'jet2_eta_nominal', 'jet2_phi_nominal', 'jet2_pt_nominal', 'jet2_qgl_nominal', 'jj_dEta_nominal', 'jj_dPhi_nominal', 'jj_eta_nominal', 'jj_mass_nominal', 'jj_mass_log_nominal', 'jj_phi_nominal', 'jj_pt_nominal', 'll_zstar_log_nominal', 'mmj1_dEta_nominal', 'mmj1_dPhi_nominal', 'mmj2_dEta_nominal', 'mmj2_dPhi_nominal', 'mmj_min_dEta_nominal', 'mmj_min_dPhi_nominal', 'mmjj_eta_nominal', 'mmjj_mass_nominal', 'mmjj_phi_nominal', 'mmjj_pt_nominal', 'mu1_eta', 'mu1_iso', 'mu1_phi', 'mu1_pt_over_mass', 'mu2_eta', 'mu2_iso', 'mu2_phi', 'mu2_pt_over_mass', 'zeppenfeld_nominal']
 
 training_features_mass = [
     "dimuon_mass",
@@ -93,11 +73,12 @@ def prepare_features(df, parameters, channel, variation="nominal", add_year=Fals
     if add_year:
         
         features = training_features + ["year"]
-    if channel == "ggh":
-        features = training_features_ggh
+    #if channel == "ggh":
+        #features = training_features_ggh
     else:
         features = training_features
     features_var = []
+    #print(features)
     for trf in features:
         if f"{trf}_{variation}" in df.columns:
             features_var.append(f"{trf}_{variation}")
@@ -360,7 +341,8 @@ def evaluate_pytorch_dnn_pisa(
 def evaluate_bdt(df, variation, model, parameters, score_name):
     # if parameters["do_massscan"]:
     #     mass_shift = parameters["mass"] - 125.0
-    features = prepare_features(df, parameters, variation, add_year=True)
+    features = prepare_features(df, parameters, variation, add_year=False)
+    #model = f"{model}_{parameters['years'][0]}"
     score_name = f"score_{model}_{variation}"
     try:
         df = df.compute()
@@ -372,15 +354,17 @@ def evaluate_bdt(df, variation, model, parameters, score_name):
 
     df.loc[:, score_name] = 0
     nfolds = 4
+    
     for i in range(nfolds):
         # train_folds = [(i + f) % nfolds for f in [0, 1]]
         # val_folds = [(i + f) % nfolds for f in [2]]
+        
         eval_folds = [(i + f) % nfolds for f in [3]]
 
         eval_filter = df.event.mod(nfolds).isin(eval_folds)
         scalers_path = f"{parameters['models_path']}/{model}/scalers_{model}_{i}.npy"
-        scalers = np.load(scalers_path)
-        model_path = f"{parameters['models_path']}/{model}/model_{model}_{i}.pkl"
+        scalers = np.load(scalers_path, allow_pickle=True)
+        model_path = f"{parameters['models_path']}/{model}/{model}_{i}.pkl"
 
         bdt_model = pickle.load(open(model_path, "rb"))
         df_i = df[eval_filter]

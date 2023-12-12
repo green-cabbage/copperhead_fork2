@@ -5,7 +5,7 @@ from dask.distributed import get_worker
 import pickle
 import glob
 import re
-import uproot3
+
 
 
 def mkdir(path):
@@ -21,9 +21,20 @@ def remove(path):
     except Exception:
         pass
 
+def split_df(df, chunk_size=100000):
+    chunks = []
+    num_chunks = len(df) // chunk_size + 1
+
+    for index in range(num_chunks):
+        chunks.append(df[index * chunk_size:(index+1) * chunk_size])
+
+    return chunks
+
+
 
 def save_stage1_output_to_parquet(output, out_dir):
     name = None
+    
     for key, task in get_worker().tasks.items():
         if task.state == "executing":
             name = key[-32:]
@@ -31,11 +42,23 @@ def save_stage1_output_to_parquet(output, out_dir):
         return
     for dataset in output.dataset.unique():
         df = output[output.dataset == dataset]
+      
         if df.shape[0] == 0:
             return
         mkdir(f"{out_dir}/{dataset}")
         df.to_parquet(path=f"{out_dir}/{dataset}/{name}.parquet")
+        
+def save_stage2_output_to_csv(output, out_dir):
 
+    for dataset in output.dataset.unique():
+        df = output[output.dataset == dataset]
+        name = dataset
+        print(name)
+        if df.shape[0] == 0:
+            return
+        mkdir(f"{out_dir}/{dataset}")
+        df.to_csv(f"{out_dir}/{dataset}/{name}.csv")
+        
 def save_stage1_output_to_csv(output, out_dir):
     name = None
     for key, task in get_worker().tasks.items():
@@ -132,6 +155,8 @@ def load_pandas_from_parquet(path):
 
 
 def save_stage2_output_hists(hist, var_name, dataset, year, parameters, npart=None):
+    #if "score" in var_name:
+    #print(var_name)
     global_path = parameters.get("global_path", None)
     label = parameters.get("label", None)
 
@@ -189,7 +214,7 @@ def load_stage2_output_hists(argset, parameters):
         return
 
     path = f"{global_path}/{label}/stage2_histograms/{var_name}/{year}/"
-    print(path)
+    #print(path)
     paths = [f"{path}/{dataset}.pickle"]
     for fname in os.listdir(path):
         if re.fullmatch(rf"{dataset}_[0-9]+.pickle", fname):
@@ -253,6 +278,7 @@ def delete_existing_stage2_parquet(datasets, years, parameters):
 
 
 def save_template(templates, out_name, parameters):
+    import uproot3
     out_file = uproot3.recreate(out_name)
     for tmp in templates:
         out_file[tmp._fName] = tmp

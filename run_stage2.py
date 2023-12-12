@@ -5,7 +5,8 @@ import dask
 from dask.distributed import Client
 import dask.dataframe as dd
 
-from python.io import load_dataframe
+from python.io import load_dataframe,mkdir,save_stage2_output_to_csv
+
 from stage2.postprocessor import process_partitions
 from stage3.fitter import run_fits
 
@@ -43,7 +44,7 @@ node_ip = "128.211.149.133"
 node_ip = "128.211.149.140"
 
 if use_local_cluster:
-    ncpus_local = 4
+    ncpus_local = 30
     slurm_cluster_ip = ""
     dashboard_address = f"{node_ip}:34875"
 else:
@@ -60,8 +61,15 @@ parameters = {
     #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
     #"channels": ["ggh"],
     "channels": ["ggh"],
+        "category": ["cat1","cat2","cat3","cat4","cat5"],
+    #"category": ["All"],
     "mva_channels": ["ggh"],
     "cats_by_score": True,
+    #"cats_by_score": False,
+    
+    "signals": ["ggh_powheg"],
+    "data": [ "data_x",
+            ],
     #"regions": ["h-sidebands","h-peak"],
     "regions": ["h-peak"],
     
@@ -89,7 +97,7 @@ parameters = {
     "models_path": "/depot/cms/hmm/vscheure/data/trained_models/",
     "dnn_models": {
         #"vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
-        "ggh": ["ggHtest2"]
+        #"ggh": ["ggHtest2"]
         #"vbf": ["ValerieDNNtest3"]
         # "vbf": ["pytorch_test"],
         # "vbf": ["pytorch_jun27"],
@@ -114,47 +122,48 @@ parameters = {
     },
     # "mva_categorizer": "3layers_64_32_16_all_feat",
     # "vbf_mva_cutoff": 0.5,
-   # "bdt_models": {
-        # "vbf": ["bdt_sep13"],
-    #},
+    "bdt_models": {
+         "ggh": ["BDTperyear"],
+    },
     "mva_bins_original": mva_bins,
 }
 
 parameters["datasets"] = [
-    "data_A",
-    "data_B",
-    "data_C",
-    "data_D",
-    "data_E",
-    "data_F",
-    "data_G",
-    "data_H",
-    "dy_M-50",
-    "dy_M-50_nocut",
-    "dy_M-100To200",
+    #"data_A",
+    #"data_B",
+    #"data_C",
+    #"data_D",
+    #"data_E",
+    #"data_F",
+    #"data_G",
+    #"data_H",
+    "data_x",
+    #"dy_M-50",
+    #"dy_M-50_nocut",
+    #"dy_M-100To200",
     #"dy_1j",
     #"dy_2j",
     #"dy_m105_160_amc",
     #"dy_m105_160_vbf_amc",
     #"ewk_lljj_mll105_160_py_dipole",
-    "ewk_lljj_mll50_mjj120",
-    "ttjets_dl",
-    "ttjets_sl",
+    #"ewk_lljj_mll50_mjj120",
+    #"ttjets_dl",
+    #"ttjets_sl",
     #"ttw",
     #"ttz",
-    "st_tw_top",
-    "st_tw_antitop",
-    "ww_2l2nu",
-    "wz_2l2q",
-    "wz_1l1nu2q",
-    "wz_3lnu",
-    "zz",
+    #"st_tw_top",
+    #"st_tw_antitop",
+    #"ww_2l2nu",
+    #"wz_2l2q",
+    #"wz_1l1nu2q",
+    #"wz_3lnu",
+    #"zz",
     #"www",
     #"wwz",
     #wzz",
     #"zzz",
     "ggh_powheg",
-    "vbf_powheg",
+    #"vbf_powheg",
 ]
 # using one small dataset for debugging
 #parameters["datasets"] = ["ggh_localTest"]
@@ -171,7 +180,7 @@ if __name__ == "__main__":
             #dashboard_address=dashboard_address,
             n_workers=ncpus_local,
             threads_per_worker=1,
-            memory_limit="8GB",
+            memory_limit="32GB",
         )
     else:
         print(
@@ -184,7 +193,7 @@ if __name__ == "__main__":
 
     # add MVA scores to the list of variables to create histograms from
     dnn_models = list(parameters["dnn_models"].values())
-    bdt_models =[]
+    bdt_models =list(parameters["bdt_models"].values())
     #bdt_models = list(parameters["bdt_models"].values())
     for models in dnn_models + bdt_models:
        for model in models:
@@ -194,6 +203,14 @@ if __name__ == "__main__":
     #client = None
     all_paths = {}
     for year in parameters["years"]:
+        out_dir = parameters["global_path"]
+        mkdir(out_dir)
+        out_dir += "/" + parameters["label"]
+        mkdir(out_dir)
+        out_dir += "/" + "stage2_output"
+        mkdir(out_dir)
+        out_dir += "/" + str(year)
+        mkdir(out_dir)
         all_paths[year] = {}
         for dataset in parameters["datasets"]:
             paths = glob.glob(
@@ -217,12 +234,24 @@ if __name__ == "__main__":
 
             # read stage1 outputs
             df = load_dataframe(client, parameters, inputs=[path], dataset=dataset)
+            if dataset == "data_x":
+                df = df.compute()
+                df.loc[df.dataset=="data_A", "dataset"] = "data_x"
+                df.loc[df.dataset=="data_B", "dataset"] = "data_x"
+                df.loc[df.dataset=="data_C", "dataset"] = "data_x"
+                df.loc[df.dataset=="data_D", "dataset"] = "data_x"
+                df.loc[df.dataset=="data_E", "dataset"] = "data_x"
+                df.loc[df.dataset=="data_F", "dataset"] = "data_x"
+                df.loc[df.dataset=="data_G", "dataset"] = "data_x"
+                df.loc[df.dataset=="data_H", "dataset"] = "data_x"
             print("have df, starting to compute")
-            print(df.compute())
-            if not isinstance(df, dd.DataFrame):
-                print("Dataframe not in correct format")
-                continue
+            #print(df.compute())
+            #if not isinstance(df, dd.DataFrame):
+                #print("Dataframe not in correct format")
+                #continue
             # run processing sequence (categorization, mva, histograms)
             info, df = process_partitions(client, parameters, df)
-            #print(info)
-            run_fits(client, parameters, df)
+                
+            save_stage2_output_to_csv(df,out_dir)
+
+            #run_fits(client, parameters, df)

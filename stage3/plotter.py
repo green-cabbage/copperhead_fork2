@@ -81,6 +81,7 @@ def plotter(client, parameters, hist_df=None, timer=None):
         "year": parameters["years"],
         "region": parameters["regions"],
         "channel": parameters["channels"],
+        "category": parameters["category"],
         "var_name": [
             v for v in hist_df.var_name.unique() if v in parameters["plot_vars"]
         ],
@@ -97,8 +98,11 @@ def plot(args, parameters={}):
     region = args["region"]
     channel = args["channel"]
     var_name = args["var_name"]
+    category = args["category"]
     hist = args["df"].loc[(args["df"].var_name == var_name) & (args["df"].year == year)]
+    pd.set_option('display.max_colwidth', None)
 
+    print(hist)
     if var_name in variables_lookup.keys():
         var = parameters["variables_lookup"][var_name]
     else:
@@ -116,7 +120,7 @@ def plot(args, parameters={}):
     # temporary
     variation = "nominal"
 
-    slicer = {"region": region, "channel": channel, "variation": variation}
+    slicer = {"region": region, "channel": channel, "variation": variation, "category": category}
     fig = plt.figure()
 
     if parameters["plot_ratio"]:
@@ -245,7 +249,7 @@ def plot(args, parameters={}):
     if save_plots:
         path = parameters["plots_path"]
         mkdir(path)
-        out_name = f"{path}/{var.name}_{region}_{channel}_{year}.png"
+        out_name = f"{path}/{var.name}_{region}_{channel}_{category}_{year}.png"
         fig.savefig(out_name)
         print(f"Saved: {out_name}")
 

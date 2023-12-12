@@ -1,26 +1,30 @@
 import ROOT as rt
 import pandas as pd
-
-from python.workflow import parallelize
-from python.io import mkdir
+from python.workflow_noDask import non_parallelize
 from stage3.fit_plots import plot
 from stage3.fit_models import chebyshev, doubleCB, bwZ, bwGamma, bwZredux, bernstein
 
 rt.RooMsgService.instance().setGlobalKillBelow(rt.RooFit.ERROR)
+#t.gSystem.Load ("../CMSSW_12_4_15/lib/el8_amd64_gcc10/libHiggsAnalysisCombinedLimit.so")
 
-
-def run_fits(client, parameters, df):
+def mkdir(path):
+    try:
+        os.mkdir(path)
+    except Exception:
+        pass
+def run_fits(parameters, df):
     signal_ds = parameters.get("signals", [])
+    data_ds = parameters.get("data", [])
     all_datasets = df.dataset.unique()
     signals = [ds for ds in all_datasets if ds in signal_ds]
-    backgrounds = [ds for ds in all_datasets if ds not in signal_ds]
+    backgrounds = [ds for ds in all_datasets if ds in data_ds]
     fit_setups = []
     if len(backgrounds) > 0:
         fit_setup = {
             "label": "background",
             "mode": "bkg",
             "df": df[df.dataset.isin(backgrounds)],
-            "blinded": True,
+            "blinded": False,
         }
         fit_setups.append(fit_setup)
     for ds in signals:
@@ -32,7 +36,7 @@ def run_fits(client, parameters, df):
         "channel": parameters["mva_channels"],
         "category": df["category"].dropna().unique(),
     }
-    fit_ret = parallelize(fitter, argset, client, parameters)
+    fit_ret = non_parallelize(fitter, argset, parameters)
     df_fits = pd.DataFrame(columns=["label", "channel", "category", "chi2"])
     for fr in fit_ret:
         df_fits = pd.concat([df_fits, pd.DataFrame.from_dict(fr)])
@@ -47,7 +51,7 @@ def run_fits(client, parameters, df):
         .sort_index()
         .drop_duplicates()
     )
-    print(df_fits)
+    #print(df_fits)
     df_fits.to_pickle("best_chi2.pkl")
     return fit_ret
 
@@ -57,18 +61,25 @@ def fitter(args, parameters={}):
     df = fit_setup["df"]
     label = fit_setup["label"]
     mode = fit_setup["mode"]
+    print(mode)
     blinded = fit_setup.get("blinded", False)
-    save = parameters.get("save_fits", False)
+    save = parameters.get("save_fits", True)
     save_path = parameters.get("save_fits_path", "fits/")
     channel = args["channel"]
+    
     category = args["category"]
 
     save_path = save_path + f"/fits_{channel}_{category}/"
     mkdir(save_path)
-
-    df = df[(df.channel == args["channel"]) & (df.category == args["category"])]
+    print(df)
+    df = df[(df.channel_nominal == channel) & (df.category == category)]
+    print(channel)
+    print(category)
+    print("in fitter")
+    print(df)
     norm = df.wgt_nominal.sum()
-
+    #norm = 1.
+    
     the_fitter = Fitter(
         fitranges={"low": 110, "high": 150, "SR_left": 120, "SR_right": 130},
         fitmodels={
@@ -84,7 +95,7 @@ def fitter(args, parameters={}):
         filename_ext="",
     )
     if mode == "bkg":
-        chi2 = the_fitter.simple_fit(
+         chi2 = the_fitter.simple_fit(
             dataset=df,
             label=label,
             category=category,
@@ -96,19 +107,19 @@ def fitter(args, parameters={}):
             save=save,
             save_path=save_path,
             norm=norm,
-        )
+         )
         # generate and fit pseudo-data
-        the_fitter.fit_pseudodata(
-            label="pseudodata_" + label,
-            category=category,
-            blinded=blinded,
-            model_names=["bwz", "bwz_redux", "bwgamma"],
-            fix_parameters=False,
-            title="Pseudo-data",
-            save=save,
-            save_path=save_path,
-            norm=norm,
-        )
+        #the_fitter.fit_pseudodata(
+            #label="pseudodata_" + label,
+            #category=category,
+            #blinded=blinded,
+            #model_names=["bwz", "bwz_redux", "bwgamma"],
+            #fix_parameters=False,
+            #title="Pseudo-data",
+            #save=save,
+            #save_path=save_path,
+            #norm=norm,
+        #)
 
     if mode == "sig":
         chi2 = the_fitter.simple_fit(
@@ -135,7 +146,7 @@ class Fitter(object):
         )
         self.fitmodels = kwargs.get("fitmodels", {})
         self.requires_order = kwargs.get("requires_order", [])
-        self.channel = kwargs.get("channel", "ggh_0jets")
+        self.channel = kwargs.get("channel", "ggh")
         self.filename_ext = kwargs.get("filename_ext", "")
 
         self.data_registry = {}
@@ -152,7 +163,7 @@ class Fitter(object):
         model_names=[],
         orders={},
         fix_parameters=False,
-        store_multipdf=False,
+        store_multipdf=True,
         title="",
         save=True,
         save_path="./",
@@ -163,8 +174,9 @@ class Fitter(object):
         if len(model_names) == 0:
             raise Exception("Error: empty list of fit models!")
 
-        ds_name = f"ds_{label}"
-        self.add_data(dataset, ds_name=ds_name, blinded=blinded)
+        ds_name = f"data_{label}"
+        self.add_data(dataset, norm, ds_name=ds_name, blinded=blinded)
+        #print(dataset["dimuon_mass"])
         ndata = len(dataset["dimuon_mass"].values)
 
         for model_name in model_names:
@@ -189,19 +201,7 @@ class Fitter(object):
             save_path=save_path,
             norm=norm,
         )
-        if store_multipdf:
-            cat = rt.RooCategory(
-                f"pdf_index_{self.channel}_{category}_{label}",
-                "index of the active pdf",
-            )
-            pdflist = rt.RooArgList()
-            for model_name in model_names:
-                pdflist.add(self.workspace.pdf(model_name))
-            multipdf = rt.RooMultiPdf(
-                f"multipdf_{self.channel}_{category}_{label}", "multipdf", cat, pdflist
-            )
-            # self.add_model("multipdf", category=category)
-            getattr(self.workspace, "import")(multipdf)
+
         if save:
             mkdir(save_path)
             self.save_workspace(
@@ -215,16 +215,16 @@ class Fitter(object):
             "mass", "mass", self.fitranges["low"], self.fitranges["high"]
         )
         mass.setRange(
-            "sideband_left", self.fitranges["low"], self.fitranges["SR_left"] + 0.1
+            "sideband_left", self.fitranges["low"], self.fitranges["SR_left"]
         )
         mass.setRange(
-            "sideband_right", self.fitranges["SR_right"] - 0.1, self.fitranges["high"]
+            "sideband_right", self.fitranges["SR_right"], self.fitranges["high"]
         )
         mass.setRange("window", self.fitranges["low"], self.fitranges["high"])
         mass.SetTitle("m_{#mu#mu}")
         mass.setUnit("GeV")
-        # w.Import(mass)
-        getattr(w, "import")(mass)
+        w.Import(mass)
+        #getattr(w, "import")(mass)
         # w.Print()
         return w
 
@@ -233,19 +233,24 @@ class Fitter(object):
         self.workspace.Write()
         outfile.Close()
 
-    def add_data(self, data, ds_name="ds", blinded=False):
+    def add_data(self, data, norm, ds_name="ds", blinded=False):
         if ds_name in self.data_registry.keys():
             raise Exception(
                 f"Error: Dataset with name {ds_name} already exists in workspace!"
             )
-
+        norm_var = rt.RooRealVar(f"norm{ds_name}", f"norm{ds_name}", norm)
+        try:
+            #self.workspace.Import(norm_var)
+            getattr(self.workspace, "import")(norm_var)
+        except Exception:
+            print(f"{norm_var} already exists in workspace, skipping...")
         if isinstance(data, pd.DataFrame):
             data = self.fill_dataset(
-                data["dimuon_mass"].values, self.workspace.obj("mass"), ds_name=ds_name
+                data["dimuon_mass"].values,norm_var, self.workspace.obj("mass"), ds_name=ds_name
             )
         elif isinstance(data, pd.Series):
             data = self.fill_dataset(
-                data.values, self.workspace.obj("mass"), ds_name=ds_name
+                data.values, norm_var,self.workspace.obj("mass"), ds_name=ds_name
             )
         elif not (
             isinstance(data, rt.TH1F)
@@ -259,7 +264,8 @@ class Fitter(object):
 
         self.data_registry[ds_name] = type(data)
         # self.workspace.Import(data, ds_name)
-        getattr(self.workspace, "import")(data, ds_name)
+        getattr(self.workspace, "import")(data)
+
 
     def fit_pseudodata(
         self,
@@ -296,8 +302,8 @@ class Fitter(object):
             data = self.workspace.pdf(model_key).generate(
                 rt.RooArgSet(self.workspace.obj("mass")), norm
             )
-            ds_name = f"pseudodata_{model_key}"
-            self.add_data(data, ds_name=ds_name)
+            ds_name = f"data_{model_key}_pseudo"
+            self.add_data(data, norm, ds_name=ds_name)
             chi2[model_key] = self.fit(
                 ds_name,
                 norm,
@@ -319,9 +325,14 @@ class Fitter(object):
             )
         return chi2
 
-    def fill_dataset(self, data, x, ds_name="ds"):
-        cols = rt.RooArgSet(x)
-        ds = rt.RooDataSet(ds_name, ds_name, cols)
+    def fill_dataset(self,  data,norm_var, x, ds_name="ds"):
+        
+        if "nonsense" in ds_name:
+            cols = rt.RooArgSet(x,norm_var)
+            ds = rt.RooDataSet(ds_name, ds_name, cols, f"norm{ds_name}")
+        else:
+            cols = rt.RooArgSet(x)
+            ds = rt.RooDataSet(ds_name, ds_name, cols) 
         for datum in data:
             if (datum < x.getMax()) and (datum > x.getMin()):
                 x.setVal(datum)
@@ -367,7 +378,7 @@ class Fitter(object):
         orders={},
         blinded=False,
         fix_parameters=False,
-        save=False,
+        save=True,
         save_path="./",
         category="cat0",
         label="",
@@ -401,16 +412,34 @@ class Fitter(object):
             chi2[model_key] = self.get_chi2(model_key, ds_name, ndata)
 
             norm_var = rt.RooRealVar(f"{model_key}_norm", f"{model_key}_norm", norm)
+            #print("In add data")
             try:
-                # self.workspace.Import(norm_var)
+                #self.workspace.Import(norm_var)
                 getattr(self.workspace, "import")(norm_var)
             except Exception:
                 print(f"{norm_var} already exists in workspace, skipping...")
 
+
         if save:
             mkdir(save_path)
             plot(self, ds_name, pdfs, blinded, category, label, title, save_path)
-
+        if True:
+            cat = rt.RooCategory(
+                f"pdf_index",
+                "index of the active pdf",
+            )
+            pdflist = rt.RooArgList()
+            for model_name in model_names_all:
+                model_key = model_name + tag
+                print(f"adding {model_name} to Multipdf")
+                pdflist.add( pdfs[model_key])
+            print(pdflist)
+            multipdf = rt.RooMultiPdf(
+                f"multipdf_{self.channel}_{category}_{label}", "multipdf", cat, pdflist
+            )
+            #self.add_model("multipdf", category=category)
+            getattr(self.workspace, "import")(cat)
+            getattr(self.workspace, "import")(multipdf)
         return chi2
 
     def get_chi2(self, model_key, ds_name, ndata):
@@ -421,7 +450,7 @@ class Fitter(object):
             "ext", "ext", self.workspace.pdf(model_key), normalization
         )
         xframe = self.workspace.obj("mass").frame()
-        ds = self.workspace.obj(ds_name)
+        ds = self.workspace.data(ds_name)
         ds.plotOn(xframe, rt.RooFit.Name(ds_name))
         model.plotOn(xframe, rt.RooFit.Name(model_key))
         nparam = model.getParameters(ds).getSize()

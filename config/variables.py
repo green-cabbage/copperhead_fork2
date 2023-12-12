@@ -109,6 +109,8 @@ variables.append(Variable("event", "event", 100, 0, 10000000))
 variables.append(Variable("run", "run", 1, 0, 1))
 variables.append(Variable("score_ValerieDNNtest2", "score_ValerieDNNtest2",20,0,2))
 variables.append(Variable("score_ValerieDNNtest3", "score_ValerieDNNtest3",20,0,2))
+variables.append(Variable("score_BDT_model_earlystop50_2018_ValerieBDTtest", "BDT_model_earlystop50_2018_ValerieBDTtest",20,0,1))
+
 
 variables_lookup = {}
 for v in variables:

@@ -9,7 +9,7 @@ from stage1.corrections.rochester import apply_roccor
 from stage1.corrections.fsr_recovery import fsr_recovery
 from scipy.optimize import curve_fit
 import sys
-
+import pdb
 
 from ROOT import *
 gSystem.Load("stage3/lib/RooDoubleCB/RooDoubleCB_cxx")
@@ -205,17 +205,22 @@ if sys.argv[1] =="Z":
     fname = "root://cmsxrootd.fnal.gov///store/mc/RunIISummer20UL18NanoAODv9/DY1JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/120000/3F74AD49-80AE-9B4B-9B30-CE5E644724E4.root"
 if (sys.argv[1] =="Higgs") or   (sys.argv[1] =="cats"):
     fname = "root://cmsxrootd.fnal.gov///store/mc/RunIISummer20UL18NanoAODv9/GluGluHToMuMu_M125_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/2810000/C4DAB63C-E2A1-A541-93A8-3F46315E362C.root"
+if sys.argv[1] == "v12":
+    fname= "root://cmsxrootd.fnal.gov///store/mc/Run3Summer22EENanoAODv12/DYJetsToLL_M-50_TuneCP5_13p6TeV-madgraphMLM-pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v5-v2/30000/505c3e6c-6ed4-4d8d-9e46-6753dd018ca8.root"
+if sys.argv[1] == "v11":
+    fname= "root://cmsxrootd.fnal.gov///store/data/Run2022C/SingleMuon/NANOAOD/ReRecoNanoAODv11-v1/2540000/02155800-7bb1-40d1-be58-c6308fb79995.root"
 #fname = "tests/samples/ewk_lljj_mll105_160_ptj0_NANOV10_2018.root"
 
 events = NanoEventsFactory.from_root(
     fname,
     schemaclass=NanoAODSchema.v6,
     #metadata={"dataset": "DY"},
-    #entry_stop=10000,
+    entry_stop=10000,
 ).events()
 print(events.fields)
-print(events.events.fields)
-
+print(events.event.fields)
+print(events.Muon.fields)
+pdb.set_trace()
 #has_fsr = fsr_recovery(events)
 #events["Muon", "pt"] = events.Muon.pt_fsr
 #events["Muon", "eta"] = events.Muon.eta_fsr

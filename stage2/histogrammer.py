@@ -7,12 +7,15 @@ from python.variable import Variable
 from python.io import save_stage2_output_hists
 
 
-def make_histograms(df, var_name, year, dataset, regions, channels, npart, parameters):
+def make_histograms(df, var_name, year, dataset, regions, channels, categories, npart, parameters):
     # try to get binning from config
+    if "BDT" in var_name:
+        var_name = f"{var_name}_{year}"
     if var_name in parameters["variables_lookup"].keys():
         var = parameters["variables_lookup"][var_name]
     else:
         var = Variable(var_name, var_name, 50, 0, 5)
+    #print(var_name)
 
     # prepare list of systematic variations
     wgt_variations = [w for w in df.columns if ("wgt_" in w)]
@@ -29,20 +32,27 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
     hist = (
         Hist.new.StrCat(regions, name="region")
         .StrCat(channels, name="channel")
+        .StrCat(categories, name="category")
         .StrCat(["value", "sumw2"], name="val_sumw2")
     )
 
     # add axis for observable variable
     if "score" in var.name:
-        model_name = var.name.replace("score_", "").replace("_nominal", "")
+        #print(var.name)
+        if "BDT" in var.name: 
+            model_name = var.name.replace("score_", "").replace("_nominal", "")
+            model_name = f"{model_name}_{year}"
+        else:
+            model_name = var.name.replace("score_", "").replace("_nominal", "")
         if "mva_bins" in parameters.keys():
             if model_name in parameters["mva_bins"].keys():
                 #print(parameters["mva_bins"][model_name])
                 bins = parameters["mva_bins"][model_name][f"{year}"]
             else:
-                bins = np.arange(102) / 50.0
+                bins = np.arange(41) / 40.0
+                #print( model_name)
         else:
-            bins = np.arange(102) / 50.0
+            bins = np.arange(41) / 40.0
         hist = hist.Var(bins, name=var.name)
     else:
         hist = hist.Reg(var.nbins, var.xmin, var.xmax, name=var.name, label=var.caption)
@@ -59,6 +69,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         "w": wgt_variations,
         "v": syst_variations,
         "channel": channels,
+        "category": categories,
     }
     loop_args = [
         dict(zip(loop_args.keys(), values))
@@ -69,6 +80,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
     for loop_arg in loop_args:
         region = loop_arg["region"]
         channel = loop_arg["channel"]
+        category = loop_arg["category"]
         w = loop_arg["w"]
         v = loop_arg["v"]
         variation = get_variation(w, v)
@@ -79,6 +91,8 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         if var_name not in df.columns:
             if var.name in df.columns:
                 var_name = var.name
+            if f"{var.name}_{year}" in df.columns:
+                var_name = f"{var.name}_{year}"
             else:
                 continue
 
@@ -87,11 +101,12 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
             & (df.region == region)
             & (df.year == year)
             & (df[f"channel_{v}"] == channel)
+            & (df["category"] == category)
         )
         data = df.loc[slicer, var_name]
         weight = df.loc[slicer, w]
 
-        to_fill = {var.name: data, "region": region, "channel": channel}
+        to_fill = {var.name: data, "region": region, "channel": channel, "category": category}
 
         to_fill_value = to_fill.copy()
         to_fill_value["val_sumw2"] = "value"
@@ -110,6 +125,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
             "variation": variation,
             "region": region,
             "channel": channel,
+            "category": category,
             "yield": weight.sum(),
         }
         if weight.sum() == 0:
@@ -127,10 +143,13 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
     # (partitions will be joined in stage3)
     save_hists = parameters.get("save_hists", False)
     if save_hists:
+        #if "score" in var.name:
+            #print(var.name)
         save_stage2_output_hists(hist, var.name, dataset, year, parameters, npart)
 
     # return info for debugging
     hist_info_rows = pd.DataFrame(hist_info_rows)
+    #print(hist_info_rows)
     return hist_info_rows
 
 

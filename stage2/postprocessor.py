@@ -7,6 +7,7 @@ from python.io import (
     delete_existing_stage2_hists,
     delete_existing_stage2_parquet,
     save_stage2_output_parquet,
+    split_df
 )
 from stage2.categorizer import (split_into_channels, categorize_by_score)
 from stage2.mva_evaluators import (
@@ -30,7 +31,7 @@ def process_partitions(client, parameters, df):
 
     df = df[[c for c in df.columns if c not in ignore_columns]]
 
-    for key in ["channels", "regions", "syst_variations", "hist_vars", "datasets"]:
+    for key in ["channels", "regions", "categories","syst_variations", "hist_vars", "datasets"]:
         if key in parameters:
             parameters[key] = list(set(parameters[key]))
 
@@ -55,12 +56,18 @@ def process_partitions(client, parameters, df):
     # perform categorization, evaluate mva models, fill histograms
     print("starting parallelize")
     all_dfs = parallelize(on_partition, argset, client, parameters,seq=False)
-    hist_info_dfs = all_dfs[0]
-    dfs = all_dfs[1]
+    hist_info_df_full = all_dfs[0][0]
+    df_new = all_dfs[0][1]
     # return info for debugging
-    df_new = pd.concat(dfs)
-    print(list(df.columns))
-    hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True)
+    #print(len(all_dfs))
+    #print(all_dfs[0][1])
+    for i in range(len(all_dfs)-1):
+        hist_info_df_full.append(all_dfs[i+1][0])
+        df_new.append(all_dfs[i+1][1])
+    #df_new = pd.concat(dfs).reset_index(drop=True)
+    #print(df_new)
+    #hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True)
+
     return hist_info_df_full, df_new
 
 
@@ -93,7 +100,9 @@ def on_partition(args, parameters):
         df.loc[df['region'] != "none", 'region'] = 'none'
     wgts = [c for c in df.columns if "wgt" in c]
     df.loc[:, wgts] = df.loc[:, wgts].fillna(0)
-    df.fillna(-999.0, inplace=True)
+    df.jet1_has_matched_gen_nominal.fillna(False, inplace=True)
+    df.jet2_has_matched_gen_nominal.fillna(False, inplace=True)
+    df.fillna(-99.0, inplace=True)
     df = df[(df.dataset == dataset) & (df.year == year)]
 
     # VBF filter
@@ -125,9 +134,9 @@ def on_partition(args, parameters):
     ]
 
     # split DY by genjet multiplicity
-    if "dy" in dataset:
-        df.jet1_has_matched_gen_nominal.fillna(False, inplace=True)
-        df.jet2_has_matched_gen_nominal.fillna(False, inplace=True)
+
+    if "dyblub" in dataset:
+
         df["two_matched_jets"] = (
             (df.jet1_has_matched_gen_nominal==True) & (df.jet2_has_matched_gen_nominal==True)
         )
@@ -147,6 +156,7 @@ def on_partition(args, parameters):
             if channel not in parameters["channels"]:
                 continue
             for model in models:
+                
                 score_name = f"score_{model}_{v}"
                 df.loc[
                     df[f"channel_{v}"] == channel, score_name
@@ -179,6 +189,7 @@ def on_partition(args, parameters):
             if channel not in parameters["channels"]:
                 continue
             for model in models:
+                model = f"{model}_{parameters['years'][0]}"
                 score_name = f"score_{model}_{v}"
                 df.loc[df[f"channel_{v}"] == channel, score_name] = evaluate_bdt(
                     df[df[f"channel_{v}"] == channel], v, model, parameters, score_name
@@ -214,22 +225,30 @@ def on_partition(args, parameters):
                         }
                     }
                 )
-    
+    #print(df)
     #For ggh: categorise by score based on signal eff
+    df["category"] = "All"
     if parameters["cats_by_score"]:
-        categorize_by_score(df, dnn_models, mode = "fixed_ggh")
+        categorize_by_score(df, bdt_models, mode = "fixed_ggh", year = parameters["years"][0])
+    #print(df)
+    categories = [c for c in df["category"].unique()
+       #c for c in parameters["category"] if c in df["category"].unique()
+    ]
+    df_for_fits = df
+    #print(categories)
+    #print(df_for_fits)
     #print(df[df[f"channel_{v}"] == channel]["category"])
     # < convert desired columns to histograms >
     # not parallelizing for now - nested parallelism leads to a lock
     hist_info_rows = []
     for var_name in parameters["hist_vars"]:
         hist_info_row = make_histograms(
-            df, var_name, year, dataset, regions, channels, npart, parameters
+            df, var_name, year, dataset, regions, channels, categories, npart, parameters
         )
         #print(hist_info_row)
         if hist_info_row is not None:
             hist_info_rows.append(hist_info_row)
-        if "dy" in dataset:
+        if "dyblub" in dataset:
             for suff in ["01j", "2j"]:
                 hist_info_row = make_histograms(
                     df,
@@ -246,7 +265,7 @@ def on_partition(args, parameters):
 
     if len(hist_info_rows) == 0:
         return pd.DataFrame()
-
+    
     hist_info_df = pd.concat(hist_info_rows).reset_index(drop=True)
 
     # < save desired columns as unbinned data (e.g. dimuon_mass for fits) >
@@ -255,7 +274,12 @@ def on_partition(args, parameters):
         save_unbinned(df, dataset, year, npart, channels, parameters)
 
     # < return some info for diagnostics & tests >
-    return [hist_info_df, df]
+    print(df_for_fits) #Good!
+
+   
+    #out_path = f"{parameters['global_path']}/{parameters['label']}/stage2_output/{year}/"
+    #save_stage1_output_to_parquet(df_for_fits,out_path)
+    return [hist_info_df, df_for_fits]
 
 
 def save_unbinned(df, dataset, year, npart, channels, parameters):
