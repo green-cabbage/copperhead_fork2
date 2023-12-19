@@ -41,8 +41,10 @@ conda activate /depot/cms/kernel/python3-ml
 ```
 Installation:
 ```bash
-git clone https://github.com/Run3HmmAnalysis/copperhead
+git clone https://github.com/vscheure/copperhead
 cd copperhead
+git fetch origin devUL
+git checkout devUL
 ```
 If accessing datasets via `xRootD` will be needed:
 ```bash
