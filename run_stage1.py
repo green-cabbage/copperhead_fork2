@@ -220,7 +220,7 @@ if __name__ == "__main__":
             #"data_H",
        ],
         "signal": [
-            #"ggh_powheg",
+            "ggh_powheg",
             #"vbf_powheg",
            # "ggh_amcPS",
             #"vbf_powhegPS",
@@ -248,8 +248,8 @@ if __name__ == "__main__":
             # "ewk_m50"
         ],
         "other_mc": [
-            "ttjets_dl",
-            "ttjets_sl",
+            #"ttjets_dl",
+            #"ttjets_sl",
             #"ttz",
             #"ttw",
             #"st_tw_top",

@@ -62,8 +62,8 @@ parameters = {
     "label": args.label,
      #"channels": ["vbf"],
     "channels": ["ggh"],
-    #"category": ["BDTperyear_2018_cat2","BDTperyear_2018_cat3","BDTperyear_2018_cat4","BDTperyear_2018_cat5"],
-    #"category":["All"],
+    #"category": ["BDTperyear_2018_cat0","BDTperyear_2018_cat1","BDTperyear_2018_cat2","BDTperyear_2018_cat3","BDTperyear_2018_cat4","BDTperyear_2018_cat0"],
+    "category":["All"],
       #"channels": ["ggh_0jets"],
      #"channels": ["none"],
     #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
@@ -74,11 +74,12 @@ parameters = {
     "syst_variations": ["nominal"],
     #
     # < plotting settings >
-    "plot_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
+    "plot_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_pisa_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
     #"plot_vars": ["njets"],
     "variables_lookup": variables_lookup,
     "save_plots": True,
     "plot_ratio": True,
+    "logscale" : False,
     "plots_path": f"{args.plotsdir}/",
    "dnn_models": {
        #"vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
@@ -123,7 +124,7 @@ parameters["grouping"] = {
     "data_F": "Data",
     "data_G": "Data",
     "data_H": "Data",
-    "data_x": "Data",
+    #"data_x": "Data",
     #"dy_M-50": "DY",
     #"dy_M-50_nocut": "DY_nocut",
     "dy_M-100To200": "DY",
@@ -219,9 +220,9 @@ if __name__ == "__main__":
     #print(yields)
 
     # save templates to ROOT files
-    yield_df = to_templates(client, parameters)
+    #yield_df = to_templates(client, parameters)
     #print(yield_df)
 
     # make datacards
-    build_datacards("score_ValerieDNNtest3", yield_df, parameters)
+    #build_datacards("score_ValerieDNNtest3", yield_df, parameters)
     

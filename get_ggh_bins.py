@@ -7,6 +7,7 @@ parameters = {
     "global_path": "/depot/cms/hmm/vscheure/",
     "label": "secondlimitstest",
     "channels": ["ggh"],
+    "regions": ["h-sidebands","h-peak"],
     "custom_npartitions": {
         "ggh_powheg": 1,
     },
@@ -16,26 +17,29 @@ parameters = {
 dataset = "ggh_powheg"
 #model_name = "pytorch_may18"
 #model_name = "pytorch_may24_pisa"
-model_name = "BDTperyear_2018"
-score_name = f"score_{model_name}_nominal"
+
 channel = "ggh"
-region = "h-peak"
 
 #for year in ["2016", "2017", "2018"]:
-for year in ["2016postVFP"]:
+for year in ["2016"]:
     print(year)
     if year == "2016":
         yearstr = "2016postVFP"
     else:
         yearstr = year
+    model_name = f"BDTperyear_{yearstr}"
+    score_name = f"score_{model_name}_nominal"
     #paths = glob.glob(f"/depot/cms/hmm/coffea/{year}_2022apr6/{dataset}/*.parquet")
     paths = glob.glob(f"/depot/cms/hmm/vscheure/secondlimitstest/stage1_output/{yearstr}/{dataset}/*.parquet")
 
     df = load_dataframe(None, parameters, inputs=paths, dataset=dataset)
     df = df.compute()
-    
+    df.jet1_has_matched_gen_nominal.fillna(False, inplace=True)
+    df.jet2_has_matched_gen_nominal.fillna(False, inplace=True)
+    df.fillna(-99.0, inplace=True)
+    df = df[(df.dataset == dataset) & (df.year == yearstr)]
     split_into_channels(df, v="nominal", ggHsplit=False)
-    print(df)
+    #print(df)
     df.loc[df[f"channel_nominal"] == channel, score_name] = evaluate_bdt(
         df[df[f"channel_nominal"] == channel],
         "nominal",
@@ -62,6 +66,6 @@ for year in ["2016postVFP"]:
     )
     """
 
-    categorize_dnn_output_ggh(df, score_name, channel, region, str(year),yearstr)
+    categorize_dnn_output_ggh(df, score_name, channel, "h-peak", str(year),yearstr)
 
 

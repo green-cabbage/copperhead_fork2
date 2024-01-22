@@ -91,7 +91,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, categories, 
         if var_name not in df.columns:
             if var.name in df.columns:
                 var_name = var.name
-            if f"{var.name}_{year}" in df.columns:
+            elif f"{var.name}_{year}" in df.columns:
                 var_name = f"{var.name}_{year}"
             else:
                 continue

@@ -9,7 +9,7 @@ from python.io import (
     save_stage2_output_parquet,
     split_df
 )
-from stage2.categorizer import (split_into_channels, categorize_by_score)
+from stage2.categorizer import (split_into_channels, categorize_by_score, categorize_by_eta)
 from stage2.mva_evaluators import (
     evaluate_pytorch_dnn,
     # evaluate_pytorch_dnn_pisa,
@@ -58,13 +58,25 @@ def process_partitions(client, parameters, df):
     all_dfs = parallelize(on_partition, argset, client, parameters,seq=False)
     hist_info_df_full = all_dfs[0][0]
     df_new = all_dfs[0][1]
+    
+    #for i in range(5):
+        #df_test = df_new[df_new["category"] == f"BDTperyear_2017_cat{i}"]
+        #print(df_test)
     # return info for debugging
     #print(len(all_dfs))
+    #print("all_dfs[0][1]")
     #print(all_dfs[0][1])
+    #print("all_dfs[0][0]")
+    #print(all_dfs[0][0])
+    #print("all_dfs[1][0]")
+    #print(all_dfs[1][0])
+    #print("all_dfs[0][2]")
+    #print(all_dfs[0][2])
     for i in range(len(all_dfs)-1):
         hist_info_df_full.append(all_dfs[i+1][0])
-        df_new.append(all_dfs[i+1][1])
-    #df_new = pd.concat(dfs).reset_index(drop=True)
+        #df_new.append(all_dfs[i+1][1])
+        #print(all_dfs[i+1][1])
+        df_new = pd.concat([df_new, all_dfs[i+1][1]])
     #print(df_new)
     #hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True)
 
@@ -214,7 +226,8 @@ def on_partition(args, parameters):
                     cut = (df[score_name] > lo) & (df[score_name] <= hi)
                     df.loc[cut, "bin_number"] = i
                 df[score_name] = df["bin_number"]
-                #print(df[score_name])
+                print(df[score_name])
+                print('wrong here')
                 parameters["mva_bins"].update(
                     {
                         model_name: {
@@ -230,7 +243,12 @@ def on_partition(args, parameters):
     df["category"] = "All"
     if parameters["cats_by_score"]:
         categorize_by_score(df, bdt_models, mode = "fixed_ggh", year = parameters["years"][0])
+    elif parameters["cats_by_eta"]:
+        categorize_by_eta(df)
     #print(df)
+    #for i in range(5):
+        #df_test = df[df["category"] == f"BDTperyear_2017_cat{i}"]
+        #print(df_test)
     categories = [c for c in df["category"].unique()
        #c for c in parameters["category"] if c in df["category"].unique()
     ]
@@ -274,7 +292,8 @@ def on_partition(args, parameters):
         save_unbinned(df, dataset, year, npart, channels, parameters)
 
     # < return some info for diagnostics & tests >
-    print(df_for_fits) #Good!
+    #print("df_for_fits")
+    #print(df_for_fits) #Good! Really!
 
    
     #out_path = f"{parameters['global_path']}/{parameters['label']}/stage2_output/{year}/"

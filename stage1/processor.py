@@ -248,13 +248,20 @@ class DimuonProcessor(processor.ProcessorABC):
             # implemented in the future
 
             # FSR recovery
+            pt_to_print = ak.to_pandas((df["Muon", "pt"]))
+            pd.set_option('display.min_rows', 200) 
+            pd.set_option('display.max_rows', None)
+            with open(f'coffeatestfile1_{self.samp_info.year}.txt', 'w') as f:
+                   print(pt_to_print, file=f)
             if self.do_fsr:
                 has_fsr = fsr_recovery(df)
                 df["Muon", "pt"] = df.Muon.pt_fsr
                 df["Muon", "eta"] = df.Muon.eta_fsr
                 df["Muon", "phi"] = df.Muon.phi_fsr
                 df["Muon", "pfRelIso04_all"] = df.Muon.iso_fsr
-
+            pt_to_print = ak.to_pandas((df["Muon", "pt"]))
+            with open(f'coffeatestfile2_{self.samp_info.year}.txt', 'w') as f:
+                    print(pt_to_print, file=f)
             # if FSR was applied, 'pt_fsr' will be corrected pt
             # if FSR wasn't applied, just copy 'pt' to 'pt_fsr'
             df["Muon", "pt_fsr"] = df.Muon.pt
@@ -263,7 +270,8 @@ class DimuonProcessor(processor.ProcessorABC):
             if self.do_geofit and ("dxybs" in df.Muon.fields):
                 apply_geofit(df, self.year, ~has_fsr)
                 df["Muon", "pt"] = df.Muon.pt_gf
-
+            with open('coffeatestfile3.txt', 'w') as f:
+                    print(pt_to_print, file=f)
             if self.timer:
                 self.timer.add_checkpoint("Muon corrections")
 

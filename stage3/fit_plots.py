@@ -3,8 +3,8 @@ import ROOT as rt
 colors = [
     rt.kRed,
     rt.kGreen,
-    rt.kBlue,
     rt.kYellow,
+    rt.kBlue,
     rt.kViolet,
     rt.kGray,
     rt.kOrange,
@@ -28,7 +28,7 @@ colors = [
 
 def plotter(ws, objNames, isBlinded, channel, category, OutputFilename, title):
     c = rt.TCanvas("c_cat" + category, "c_cat" + category, 800, 800)
-    xframe = ws.obj("mass").frame(rt.RooFit.Title(title + " in cat" + category))
+    xframe = ws.obj("mh_ggh").frame(rt.RooFit.Title(title + " in cat" + category))
     count = 0
     for name in objNames:
         if "model" in name:
@@ -66,18 +66,20 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
     upper_pad.Draw()
     lower_pad.Draw()
     upper_pad.cd()
-    mass = ws.obj("mass")
-    xframe = mass.frame(rt.RooFit.Title(title + " Fit in cat" + category))
+    #print('Hallo')
+    mh_ggh = ws.obj("mh_ggh")
+    #print('Hallo')
+    xframe = mh_ggh.frame(rt.RooFit.Title(title + " Fit in cat" + category))
     # dataset.plotOn(xframe,rt.RooFit.CutRange("sideband_left"))
     # dataset.plotOn(xframe,rt.RooFit.CutRange("sideband_right"))
 
     ws.obj(ds_name).plotOn(xframe, rt.RooFit.Binning(80))
-
+    #print('Hallo')
     leg0 = rt.TLegend(0.15 + offset, 0.6, 0.5 + offset, 0.82)
     leg0.SetFillStyle(0)
-    leg0.SetLineColor(0)
+    #leg0.SetLineColor(0)
     leg0.SetTextSize(0.03)
-    # leg0.AddEntry(h_data,"Data","lep")
+    #leg0.AddEntry(h_data,"Data","lep")
     if blinded:
         count = 0
         for model_key, model in models.items():
@@ -92,6 +94,7 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
             count += 1
     else:
         count = 0
+        #print('Hallo before plot')
         for model_key, model in models.items():
             model.plotOn(
                 xframe,
@@ -100,18 +103,19 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
                 rt.RooFit.LineColor(colors[count]),
                 rt.RooFit.Name(model.GetName()),
             )
-            leg0.AddEntry(model, "#splitline{" + model.GetName() + "}{model}", "l")
+            leg0.AddEntry(model, "#line{" + model.GetName() + "}{model}", "l")
             count += 1
     # upper_pad = rt.TPad("up_cat"+category,"up_cat"+category,0.0,0.2,1.0,1.0,21)
     # lower_pad = rt.TPad("lp_cat"+category,"lp_cat"+category,0.0,0.0,1.0,0.2,22)
     xframe.SetMinimum(0.0001)
     xframe.Draw()
+    #print('Hallo before ggh')
     if "ggh_powheg" in label:
         print("Fitting ggH signal")
         # Add TLatex to plot
         for model_key, model in models.items():
-            h_pdf = model.createHistogram("h_pdf", mass, rt.RooFit.Binning(80))
-        print(h_pdf.GetMaximum())
+            h_pdf = model.createHistogram("h_pdf", mh_ggh, rt.RooFit.Binning(80))
+        #print(h_pdf.GetMaximum())
         effSigma = getEffSigma(h_pdf)
         effSigma_low, effSigma_high = (
             h_pdf.GetMean() - effSigma,
@@ -119,7 +123,7 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         )
         h_effSigma = h_pdf.Clone()
         h_effSigma.GetXaxis().SetRangeUser(effSigma_low, effSigma_high)
-        h_data = mass.createHistogram("h_data", rt.RooFit.Binning(80))
+        h_data = mh_ggh.createHistogram("h_data", rt.RooFit.Binning(80))
         lat0 = rt.TLatex()
         lat0.SetTextFont(42)
         lat0.SetTextAlign(11)
@@ -200,22 +204,28 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
             0.17 + offset, 0.25, "FWHM = %1.2f GeV" % (fwhm_high - fwhm_low)
         )
     else:
+        
+
         lat0 = rt.TLatex()
         lat0.SetTextFont(42)
         lat0.SetTextAlign(11)
         lat0.SetNDC()
         lat0.SetTextSize(0.045)
-        lat0.DrawLatex(0.15, 0.92, "#bf{CMS} #it{2018D}")
+        lat0.DrawLatex(0.15, 0.92, "#bf{CMS} #it{Run2}")
         lat0.DrawLatex(0.77, 0.92, "13 TeV")
         lat0.DrawLatex(0.16 + 0.02, 0.83, "H#rightarrow#mu#mu")
+        #leg0.AddEntry(h_data, "Data", "lep")
+        #leg0.AddEntry(h_pdf, model_key, "l")
         leg0.Draw("Same")
 
     hpull = xframe.pullHist()
     lower_pad.cd()
-    xframe2 = mass.frame()
+    #print('Hallo before frame')
+    xframe2 = mh_ggh.frame()
     xframe2.SetTitle("")
     xframe2.addPlotable(hpull, "P")
     xframe2.GetYaxis().SetTitle("Pull")
+    xframe2.GetYaxis().SetRangeUser(-5, 8)
     if blinded:
         xframe2.GetYaxis().SetRangeUser(-4, 4)
     xframe2.GetYaxis().SetTitleOffset(0.3)
@@ -231,6 +241,7 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
     xframe2.Draw()
     c.Modified()
     c.Update()
+    #print('Hallo')
     out_name = (
         f"{save_path}/fit_{label}_{fitter.channel}_{category}{fitter.filename_ext}"
     )

@@ -12,6 +12,7 @@ from stage3.fitter import run_fits
 
 from config.mva_bins import mva_bins
 from config.variables import variables_lookup
+import pandas as pd
 
 __all__ = ["dask"]
 
@@ -61,17 +62,17 @@ parameters = {
     #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
     #"channels": ["ggh"],
     "channels": ["ggh"],
-        "category": ["cat1","cat2","cat3","cat4","cat5"],
-    #"category": ["All"],
+    "category": ["All"],
     "mva_channels": ["ggh"],
-    "cats_by_score": True,
-    #"cats_by_score": False,
+    #"cats_by_score": True,
+    "cats_by_score": False,
+    "cats_by_eta": False,
     
     "signals": ["ggh_powheg"],
     "data": [ "data_x",
             ],
-    #"regions": ["h-sidebands","h-peak"],
-    "regions": ["h-peak"],
+    "regions": ["h-sidebands","h-peak"],
+    #"regions": ["none"],
     
     "syst_variations": ["nominal"],
     # "custom_npartitions": {
@@ -79,7 +80,7 @@ parameters = {
     # },
     #
     # < settings for histograms >
-    "hist_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","dimuon_mass_res","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
+    "hist_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_pisa_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","dimuon_mass_res","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
     "variables_lookup": variables_lookup,
     "save_hists": True,
     #
@@ -137,10 +138,10 @@ parameters["datasets"] = [
     #"data_F",
     #"data_G",
     #"data_H",
-    "data_x",
+    #"data_x",
     #"dy_M-50",
     #"dy_M-50_nocut",
-    #"dy_M-100To200",
+    "dy_M-100To200",
     #"dy_1j",
     #"dy_2j",
     #"dy_m105_160_amc",
@@ -162,7 +163,7 @@ parameters["datasets"] = [
     #"wwz",
     #wzz",
     #"zzz",
-    "ggh_powheg",
+    #"ggh_powheg",
     #"vbf_powheg",
 ]
 # using one small dataset for debugging
@@ -224,8 +225,10 @@ if __name__ == "__main__":
             all_paths[year][dataset] = paths
             #print(all_paths)
     # run postprocessing
+    combined_df = pd.DataFrame()
     for year in parameters["years"]:
         print(f"Processing {year}")
+        
         
         for dataset, path in tqdm.tqdm(all_paths[year].items()):
             #print(path)
@@ -251,7 +254,7 @@ if __name__ == "__main__":
                 #continue
             # run processing sequence (categorization, mva, histograms)
             info, df = process_partitions(client, parameters, df)
-                
+            #print(df)
+
             save_stage2_output_to_csv(df,out_dir)
 
-            #run_fits(client, parameters, df)

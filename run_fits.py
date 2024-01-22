@@ -40,7 +40,7 @@ parameters = {
     #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
     #"channels": ["ggh"],
     "channels": ["ggh"],
-        "category": ["cat1","cat2","cat3","cat4","cat5"],
+        #"category": ["cat1","cat2","cat3","cat4","cat5"],
     #"category": ["All"],
     "mva_channels": ["ggh"],
     "cats_by_score": True,
@@ -66,7 +66,7 @@ parameters["datasets"] = [
     #"data_F",
     #"data_G",
     #"data_H",
-    "data_x",
+    #"data_x",
     "ggh_powheg",
 
 ]
@@ -85,7 +85,7 @@ if __name__ == "__main__":
             paths = glob.glob(
                 f"{parameters['global_path']}/"
                 f"{parameters['label']}/stage2_output/{year}/"
-                f"{dataset}/*.csv"
+                f"{dataset}"
             )
             #print(f"{parameters['global_path']}/"
                #f"{parameters['label']}/stage1_output/{year}/"
@@ -103,6 +103,16 @@ if __name__ == "__main__":
 
             # read stage2 outputs
             for pat in path:
-                df = pd.read_csv(pat)
+                df = pd.read_csv(f"{pat}/{dataset}.csv")
+                df_all = pd.read_csv(f"{pat}/{dataset}_nocats.csv")
+                if args.year[0] == "combined":
+                    columns_to_check = ["score_BDTperyear_2016postVFP_nominal", "score_BDTperyear_2016preVFP_nominal", "score_BDTperyear_2017_nominal", "score_BDTperyear_2018_nominal"]
+                else:
+                    columns_to_check = [f"score_BDTperyear_{args.year[0]}_nominal"]
 
-                run_fits(parameters, df)
+                # Drop rows where all specified columns have NaN values
+                df_all_filtered = df_all.dropna(subset=columns_to_check, how='all')
+                print(df)
+                print(df_all_filtered)
+
+                run_fits(parameters, df,df_all_filtered)

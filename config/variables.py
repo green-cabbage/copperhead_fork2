@@ -5,7 +5,7 @@ variables = []
 variables.append(Variable("dimuon_mass", r"$m_{\mu\mu}$ [GeV]", 30, 110, 150))
 variables.append(Variable("LHEMass", r"$m_{genleplep}$ [GeV]", 50, 110, 150))
 variables.append(
-    Variable("dimuon_pisa_mass_res", r"$\Delta M_{\mu\mu}$ [GeV]", 30, 0, 20)
+    Variable("dimuon_pisa_mass_res", r"$\Delta M_{\mu\mu}$ [GeV]", 30, 0, 6)
 )
 variables.append(
     Variable(
@@ -17,7 +17,7 @@ variables.append(
     )
 )
 variables.append(
-    Variable("dimuon_ebe_mass_res", r"$\Delta M_{\mu\mu}$ [GeV]", 30, 0, 20)
+    Variable("dimuon_ebe_mass_res", r"$\Delta M_{\mu\mu}$ [GeV]", 30, 0, 6)
 )
 variables.append(
     Variable(

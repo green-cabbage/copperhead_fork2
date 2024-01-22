@@ -49,16 +49,39 @@ def categorize_by_score(df, scores, mode="uniform",year="2018", **kwargs):
                 #df["category"] = "cat0"
                 #score_ggh = df[df.loc[(df.channel_nominal == channel) & (df.dataset == "ggh_powheg"), f"score_{score_name}_nominal"]]
                 signal_eff_bins = {}
-                signal_eff_bins["2018"] = [0.0, 0.11045493930578232, 0.38483065366744995, 0.5410641431808472, 0.7430070638656616, 1]
-                signal_eff_bins["2017"] = [0.0,  0.11117783933877945, 0.38726115226745605, 0.5426409244537354, 0.745756208896637,1]
-                signal_eff_bins["2016postVFP"] = [0.0, 0.10687708854675293, 0.3635649085044861, 0.5287673473358154, 0.7236860394477844, 1]
-                signal_eff_bins["2016preVFP"] = [0.0, 0.10688136518001556, 0.3617468774318695, 0.528583288192749, 0.722981870174408, 1]
+                signal_eff_bins["2018"] = [0.0, 
+                                           0.34052810072898865, 
+                                           0.6200955510139465, 
+                                           0.7057817578315735, 
+                                           0.8094207644462585, 
+                                           1]
+                signal_eff_bins["2017"] = [0.0, 
+                                           0.33528196811676025, 
+                                           0.5249117016792297, 
+                                           0.6191316843032837, 
+                                           0.7578054666519165, 
+                                           1]
+                signal_eff_bins["2016postVFP"] = [0.0, 
+                                                  0.46456924080848694, 
+                                                  0.611092209815979, 
+                                                  0.6676164269447327, 
+                                                  0.7403154969215393, 
+                                                  1]
+                signal_eff_bins["2016preVFP"] = [0.0, 
+                                                 0.4651411175727844, 
+                                                 0.6060909628868103, 
+                                                 0.6604294180870056, 
+                                                 0.7282804846763611, 
+                                                 1]
                 #signal_eff_bins = [0,1]
                 
                 #print("Score all:")
                 #print(score.dropna())
                 #print("Score signal")
                 #print(score_ggh.dropna())
+                print(f"doing categorisation for {year}")
+                print(f"doing categorisation for score_{score_name}_nominal")
+                print(signal_eff_bins[year])
                 for i in range(len(signal_eff_bins[year])-1):
                     cut_lo = signal_eff_bins[year][i]
                     cut_hi = signal_eff_bins[year][i + 1]
@@ -66,7 +89,18 @@ def categorize_by_score(df, scores, mode="uniform",year="2018", **kwargs):
                     cat_name = f"{score_name}_cat{i}"
                     cut = (df.channel_nominal == channel) & (score > cut_lo) & (score <= cut_hi)
                     df.loc[cut, "category"] = cat_name
+def categorize_by_eta(df , **kwargs):
+    nbins = kwargs.pop("nbins", 4)
 
+    print(f"doing categorisation for score_eta")
+    etacats = [0.0,0.8,1.4,2.4]
+    for i in range(len(etacats)-1):
+        cut_lo = etacats[i]
+        cut_hi = etacats[i + 1]
+        cat_name = f"EtaCats_cat{i}"
+        cut = (df.channel_nominal == "ggh") & (df.mu1_eta > cut_lo) & (df.mu1_eta <= cut_hi) & (df.mu2_eta > cut_lo) & (df.mu2_eta <= cut_hi)
+        
+        df.loc[cut, "category"] = cat_name
 
                 
                 
@@ -138,11 +172,11 @@ def categorize_dnn_output(df, score_name, channel, region, year, yearstr):
     bins = [df[score_name].max()]
     #print(bins)
     #print(channel)
-    #print(region)
+    print(region)
     #print(year)
     
     slicer = (
-        (df.channel_nominal == channel) & (df.region == region) & (df.year == yearstr)
+        (df.channel_nominal == channel) & ((df.region == "h-peak") or (df.region == "h-sidebands")) & (df.year == yearstr)
     )
     df_sorted = (
         df.loc[slicer, :]
@@ -174,8 +208,10 @@ def categorize_dnn_output(df, score_name, channel, region, year, yearstr):
     bins = sorted(bins)
     #print(bins)
 def categorize_dnn_output_ggh(df, score_name, channel, region, year, yearstr):
-    # Run 2 (VBF yields)
-    target_yields = [0,0.05,0.2,0.35,0.7,1]
+    # Run 2 (ggh yields)
+    target_yields = [0.05,0.2,0.35,0.7,1]
+    target_yields = [0.3,0.65,0.8,0.95,1]
+    #target_yields = [1.0,0.95,0.8,0.65,0.3,0]
 
     bins = [df[score_name].max()]
     #print(bins)
@@ -184,16 +220,16 @@ def categorize_dnn_output_ggh(df, score_name, channel, region, year, yearstr):
     #print(year)
     
     slicer = (
-        (df.channel_nominal == channel) & (df.region == region) & (df.year == yearstr)
+        (df.channel_nominal == channel) & (df.year == yearstr)
     )
     df_sorted = (
         df.loc[slicer, :]
-        .sort_values(by=score_name, ascending=False)
+        .sort_values(by=score_name, ascending=True)
         .reset_index(drop=True)
     )
     #print(df.loc[slicer, :][score_name])
     df_sorted["wgt_cumsum_normed"] = df_sorted.wgt_nominal.cumsum()/df_sorted.wgt_nominal.sum()
-    print(df_sorted)
+    #print(df_sorted)
     tot_yield = 0
     last_yield = 0
     #print(target_yields)
@@ -203,7 +239,7 @@ def categorize_dnn_output_ggh(df, score_name, channel, region, year, yearstr):
             value1 = df_sorted.loc[i + 1, "wgt_cumsum_normed"]
             #print(value)
             #print(value1)
-            if (value < yi) & (value1 > yi):
+            if (value < yi) & (value1 >= yi):
                 #if abs(last_yield - tot_yield) < 1e-06:
                     #continue
                 #if abs(tot_yield - sum(target_yields) < 1e-06:
@@ -213,3 +249,15 @@ def categorize_dnn_output_ggh(df, score_name, channel, region, year, yearstr):
     bins.append(0.0)
     bins = sorted(bins)
     print(bins)
+    for i in range(len(bins)-1):
+        cut_lo = bins[i]
+        cut_hi = bins[i + 1]
+        #print(f"Cut hi = {cut_hi}")
+        cat_name = f"{score_name}_cat{i}"
+        cut = (df_sorted.channel_nominal == channel) & (df_sorted[score_name] > cut_lo) & (df_sorted[score_name] <= cut_hi)
+        df_sorted.loc[cut, "category"] = cat_name
+    #print(df_sorted["category"])
+    #for i in range(5):
+        #df_test = df_sorted[df_sorted["category"] == f"{score_name}_cat{i}"]
+        #print(df_test[score_name])
+        #print(df_test["wgt_cumsum_normed"])

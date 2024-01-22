@@ -2,6 +2,7 @@ import numpy as np
 import pickle
 import torch
 from stage2.mva_models import Net,NetSimple, NetPisaRun2, NetPisaRun2Combination, MvaCategorizer
+import matplotlib.pyplot as plt
 
 
 training_features = [
@@ -346,12 +347,13 @@ def evaluate_bdt(df, variation, model, parameters, score_name):
     score_name = f"score_{model}_{variation}"
     try:
         df = df.compute()
+        
     except Exception:
         pass
 
     if df.shape[0] == 0:
         return None
-
+    #print(df)
     df.loc[:, score_name] = 0
     nfolds = 4
     
@@ -371,6 +373,8 @@ def evaluate_bdt(df, variation, model, parameters, score_name):
         if df_i.shape[0] == 0:
             continue
         df_i.loc[df_i.region != "h-peak", "dimuon_mass"] = 125.0
+        #print(df_i["region"])
+        #print(df_i["dimuon_mass"])
         # if parameters["do_massscan"]:
         #     df_i.loc[:, "dimuon_mass"] = df_i["dimuon_mass"] - mass_shift
         df_i = (df_i[features] - scalers[0]) / scalers[1]
@@ -384,4 +388,27 @@ def evaluate_bdt(df, variation, model, parameters, score_name):
                     bdt_model.predict_proba(df_i.values)[:, 1]
                 ).ravel()
             df.loc[eval_filter, score_name] = prediction  # np.arctanh((prediction))
+    BDTcontrol_plots=True
+    if BDTcontrol_plots == True:
+        from matplotlib.colors import LogNorm
+        BDTControlPlotsList = ["mu1_eta","mu2_eta","dimuon_mass","dimuon_ebe_mass_res","dimuon_ebe_mass_res_rel"]
+        for plot in BDTControlPlotsList:
+            fig, ax = plt.subplots(1,1)
+            if plot == "dimuon_ebe_mass_res":
+                #plt.ylim(0,3)
+                hist = ax.hist2d(df[score_name], df[plot], bins=(15, 100), cmap=plt.cm.Blues,vmax=7000, vmin=100)
+                ax.set_ylim(0.9,3)
+            else:
+                hist = ax.hist2d(df[score_name], df[plot], bins=(20, 20), cmap=plt.cm.Blues)
+            # Add labels and title
+            ax.set_xlabel(score_name)
+            ax.set_ylabel(plot)
+            #ax.title('2D Histogram Plot')
+
+            # Add color bar
+            cbar = plt.colorbar(hist[3], ax=ax, label='events')
+            plt.savefig(f"testBDT2D{plot}.png")
+            plt.clf()
+            
+    #print(df[score_name])
     return df[score_name]
