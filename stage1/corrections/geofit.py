@@ -21,6 +21,7 @@ def apply_geofit(df, year, mask):
         "2016": {"eta_1": 411.34, "eta_2": 673.40, "eta_3": 1099.0},
         "2017": {"eta_1": 582.32, "eta_2": 974.05, "eta_3": 1263.4},
         "2018": {"eta_1": 650.84, "eta_2": 988.37, "eta_3": 1484.6},
+        "2022EE": {"eta_1": 650.84, "eta_2": 988.37, "eta_3": 1484.6},
     }
     pt_corr = pt
     for eta_i in ["eta_1", "eta_2", "eta_3"]:
@@ -52,6 +53,7 @@ def geofit_evaluator(muons_pt, muons_eta, muons_dxybs, muons_charge, year, mask)
         "2016": {"eta_1": 411.34, "eta_2": 673.40, "eta_3": 1099.0},
         "2017": {"eta_1": 582.32, "eta_2": 974.05, "eta_3": 1263.4},
         "2018": {"eta_1": 650.84, "eta_2": 988.37, "eta_3": 1484.6},
+        "2022EE": {"eta_1": 650.84, "eta_2": 988.37, "eta_3": 1484.6},
     }
 
     for eta_i in ["eta_1", "eta_2", "eta_3"]:

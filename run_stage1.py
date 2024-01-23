@@ -53,7 +53,7 @@ parser.add_argument(
     "-d",
     "--datasets",
     dest="datasets",
-    default="UL",
+    default="Run3",
     action="store",
     help="Wich datasets file to use (either UL or purdue)",
 )
@@ -142,6 +142,7 @@ parameters = {
 # submit processing jobs using coffea's DaskExecutor
 def submit_job(parameters):
     # mkdir(parameters["out_path"])
+    print("in submit job")
     out_dir = parameters["global_path"]
     mkdir(out_dir)
     out_dir += "/" + parameters["label"]
@@ -152,6 +153,7 @@ def submit_job(parameters):
     mkdir(out_dir)
 
     executor_args = {"client": parameters["client"], "retries": 2}
+    print(parameters["samp_infos"].fileset)
     processor_args = {
         "samp_info": parameters["samp_infos"],
         "do_timer": parameters["do_timer"],
@@ -170,16 +172,17 @@ def submit_job(parameters):
         xrootdtimeout=2400,
     )
 
-    try:
-        run(
-            parameters["samp_infos"].fileset,
-            "Events",
-            processor_instance=DimuonProcessor(**processor_args),
-        )
+    #try:
+    print("trying to run")
+    run(
+        parameters["samp_infos"].fileset,
+        "Events",
+        processor_instance=DimuonProcessor(**processor_args),
+    )
 
-    except Exception as e:
-        tb = traceback.format_exc()
-        return "Failed: " + str(e) + " " + tb
+    #except Exception as e:
+        #tb = traceback.format_exc()
+        #return "Failed: " + str(e) + " " + tb
 
     return "Success!"
 
@@ -212,7 +215,7 @@ if __name__ == "__main__":
             #'test_file_data_A',
             #"data_A",
             #"data_B",
-            #"data_C",
+            "data_C",
             #"data_D",
             #"data_E",
             #"data_F",
@@ -248,8 +251,8 @@ if __name__ == "__main__":
             # "ewk_m50"
         ],
         "other_mc": [
-            "ttjets_dl",
-            "ttjets_sl",
+            #"ttjets_dl",
+            #"ttjets_sl",
             #"ttz",
             #"ttw",
             #"st_tw_top",
@@ -295,7 +298,7 @@ if __name__ == "__main__":
         # load lists of ROOT files, compute lumi weights
         parameters["samp_infos"] = load_samples(datasets, parameters)
         timings[f"load {lbl}"] = time.time() - tick1
-
+        print(parameters["samp_infos"])
         tick2 = time.time()
         # run main processing
         delete_existing_stage1_output(datasets, parameters)

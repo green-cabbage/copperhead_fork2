@@ -90,9 +90,9 @@ class DimuonProcessor(processor.ProcessorABC):
         self.do_jerunc = False
         for ptvar in self.pt_variations:
             if ptvar in jec_pars["jec_variations"]:
-                self.do_jecunc = True
+                self.do_jecunc = False # Set back to true when running
             if ptvar in jec_pars["jer_variations"]:
-                self.do_jerunc = True
+                self.do_jerunc = False # Set back to true when running
 
         # enable timer for debugging
         do_timer = kwargs.get("do_timer", False)
@@ -102,13 +102,15 @@ class DimuonProcessor(processor.ProcessorABC):
         # Initialize timer
         if self.timer:
             self.timer.update()
-        #print(df)
+        
+        #df.to_csv("Run3DF.csv")
         # Dataset name (see definitions in config/datasets.py)
         dataset = df.metadata["dataset"]
         #print(df.Pileup.nTrueInt)
         #print(np.array(df.Pileup.nTrueInt)),
         is_mc = "data" not in dataset
         numevents = len(df)
+        
         
         
         # ------------------------------------------------------------#
@@ -172,6 +174,8 @@ class DimuonProcessor(processor.ProcessorABC):
         output["npv"] = df.PV.npvs
         output["met"] = df.MET.pt
         output["LHEMass"] = df["LHEMass"]
+        #output.to_csv("testRun3file.csv")
+        #pdb.set_trace()
         #print( output["LHEMass"])
         # Separate dataframe to keep track on weights
         # and their systematic variations
@@ -248,7 +252,9 @@ class DimuonProcessor(processor.ProcessorABC):
             # implemented in the future
 
             # FSR recovery
+            
             if self.do_fsr:
+                
                 has_fsr = fsr_recovery(df)
                 df["Muon", "pt"] = df.Muon.pt_fsr
                 df["Muon", "eta"] = df.Muon.eta_fsr
@@ -400,8 +406,8 @@ class DimuonProcessor(processor.ProcessorABC):
 
         # We only need to reapply JEC for 2018 data
         # (unless new versions of JEC are released)
-        if ("data" in dataset) and ("2018" in self.year):
-            self.do_jec = True
+        #if ("data" in dataset) and ("2018" in self.year):
+            #self.do_jec = True
 
         jets = apply_jec(
             df,
@@ -605,10 +611,10 @@ class DimuonProcessor(processor.ProcessorABC):
             "eta",
             "phi",
             "jetId",
-            "qgl",
-            "puId",
+            #"qgl",
+            #"puId",
             "mass",
-            "btagDeepB",
+            "btagDeepFlavB",
             "has_matched_gen",
         ]
         if "puId17" in df.Jet.fields:
@@ -697,7 +703,7 @@ class DimuonProcessor(processor.ProcessorABC):
         jet_selection = (
             pass_jet_id
             & pass_jet_puid
-            & (jets.qgl > -2)
+            #& (jets.qgl > -2)
             & jets.clean
             & (jets.pt > self.parameters["jet_pt_cut"])
             & (abs(jets.eta) < self.parameters["jet_eta_cut"])
@@ -759,8 +765,8 @@ class DimuonProcessor(processor.ProcessorABC):
             # --- QGL weights --- #
             isHerwig = "herwig" in dataset
 
-            qgl_wgts = qgl_weights(jet1, jet2, isHerwig, output, variables, njets)
-            weights.add_weight("qgl_wgt", qgl_wgts, how="all")
+            #qgl_wgts = qgl_weights(jet1, jet2, isHerwig, output, variables, njets)
+            #weights.add_weight("qgl_wgt", qgl_wgts, how="all")
 
             # --- Btag weights --- #
             bjet_sel_mask = output.event_selection #& two_jets & vbf_cut
@@ -847,12 +853,14 @@ class DimuonProcessor(processor.ProcessorABC):
         else:
             self.zpt_path = "zpt_weights/2017_value"
         # PU ID weights
-        puid_filename = self.parameters["puid_sf_file"]
-        self.extractor.add_weight_sets([f"* * {puid_filename}"])
+        #puid_filename = self.parameters["puid_sf_file"]
+        #self.extractor.add_weight_sets([f"* * {puid_filename}"])
         # Calibration of event-by-event mass resolution
         for mode in ["Data", "MC"]:
             if "2016" in self.year:
                 yearstr = "2016"
+            if "2022" in self.year:
+                yearstr = "2018"
             else:
                 yearstr=self.year #Work around before there are seperate new files for pre and postVFP
             label = f"res_calib_{mode}_{yearstr}"

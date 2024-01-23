@@ -122,6 +122,8 @@ def mass_resolution(is_mc, evaluator, df, year):
     dpt2 = (df.mu2_ptErr * df.dimuon_mass) / (2 * df.mu2_pt)
     if "2016" in year:
         yearstr = "2016"
+    if "2022" in year:
+        yearstr = "2018"
     else:
         yearstr=year #Work around before there are seperate new files for pre and postVFP
     if is_mc:

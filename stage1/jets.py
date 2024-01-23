@@ -8,7 +8,7 @@ def prepare_jets(df, is_mc):
     # Initialize missing fields (needed for JEC)
     df["Jet", "pt_raw"] = (1 - df.Jet.rawFactor) * df.Jet.pt
     df["Jet", "mass_raw"] = (1 - df.Jet.rawFactor) * df.Jet.mass
-    df["Jet", "rho"] = ak.broadcast_arrays(df.fixedGridRhoFastjetAll, df.Jet.pt)[0]
+    #df["Jet", "rho"] = ak.broadcast_arrays(df.fixedGridRhoFastjetAll, df.Jet.pt)[0]
 
     if is_mc:
         df["Jet", "pt_gen"] = ak.values_astype(
@@ -25,14 +25,14 @@ def fill_jets(output, variables, jet1, jet2):
         "jet1_eta",
         "jet1_rap",
         "jet1_phi",
-        "jet1_qgl",
+        #"jet1_qgl",
         "jet1_jetId",
         "jet1_puId",
         "jet1_has_matched_gen" "jet2_pt",
         "jet2_eta",
         "jet2_rap",
         "jet2_phi",
-        "jet2_qgl",
+        #"jet2_qgl",
         "jet2_jetId",
         "jet2_puId",
         "jet2_has_matched_gen" "jj_mass",
@@ -68,7 +68,9 @@ def fill_jets(output, variables, jet1, jet2):
         variables[v] = -999.0
 
     # Fill single jet variables
-    for v in ["pt", "eta", "phi", "qgl", "jetId", "puId", "has_matched_gen"]:
+    for v in ["pt", "eta", "phi", 
+              #"qgl", 
+              "jetId", "puId", "has_matched_gen"]:
         variables[f"jet1_{v}"] = jet1[v]
         variables[f"jet2_{v}"] = jet2[v]
 

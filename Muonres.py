@@ -173,6 +173,7 @@ def fill_muons(output, mu1, mu2):
     for v in ["pt", "ptErr", "eta", "phi"]:
         output[f"mu1_{v}"] = mu1[v]
         output[f"mu2_{v}"] = mu2[v]
+    
     output["lumiID"] = mu1.lumiID
     output["runID"] = mu1.runID
     output["eventID"] = mu1.eventID
@@ -180,7 +181,7 @@ def fill_muons(output, mu1, mu2):
     output["mu2_iso"] = mu2.pfRelIso04_all
     output["mu1_pt_over_mass"] = output.mu1_pt / output.dimuon_mass
     output["mu2_pt_over_mass"] = output.mu2_pt / output.dimuon_mass
-
+    #print(output)
     # Fill dimuon variables
     mm = p4_sum(mu1, mu2)
     for v in ["pt", "eta", "phi", "mass", "rap"]:
@@ -201,6 +202,9 @@ def fill_muons(output, mu1, mu2):
 if sys.argv[1]=="data":
     #fname = "root://cmsxrootd.fnal.gov///store/data/Run2018A/SingleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2550000/00EBBD1F-032C-9B49-A998-7645C9966432.root"
     fname = "root://cmsxrootd.fnal.gov///store/data/Run2018A/SingleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2550000/02D6A1FE-C8EB-1A48-8B31-149FDFB64893.root"
+if sys.argv[1]=="dataRun3":
+    #fname = "root://cmsxrootd.fnal.gov///store/data/Run2018A/SingleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2550000/00EBBD1F-032C-9B49-A998-7645C9966432.root"
+    fname = "root://eos.cms.rcac.purdue.edu//store/data/Run2022C/SingleMuon/NANOAOD/16Dec2023-v1/50000/e45b2346-b1b5-4af9-afc3-cc4ce2fc81de.root"
 if sys.argv[1] =="Z":
     fname = "root://cmsxrootd.fnal.gov///store/mc/RunIISummer20UL18NanoAODv9/DY1JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/120000/3F74AD49-80AE-9B4B-9B30-CE5E644724E4.root"
 if (sys.argv[1] =="Higgs") or   (sys.argv[1] =="cats"):
@@ -215,7 +219,7 @@ events = NanoEventsFactory.from_root(
     fname,
     schemaclass=NanoAODSchema.v6,
     #metadata={"dataset": "DY"},
-    entry_stop=10000,
+    entry_stop=1000000,
 ).events()
 print(events.fields)
 print(events.event.fields)
@@ -272,7 +276,7 @@ lumiID.rename(columns={"values":"lumiID"}, inplace =True)
 
 IDs = eventID.join(runID)
 IDs = IDs.join(lumiID)
-if sys.argv[1] != "data":
+if  "data" not in sys.argv[1]:
     GenMuonsPt = ak.to_pandas(events.Muon.matched_gen.pt)
     GenMuonsPt.rename(columns={"values":"genpt"}, inplace =True)
     GenMuonsEta = ak.to_pandas(events.Muon.matched_gen.eta)
@@ -292,6 +296,7 @@ if sys.argv[1] != "data":
     muons = muons.join(GenMuons)
 
 muons = muons.join(IDs)
+print(muons)
 muons["selection"] = (
                 (muons.pt > 20)
                 & (abs(muons.eta < 2.4))
@@ -306,8 +311,8 @@ nmuons = (
                 .groupby("entry")["subentry"]
                 .nunique()
             )
-
-#print(nmuons)
+print("N muons N muons N muons --------------------------------------------------------")
+print(nmuons)
 
 
 # Find opposite-sign muons
@@ -318,6 +323,7 @@ output["event_selection"] = (
          & (mm_charge == -1)
             )        
 muons = muons[muons.selection & (nmuons == 2)]
+print(muons)
 mu1 = muons.loc[muons.pt.groupby("entry").idxmax()]
 mu2 = muons.loc[muons.pt.groupby("entry").idxmin()]
 #sgenmu1 = 
@@ -326,8 +332,9 @@ mu2.index = mu2.index.droplevel("subentry")
 
 
 fill_muons(output,mu1,mu2)
-print(output.keys())
+#print(output)
 Analysis_DF = output[["runID", "lumiID", "eventID","mu1_charge", "mu1_pt","mu2_charge", "mu2_pt", "dimuon_mass"]]
+#pdb.set_trace()
 #mu2_tmp = mu2
 #mu2_tmp.rename(columns={"pt":"mu2_pt"}, inplace =True)
 #print(mu2_tmp)
@@ -336,6 +343,8 @@ with pd.option_context('display.float_format', '{:0.20f}'.format):
     Analysis_DF.to_csv("eventnumberedptNano.csv")
 output= output[output.event_selection==True]
 print(output)
+print(output[output["dimuon_mass"]>110])
+print(output[output["dimuon_mass"]>110]["dimuon_mass"])
 EtaCats = [[0.0,0.9,0.0,0.9],[0.0,0.9,0.9,1.8],[0.0,0.9,1.8,2.4], [0.9,1.8,0.0,0.9], [0.9,1.8,0.9,1.8], [0.9,1.8,1.8,2.4],[1.8,2.4,0.0,0.9],[1.8,2.4,0.9,1.8],[1.8,2.4,1.8,2.4]]
 nbins=80
 EtaCats  = [[0.0,0.9,0.0,0.9],[0.0,0.9,1.8,2.4],[1.8,2.4,1.8,2.4]]

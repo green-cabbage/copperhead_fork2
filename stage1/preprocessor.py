@@ -57,7 +57,7 @@ def read_via_xrootd(server, path, from_das=False):
         command = f'dasgoclient --query=="file dataset={path}"'
     else:
         command = f"xrdfs {server} ls -R {path} | grep '.root'"
-        #print(command)
+        print(command)
     proc = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
     )
@@ -68,7 +68,7 @@ def read_via_xrootd(server, path, from_das=False):
         print("    voms-proxy-init --voms cms")
         print("    source /cvmfs/cms.cern.ch/cmsset_default.sh")
     result = [server + r.rstrip().decode("utf-8") for r in result]
-    #print(result)
+    print(result)
     return result
 
 
@@ -80,7 +80,6 @@ class SamplesInfo(object):
         self.timeout = kwargs.pop("timeout", 300)
         self.debug = kwargs.pop("debug", False)
         datasets_from = kwargs.pop("datasets_from", "UL")
-
         self.parameters = {k: v[self.year] for k, v in parameters.items()}
 
         self.is_mc = True
@@ -89,6 +88,8 @@ class SamplesInfo(object):
             from config.datasets import datasets
         if "UL" in datasets_from:
             from config.datasets_someUL import datasets
+        if "Run3" in datasets_from:
+            from config.datasets_Run3 import datasets
         elif "pisa" in datasets_from:
             from config.datasets_pisa import datasets
 
@@ -104,6 +105,8 @@ class SamplesInfo(object):
             self.lumi = 41530.0
         elif "2018" in self.year:
             self.lumi = 59970.0
+        elif "2022EE" in self.year:
+            self.lumi = 16800.0
         # print('year: ', self.year)
         # print('Default lumi: ', self.lumi)
 
@@ -145,7 +148,7 @@ class SamplesInfo(object):
         data_entries = 0
 
         if self.xrootd:
-            
+            print(self.paths[sample])
             all_files = read_via_xrootd(self.server, self.paths[sample])
         elif self.paths[sample].endswith(".root"):
             all_files = [self.paths[sample]]
@@ -249,7 +252,8 @@ class SamplesInfo(object):
                 self.lumi_weights[self.sample] = xsec * self.lumi / N
             else:
                 self.lumi_weights[self.sample] = 0
-            # print(f"{self.sample}: events={numevents}")
+            print(f"{self.sample}: events={numevents}")
             return numevents
         else:
+            print(self.data_entries)
             return self.data_entries

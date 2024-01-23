@@ -1,5 +1,5 @@
 def for_all_years(value):
-    out = {k: value for k in ["2016preVFP","2016postVFP", "2017", "2018"]}
+    out = {k: value for k in ["2016preVFP","2016postVFP", "2017", "2018","2022EE",]}
     return out
 
 
@@ -66,10 +66,23 @@ jec_unc_to_consider = {
         "RelativeSample2018",
         "FlavorQCD",
     ],
+    "2022EE": [
+        "Absolute",
+        "Absolute2018",
+        "BBEC1",
+        "BBEC12018",
+        "EC2",
+        "EC22018",
+        "HF",
+        "HF2018",
+        "RelativeBal",
+        "RelativeSample2018",
+        "FlavorQCD",
+    ],
 }
 
 jec_parameters["jec_variations"] = {
-    year: get_variations(jec_unc_to_consider[year]) for year in ["2016preVFP","2016postVFP", "2017", "2018"]
+    year: get_variations(jec_unc_to_consider[year]) for year in ["2016preVFP","2016postVFP", "2017", "2018","2022EE"]
 }
 
 jec_parameters["runs"] = {
@@ -77,6 +90,7 @@ jec_parameters["runs"] = {
     "2016postVFP": ["F", "G", "H"],
     "2017": ["B", "C", "D", "E", "F"],
     "2018": ["A", "B", "C", "D"],
+    "2022EE": ["A", "B", "C", "D"],
 }
 
 jec_parameters["jec_levels_mc"] = for_all_years(
@@ -91,6 +105,7 @@ jec_parameters["jec_tags"] = {
     "2016postVFP": "Summer16_07Aug2017_V11_MC",
     "2017": "Fall17_17Nov2017_V32_MC",
     "2018": "Autumn18_V19_MC",
+    "2022EE": "Autumn18_V19_MC",
 }
 
 jec_parameters["jer_tags"] = {
@@ -98,6 +113,7 @@ jec_parameters["jer_tags"] = {
     "2016postVFP": "Summer16_25nsV1_MC",
     "2017": "Fall17_V3_MC",
     "2018": "Autumn18_V7_MC",
+    "2022EE": "Autumn18_V7_MC",
 }
 
 jec_parameters["jec_data_tags"] = {
@@ -121,9 +137,15 @@ jec_parameters["jec_data_tags"] = {
         "Autumn18_RunC_V19_DATA": ["C"],
         "Autumn18_RunD_V19_DATA": ["D"],
     },
+    "2022EE": {
+        "Autumn18_RunA_V19_DATA": ["A"],
+        "Autumn18_RunB_V19_DATA": ["B"],
+        "Autumn18_RunC_V19_DATA": ["C"],
+        "Autumn18_RunD_V19_DATA": ["D"],
+    },
 }
 
 jer_variations = ["jer1", "jer2", "jer3", "jer4", "jer5", "jer6"]
 jec_parameters["jer_variations"] = {
-    year: get_variations(jer_variations) for year in ["2016preVFP","2016postVFP", "2017", "2018"]
+    year: get_variations(jer_variations) for year in ["2016preVFP","2016postVFP", "2017", "2018","2022EE"]
 }
