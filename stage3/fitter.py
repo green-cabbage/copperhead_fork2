@@ -44,7 +44,7 @@ def run_fits(parameters, df,df_all):
         #print (parameters)
         fit_ret = non_parallelize(fitter, argset, parameters)
     fit_setups = []
-    if len(backgrounds) < 0:
+    if len(backgrounds) > 0:
         if simple ==False:
             fit_setup = {
                 "label": "background_cats",
@@ -769,7 +769,7 @@ class Fitter(object):
                 for model_name in model_names:
                     for order in orders[model_name]:
                         for model_name_multi in model_names_multi:
-                            #print(model_names_multi)
+                            print(model_name_multi)
                             multipdfs[model_name_multi] = WS_all.pdf(f"{model_name_multi}_ggh_All")
                             #print(multipdfs[model_name_multi])
             
@@ -795,7 +795,7 @@ class Fitter(object):
                             ProdPDF = rt.RooProdPdf(f"ProdPDF{model_name_multi}{model_name}{str(order)}{tag}", f"ProdPDF {model_name_multi}{tag}", prodpdflist)
                             self.workspace.Import(ProdPDF, rt.RooFit.RenameConflictNodes(f"_for{model_name_multi}"))
                         #prod_model_names_all.append(ProdPDF)
-                    
+                            print(ProdPDF)
                             print("ProdPDF created")
                             ProdPDFs.append(f"ProdPDF{model_name_multi}{model_name}{str(order)}{tag}")
                             pdfs[f"ProdPDF{model_name_multi}{model_name}{str(order)}{tag}"] = ProdPDF
@@ -803,29 +803,30 @@ class Fitter(object):
                             print("ProdPDF appended")
                             norm_var = rt.RooRealVar(f"ProdPDF{model_name_multi}{model_name}{str(order)}{tag}_norm", f"ProdPDF{model_name_multi}{model_name}{str(order)}{tag}_norm", norm)
                             try:
-                                #self.workspace.Import(norm_var)
+                                self.workspace.Import(norm_var)
                                 getattr(self.workspace, "import")(norm_var)
                             except Exception:
                                 print(f"{norm_var} already exists in workspace, skipping...")
       
                             chi2[f"ProdPDF{model_name_multi}{model_name}{str(order)}{tag}"] = self.get_chi2(f"ProdPDF{model_name_multi}{model_name}{str(order)}{tag}", ds_name, ndata)
+                            print(chi2[f"ProdPDF{model_name_multi}{model_name}{str(order)}{tag}"])
                         model_names_all = ProdPDFs
-                        #print(model_names_all)
+                        print(model_names_all)
   
 
 
                             
-                    for order in orders[model_name]:
-                        with open(f'chi2{tag}{model_name}{order}.txt', 'w') as f:
-                            print(chi2, file=f)
-                       
-            norm_var = rt.RooRealVar(f"{model_key}_norm", f"{model_key}_norm", norm)
-            print(f"Norm_{category} = {norm}")
-            try:
-                self.workspace.Import(norm_var)
-                getattr(self.workspace, "import")(norm_var)
-            except Exception:
-                print(f"{norm_var} already exists in workspace, skipping...")
+                    #for order in orders[model_name]:
+                       #with open(f'chi2{tag}{model_name}{order}.txt', 'w') as f:
+                            #print(chi2, file=f)
+            if doProdPDF == False:           
+                norm_var = rt.RooRealVar(f"{model_key}_norm", f"{model_key}_norm", norm)
+                print(f"Norm_{category} = {norm}")
+                try:
+                    self.workspace.Import(norm_var)
+                    getattr(self.workspace, "import")(norm_var)
+                except Exception:
+                    print(f"{norm_var} already exists in workspace, skipping...")
 
 
         if save:
@@ -849,10 +850,23 @@ class Fitter(object):
                 model_key = model_name + tag
                 #print(f"adding {model_name} to Multipdf")
                 pdflist.add( pdfs_to_plot[model_key])
+                norm_var = rt.RooRealVar(f"{model_name}__for_multi_norm", f"ProdPDF{model_name}__for_multi_norm", norm)
+                try:
+                    self.workspace.Import(norm_var)
+                    getattr(self.workspace, "import")(norm_var)
+                except Exception:
+                    print(f"{norm_var} already exists in workspace, skipping...")
             #print(pdflist)
             multipdf = rt.RooMultiPdf(
-                f"multipdf_{self.channel}_{category}_{label}", "multipdf", cat, pdflist
+                f"multipdf_{self.channel}_{category}", "multipdf", cat, pdflist
             )
+            norm_var = rt.RooRealVar(f"multipdf_{self.channel}_{category}_norm",f"multipdf_{self.channel}_{category}_norm", norm)
+            try:
+                self.workspace.Import(norm_var)
+                getattr(self.workspace, "import")(norm_var)
+            except Exception:
+                print(f"{norm_var} already exists in workspace, skipping...")
+
             #multipdf.fitTo(
             #    self.workspace.obj(ds_name),
             #    rt.RooFit.Save(),
@@ -865,6 +879,8 @@ class Fitter(object):
             #self.add_model("multipdf", category=category)
             getattr(self.workspace, "import")(cat)
             self.workspace.Import(multipdf, rt.RooFit.RenameConflictNodes("_for_multi"))
+
+
         #print(pdfs[model_key])
         print(f'Chi2 = {chi2}')
         
