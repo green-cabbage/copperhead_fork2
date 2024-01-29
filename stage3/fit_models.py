@@ -84,9 +84,9 @@ def bwZGamma(x, tag, mix_min=0.001):
 # with an off power for the breit weigner
 # ----------------------------------------
 def bwZredux(x, tag):
-    a1 = rt.RooRealVar("bwz_redux_a1" + tag, "a1", 1.39, 0.7, 2.1)
-    a2 = rt.RooRealVar("bwz_redux_a2" + tag, "a2", 0.46, 0.30, 0.62)
-    a3 = rt.RooRealVar("bwz_redux_a3" + tag, "a3", -0.26, -0.40, -0.12)
+    a1 = rt.RooRealVar("bwz_redux_a1" + tag, "a1", 1.39, 1.0, 3.1) #1.39, 0.7, 2.1 -original values from Arnab
+    a2 = rt.RooRealVar("bwz_redux_a2" + tag, "a2", 0.46, 0.00, 50.0) #0.46, 0.30, 0.62
+    a3 = rt.RooRealVar("bwz_redux_a3" + tag, "a3", -0.26, -50.00, 0.0) #0.26, -0.40, -0.12
 
     # a1.setConstant()
     # a2.setConstant()
@@ -379,15 +379,23 @@ def bwZGammaPlusLinear(x, tag):
             linMmumu,
         ],
     )
-
+def SumTwoExpPdf(x, tag):
+    a1 = rt.RooRealVar("a1" + tag, "a1", 0.1, -2., 2)
+    a2 = rt.RooRealVar("a2" + tag, "a2", 0.1,-2., 2)
+    f = rt.RooRealVar("f" + tag, "f", 0.1, 0, 2)
+    #m = rt.RooRealVar("m" + tag, "m", 91.2, 90, 92)
+    offset  = True
+    model = rt.RooSumTwoExpPdf("SumTwoExpPdf" + tag, "SumTwoExpPdf", x, a1,a2,f,offset)
+    return model, [a1,a2,f]
 
 def doubleCB(x, tag):
     mean = rt.RooRealVar("mean" + tag, "mean", 125.0, 120.0, 130.0)
-    sigma = rt.RooRealVar("sigma" + tag, "sigma", 2, 0.0, 5.0)
-    alpha1 = rt.RooRealVar("alpha1" + tag, "alpha1", 1.0, 0.01, 15)
-    n1 = rt.RooRealVar("n1" + tag, "n1", 1.5, 0, 25)
-    alpha2 = rt.RooRealVar("alpha2" + tag, "alpha2", 1.0, 0.01, 15)
-    n2 = rt.RooRealVar("n2" + tag, "n2", 1.5, 0, 25)
+    sigma = rt.RooRealVar("sigma" + tag, "sigma", 1.5, 0.0, 10.0)
+    alpha1 = rt.RooRealVar("alpha1" + tag, "alpha1", 1.0, 0.001, 5)
+    n1 = rt.RooRealVar("n1" + tag, "n1", 1.5, -10, 30)
+    alpha2 = rt.RooRealVar("alpha2" + tag, "alpha2", 1.0, 0.001, 5)
+    n2 = rt.RooRealVar("n2" + tag, "n2", 1.5, -10, 30)
+    #mean.setConstant(True)
     model = rt.RooDoubleCB("dcb" + tag, "dcb", x, mean, sigma, alpha1, n1, alpha2, n2)
     return model, [mean, sigma, alpha1, n1, alpha2, n2]
 
