@@ -1,4 +1,7 @@
 datasets = {
+    "2018": {
+        "data_A": "/store/user/vscheure/SingleMuon/crab_Data2018A_nanov12_2/",
+    },
     "2022EE": {
         #"test_file": "root://xrootd.rcac.purdue.edu//store/mc/RunIISummer16NanoAODv6/DYJetsToLL_M-105To160_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8//NANOAODSIM//PUMoriond17_Nano25Oct2019_102X_mcRun2_asymptotic_v7_ext1-v1//70000//6D37B11E-A470-FE44-8D02-E4ED006C1D0E.root",
         #"data_B": "/store/data/Run2016B/SingleMuon/NANOAOD/ver2_HIPM_UL2016_MiniAODv2_NanoAODv9-v2/",

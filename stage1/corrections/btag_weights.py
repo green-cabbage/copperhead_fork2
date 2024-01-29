@@ -13,7 +13,7 @@ def btag_weights_json(processor, systs, jets, weights, bjet_sel_mask, btag_file)
     jets.loc[jets.pt > 1000.0, "pt"] = 1000.0
     
     
-    btag_json=[btag_file["deepCSV_shape"]]
+    btag_json=[btag_file["deep_shape"]]
     jets.loc[abs(jets["eta"]) < 2.4, "btag_wgt"] = onedimeval(partial(btag_json[0].evaluate,
         "central"),
         jets.hadronFlavour.values,

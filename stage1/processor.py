@@ -31,7 +31,7 @@ from stage1.corrections.btag_weights import btag_weights_json
 
 from stage1.muons import fill_muons
 from stage1.jets import prepare_jets, fill_jets, fill_softjets
-from stage1.jets import jet_id, jet_puid
+from stage1.jets import jet_id #jet_puid
 from stage1.jets import fill_gen_jets
 
 from config.parameters import parameters
@@ -617,8 +617,8 @@ class DimuonProcessor(processor.ProcessorABC):
             "btagDeepFlavB",
             "has_matched_gen",
         ]
-        if "puId17" in df.Jet.fields:
-            jet_columns += ["puId17"]
+        #if "puId17" in df.Jet.fields:
+            #jet_columns += ["puId17"]
         if is_mc:
             jet_columns += ["partonFlavour", "hadronFlavour"]
         if variation == "nominal":
@@ -685,7 +685,7 @@ class DimuonProcessor(processor.ProcessorABC):
         # ------------------------------------------------------------#
 
         pass_jet_id = jet_id(jets, self.parameters, self.year)
-        pass_jet_puid = jet_puid(jets, self.parameters, self.year)
+        #pass_jet_puid = jet_puid(jets, self.parameters, self.year)
 
         # Jet PUID scale factors
         # if is_mc and False:  # disable for now
@@ -702,7 +702,7 @@ class DimuonProcessor(processor.ProcessorABC):
 
         jet_selection = (
             pass_jet_id
-            & pass_jet_puid
+            #& pass_jet_puid
             #& (jets.qgl > -2)
             & jets.clean
             & (jets.pt > self.parameters["jet_pt_cut"])
@@ -783,7 +783,7 @@ class DimuonProcessor(processor.ProcessorABC):
         # Separate from ttH and VH phase space
         variables["nBtagLoose"] = (
             jets[
-                (jets.btagDeepB > self.parameters["btag_loose_wp"])
+                (jets.btagDeepFlavB > self.parameters["btag_loose_wp"])
                 & (abs(jets.eta) < 2.5)
             ]
             .reset_index()
@@ -793,7 +793,7 @@ class DimuonProcessor(processor.ProcessorABC):
 
         variables["nBtagMedium"] = (
             jets[
-                (jets.btagDeepB > self.parameters["btag_medium_wp"])
+                (jets.btagDeepFlavB > self.parameters["btag_medium_wp"])
                 & (abs(jets.eta) < 2.5)
             ]
             .reset_index()

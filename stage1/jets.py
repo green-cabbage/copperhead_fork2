@@ -27,14 +27,14 @@ def fill_jets(output, variables, jet1, jet2):
         "jet1_phi",
         #"jet1_qgl",
         "jet1_jetId",
-        "jet1_puId",
+        #"jet1_puId",
         "jet1_has_matched_gen" "jet2_pt",
         "jet2_eta",
         "jet2_rap",
         "jet2_phi",
         #"jet2_qgl",
         "jet2_jetId",
-        "jet2_puId",
+        #"jet2_puId",
         "jet2_has_matched_gen" "jj_mass",
         "jj_mass_log",
         "jj_pt",
@@ -70,7 +70,9 @@ def fill_jets(output, variables, jet1, jet2):
     # Fill single jet variables
     for v in ["pt", "eta", "phi", 
               #"qgl", 
-              "jetId", "puId", "has_matched_gen"]:
+              "jetId", 
+              #"puId",
+              "has_matched_gen"]:
         variables[f"jet1_{v}"] = jet1[v]
         variables[f"jet2_{v}"] = jet2[v]
 

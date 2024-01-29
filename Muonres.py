@@ -208,7 +208,7 @@ if sys.argv[1]=="dataRun3":
 if sys.argv[1] =="Z":
     fname = "root://cmsxrootd.fnal.gov///store/mc/RunIISummer20UL18NanoAODv9/DY1JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/120000/3F74AD49-80AE-9B4B-9B30-CE5E644724E4.root"
 if (sys.argv[1] =="Higgs") or   (sys.argv[1] =="cats"):
-    fname = "root://cmsxrootd.fnal.gov///store/mc/RunIISummer20UL18NanoAODv9/GluGluHToMuMu_M125_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/2810000/C4DAB63C-E2A1-A541-93A8-3F46315E362C.root"
+    fname="root://eos.cms.rcac.purdue.edu//store/user/vscheure/GluGluHToMuMu_M125_TuneCP5_13TeV-powheg-pythia8/crab_ggHMuMuNanov12/240124_195025/0000/GluGluHToMuMu_ULRun2_2018_NANOAODv12_3.root"
 if sys.argv[1] == "v12":
     fname= "root://cmsxrootd.fnal.gov///store/mc/Run3Summer22EENanoAODv12/DYJetsToLL_M-50_TuneCP5_13p6TeV-madgraphMLM-pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v5-v2/30000/505c3e6c-6ed4-4d8d-9e46-6753dd018ca8.root"
 if sys.argv[1] == "v11":
@@ -258,6 +258,9 @@ muon_columns = [
                 "charge",
                 "ptErr",
                 "mass",
+                "bsConstrainedPt",
+                "bsConstrainedPtErr",
+                #"bsConstrainedPtChi2",
                 "pfRelIso04_all",
                 "mediumId",
                 "isGlobal",
@@ -342,9 +345,11 @@ Analysis_DF = output[["runID", "lumiID", "eventID","mu1_charge", "mu1_pt","mu2_c
 with pd.option_context('display.float_format', '{:0.20f}'.format):
     Analysis_DF.to_csv("eventnumberedptNano.csv")
 output= output[output.event_selection==True]
-print(output)
-print(output[output["dimuon_mass"]>110])
-print(output[output["dimuon_mass"]>110]["dimuon_mass"])
+#print(output)
+#print(output[output["dimuon_mass"]>110])
+#print(output[output["dimuon_mass"]>110]["dimuon_mass"])
+print(output["mu1_bsConstrainedPt"])
+print(output["mu2_bsConstrainedPtErr"])
 EtaCats = [[0.0,0.9,0.0,0.9],[0.0,0.9,0.9,1.8],[0.0,0.9,1.8,2.4], [0.9,1.8,0.0,0.9], [0.9,1.8,0.9,1.8], [0.9,1.8,1.8,2.4],[1.8,2.4,0.0,0.9],[1.8,2.4,0.9,1.8],[1.8,2.4,1.8,2.4]]
 nbins=80
 EtaCats  = [[0.0,0.9,0.0,0.9],[0.0,0.9,1.8,2.4],[1.8,2.4,1.8,2.4]]
