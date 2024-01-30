@@ -62,7 +62,8 @@ parameters = {
     "label": args.label,
      #"channels": ["vbf"],
     "channels": ["ggh"],
-    #"category": ["BDTperyear_2018_cat2","BDTperyear_2018_cat3","BDTperyear_2018_cat4","BDTperyear_2018_cat5"],
+    #"category": ["BDTperyear_2018_cat0","BDTperyear_2018_cat2","BDTperyear_2018_cat2","BDTperyear_2018_cat3","BDTperyear_2018_cat4"],
+    "category": ["EtaCats_cat0","EtaCats_cat1","EtaCats_cat2"],
     #"category":["All"],
       #"channels": ["ggh_0jets"],
      #"channels": ["none"],
@@ -74,13 +75,13 @@ parameters = {
     "syst_variations": ["nominal"],
     #
     # < plotting settings >
-    "plot_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
+    "plot_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res", "mu1_eta","jet1_pt",'mu2_eta',"mu1_pt",'dimuon_eta',],#["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_cos_theta_cs","zeppenfeld",'dimuon_eta',"jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",'jet1_qgl', 'mu2_eta', 'mu2_iso',], 
     #"plot_vars": ["njets"],
     "variables_lookup": variables_lookup,
     "save_plots": True,
     "plot_ratio": True,
     "plots_path": f"{args.plotsdir}/",
-   "dnn_models": {
+   #"dnn_models": {
        #"vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
     #"ggh": ["ggHtest2"],
        
@@ -104,14 +105,14 @@ parameters = {
         #    #"pytorch_sep2_vbf+ggh_vs_dy+ewk",
         # ],
         # "vbf": ["pytorch_may24_pisa"],
-    },
+    #},
     "bdt_models": {
-        "ggh": ["BDTperyear_2018"],
+    #"ggh": ["BDTperyear"],
     },
     #
     # < templates and datacards >
-    "save_templates": False,
-    "templates_vars": [  "score_ValerieDNNtest3"],
+    #"save_templates": False,
+    #"templates_vars": [  "score_ValerieDNNtest3"],
 }
 
 parameters["grouping"] = {
@@ -123,7 +124,7 @@ parameters["grouping"] = {
     "data_F": "Data",
     "data_G": "Data",
     "data_H": "Data",
-    "data_x": "Data",
+    #"data_x": "Data",
     #"dy_M-50": "DY",
     #"dy_M-50_nocut": "DY_nocut",
     "dy_M-100To200": "DY",
@@ -202,10 +203,10 @@ if __name__ == "__main__":
     print(f"Connected to cluster! #CPUs = {parameters['ncpus']}")
 
     # add MVA scores to the list of variables to plot
-    #dnn_models = []
-    dnn_models = list(parameters["dnn_models"].values())
-    #bdt_models = []
-    bdt_models = list(parameters["bdt_models"].values())
+    dnn_models = []
+    #dnn_models = list(parameters["dnn_models"].values())
+    bdt_models = []
+    #bdt_models = list(parameters["bdt_models"].values())
     for models in dnn_models + bdt_models:
        for model in models:
             parameters["plot_vars"] += ["score_" + model]
@@ -219,9 +220,9 @@ if __name__ == "__main__":
     #print(yields)
 
     # save templates to ROOT files
-    yield_df = to_templates(client, parameters)
+    #yield_df = to_templates(client, parameters)
     #print(yield_df)
 
     # make datacards
-    build_datacards("score_ValerieDNNtest3", yield_df, parameters)
+    #build_datacards("score_ValerieDNNtest3", yield_df, parameters)
     

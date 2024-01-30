@@ -13,13 +13,13 @@ def btag_weights_json(processor, systs, jets, weights, bjet_sel_mask, btag_file)
     jets.loc[jets.pt > 1000.0, "pt"] = 1000.0
     
     
-    btag_json=[btag_file["deep_shape"]]
+    btag_json=[btag_file["deepJet_shape"]]
     jets.loc[abs(jets["eta"]) < 2.4, "btag_wgt"] = onedimeval(partial(btag_json[0].evaluate,
         "central"),
         jets.hadronFlavour.values,
         abs(jets.eta.values),
         jets.pt.values,
-        jets.btagDeepB.values,
+        jets.btagDeepFlavB.values,
     )
     btag["wgt"] = jets["btag_wgt"].prod(level=0)
     btag["wgt"] = btag["wgt"].fillna(1.0)
@@ -51,7 +51,7 @@ def btag_weights_json(processor, systs, jets, weights, bjet_sel_mask, btag_file)
                     jets.hadronFlavour[btag_mask].values,
                     abs(jets.eta)[btag_mask].values,
                     jets.pt[btag_mask].values,
-                    jets.btagDeepB[btag_mask].values,
+                    jets.btagDeepFlavB[btag_mask].values,
                     
                 )
                 jets.loc[btag_mask, f"btag_{sys}_down"] = onedimeval(partial(btag_json[0].evaluate,
@@ -59,7 +59,7 @@ def btag_weights_json(processor, systs, jets, weights, bjet_sel_mask, btag_file)
                     jets.hadronFlavour[btag_mask].values,
                     abs(jets.eta)[btag_mask].values,
                     jets.pt[btag_mask].values,
-                    jets.btagDeepB[btag_mask].values,
+                    jets.btagDeepFlavB[btag_mask].values,
                     
                 )
 
@@ -92,7 +92,7 @@ def btag_weights_csv(processor, lookup, systs, jets, weights, bjet_sel_mask):
         jets.hadronFlavour.values,
         abs(jets.eta.values),
         jets.pt.values,
-        jets.btagDeepB.values,
+        jets.btagDeepFlavB.values,
         True,
     )
     btag["wgt"] = jets["btag_wgt"].prod(level=0)
@@ -124,7 +124,7 @@ def btag_weights_csv(processor, lookup, systs, jets, weights, bjet_sel_mask):
                     jets.hadronFlavour[btag_mask].values,
                     abs(jets.eta)[btag_mask].values,
                     jets.pt[btag_mask].values,
-                    jets.btagDeepB[btag_mask].values,
+                    jets.btagDeepFlavB[btag_mask].values,
                     True,
                 )
                 jets.loc[btag_mask, f"btag_{sys}_down"] = lookup.eval(
@@ -132,7 +132,7 @@ def btag_weights_csv(processor, lookup, systs, jets, weights, bjet_sel_mask):
                     jets.hadronFlavour[btag_mask].values,
                     abs(jets.eta)[btag_mask].values,
                     jets.pt[btag_mask].values,
-                    jets.btagDeepB[btag_mask].values,
+                    jets.btagDeepFlavB[btag_mask].values,
                     True,
                 )
 

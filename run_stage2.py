@@ -63,9 +63,10 @@ parameters = {
     "channels": ["ggh"],
         "category": ["cat1","cat2","cat3","cat4","cat5"],
     #"category": ["All"],
-    "mva_channels": ["ggh"],
-    "cats_by_score": True,
-    #"cats_by_score": False,
+    #"mva_channels": ["ggh"],
+    #"cats_by_score": True,
+    "cats_by_score": False,
+    "cats_by_eta": True,
     
     "signals": ["ggh_powheg"],
     "data": [ "data_x",
@@ -79,14 +80,16 @@ parameters = {
     # },
     #
     # < settings for histograms >
-    "hist_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","dimuon_mass_res","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
+    "hist_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res", "mu1_eta","jet1_pt",'mu2_eta',"mu1_pt",'dimuon_eta',],#"dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","dimuon_mass_res","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",'jet1_qgl', 'mu2_iso',],    #['dimuon_cos_theta_cs', 'dimuon_dEta', 'dimuon_dPhi', 'dimuon_dR',  'dimuon_phi', 'dimuon_phi_cs', 'dimuon_pt', 'dimuon_pt_log', 'jet1_eta', 'jet1_phi', 'jet1_pt', 'jet1_qgl', 'jet2_eta', 'jet2_phi', 'jet2_pt', 'jet2_qgl', 'jj_dEta', 'jj_dPhi', 'jj_eta', 'jj_mass', 'jj_mass_log', 'jj_phi', 'jj_pt', 'll_zstar_log', 'mmj1_dEta', 'mmj1_dPhi', 'mmj2_dEta', 'mmj2_dPhi', 'mmj_min_dEta', 'mmj_min_dPhi', 'mmjj_eta', 'mmjj_mass', 'mmjj_phi', 'mmjj_pt', 'mu1_eta', 'mu1_iso', 'mu1_phi', 'mu1_pt_over_mass', 'mu2_eta', 'mu2_iso', 'mu2_phi', 'mu2_pt_over_mass', 'zeppenfeld'],
+    
+
     "variables_lookup": variables_lookup,
     "save_hists": True,
     #
     # < settings for unbinned output>
     "tosave_unbinned": {
-        "vbf": ["dimuon_mass", "event", "wgt_nominal", "mu1_pt", "score_pytorch_test"],
-        "none": ["dimuon_mass", "event", "wgt_nominal", "mu1_pt", "score_pytorch_test"],
+        #"vbf": ["dimuon_mass", "event", "wgt_nominal", "mu1_pt", "score_pytorch_test"],
+        #"none": ["dimuon_mass", "event", "wgt_nominal", "mu1_pt", "score_pytorch_test"],
         "ggh_0jets": ["dimuon_mass", "wgt_nominal"],
         "ggh_1jet": ["dimuon_mass", "wgt_nominal"],
         "ggh_2orMoreJets": ["dimuon_mass", "wgt_nominal"],
@@ -119,11 +122,11 @@ parameters = {
         #    #"pytorch_sep2_vbf+ggh_vs_dy+ewk",
          #],
         # "vbf": ["pytorch_may24_pisa"],
-    },
+   },
     # "mva_categorizer": "3layers_64_32_16_all_feat",
     # "vbf_mva_cutoff": 0.5,
     "bdt_models": {
-         "ggh": ["BDTperyear"],
+         #"ggh": ["BDTperyear"],
     },
     "mva_bins_original": mva_bins,
 }
@@ -162,7 +165,7 @@ parameters["datasets"] = [
     #"wwz",
     #wzz",
     #"zzz",
-    "ggh_powheg",
+    #"ggh_powheg",
     #"vbf_powheg",
 ]
 # using one small dataset for debugging

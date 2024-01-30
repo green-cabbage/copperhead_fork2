@@ -65,6 +65,7 @@ class DimuonProcessor(processor.ProcessorABC):
         self.do_roccor = True
         self.do_fsr = True
         self.do_geofit = True
+        self.bsConst = False#~self.do_geofit
         self.auto_pu = True
         self.do_nnlops = True
         self.do_pdf = True
@@ -233,6 +234,32 @@ class DimuonProcessor(processor.ProcessorABC):
         df["Muon", "phi_raw"] = df.Muon.phi
         df["Muon", "pfRelIso04_all_raw"] = df.Muon.pfRelIso04_all
 
+
+        # Use bsConstrainedPt instead of raw pt if Chi2 of BSfit is <30
+        if self.bsConst:
+          
+            
+            df["Muon", "bsConstrainedChi2"] = df.Muon.bsConstrainedChi2
+            df["Muon", "bsConstrainedPt"] = df.Muon.bsConstrainedPt
+            df["Muon", "bsConstrainedPtErr"] = df.Muon.bsConstrainedPtErr
+            BSConstraint_mask = (
+                (df.Muon.bsConstrainedChi2 <30)
+
+            )
+            BSConstraint_mask = ak.fill_none(BSConstraint_mask, False)
+            
+
+
+            df["Muon", "pt"] = ak.where(BSConstraint_mask, df.Muon.bsConstrainedPt, df.Muon.pt)
+            df["Muon", "ptErr"] = ak.where(BSConstraint_mask, df.Muon.bsConstrainedPtErr, df.Muon.ptErr)
+            
+        else:
+            df["Muon", "bsConstrainedChi2"] = 0
+            df["Muon", "bsConstrainedPt"] = 0
+            df["Muon", "bsConstrainedPtErr"] = 0
+
+
+        
         # Rochester correction
         if self.do_roccor:
             apply_roccor(df, self.roccor_lookup, is_mc)
@@ -285,6 +312,9 @@ class DimuonProcessor(processor.ProcessorABC):
                 "pt_raw",
                 "eta_raw",
                 "pfRelIso04_all",
+                "bsConstrainedChi2",
+                "bsConstrainedPt",
+                "bsConstrainedPtErr",
             ] + [self.parameters["muon_id"]]
             muons = ak.to_pandas(df.Muon[muon_columns])
 
