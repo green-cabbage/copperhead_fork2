@@ -4,8 +4,8 @@ from python.math_tools import p4_sum, delta_r, cs_variables, cs_variables_pisa
 
 
 def fill_muons(processor, output, mu1, mu2, is_mc):
-    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso"]
-    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso"]
+    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso","mu1_bsConstrainedPt","mu1_bsConstrainedPtErr","mu1_bsConstrainedChi2","mu1_pt_raw"]
+    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso","mu2_bsConstrainedPt","mu2_bsConstrainedPtErr","mu2_bsConstrainedChi2","mu2_pt_raw"]
     dimuon_variable_names = [
         "dimuon_mass",
         "dimuon_ebe_mass_res",
@@ -28,14 +28,13 @@ def fill_muons(processor, output, mu1, mu2, is_mc):
         output[n] = 0.0
 
     # Fill single muon variables
-    for v in ["pt", "ptErr", "eta", "phi"]:
+    for v in ["pt", "ptErr", "eta", "phi","bsConstrainedPt","bsConstrainedPtErr","bsConstrainedChi2","pt_raw"]:
         output[f"mu1_{v}"] = mu1[v]
         output[f"mu2_{v}"] = mu2[v]
 
     output["mu1_iso"] = mu1.pfRelIso04_all
     output["mu2_iso"] = mu2.pfRelIso04_all
-    output["mu1_pt_over_mass"] = output.mu1_pt / output.dimuon_mass
-    output["mu2_pt_over_mass"] = output.mu2_pt / output.dimuon_mass
+
 
     # Fill dimuon variables
     mm = p4_sum(mu1, mu2)
@@ -43,6 +42,8 @@ def fill_muons(processor, output, mu1, mu2, is_mc):
         name = f"dimuon_{v}"
         output[name] = mm[v]
         output[name] = output[name].fillna(-999.0)
+        
+
 
     output["dimuon_pt_log"] = np.log(output.dimuon_pt)
 
@@ -69,6 +70,12 @@ def fill_muons(processor, output, mu1, mu2, is_mc):
         output["dimuon_cos_theta_cs_pisa"],
         output["dimuon_phi_cs_pisa"],
     ) = cs_variables_pisa(mu1, mu2)
+
+    output["mu1_pt_over_mass"] = output.mu1_pt / output.dimuon_mass
+    output["mu2_pt_over_mass"] = output.mu2_pt / output.dimuon_mass
+
+
+
 def fill_muons_Simple(processor, output, mu1, mu2, is_mc):
     mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso"]
     mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso"]
@@ -122,6 +129,8 @@ def mass_resolution(is_mc, evaluator, df, year):
     dpt2 = (df.mu2_ptErr * df.dimuon_mass) / (2 * df.mu2_pt)
     if "2016" in year:
         yearstr = "2016"
+    if "2022" in year:
+        yearstr = "2018"
     else:
         yearstr=year #Work around before there are seperate new files for pre and postVFP
     if is_mc:
