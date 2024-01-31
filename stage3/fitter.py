@@ -21,7 +21,7 @@ def run_fits(parameters, df,df_all):
     backgrounds = [ds for ds in all_datasets if ds in data_ds]
     fit_setups = []
 
-    if len(backgrounds) < 0:
+    if len(backgrounds) > 0:
         fit_setup_multi = {
            "label": "background_all",
            "mode": "bkg_all",
@@ -29,6 +29,9 @@ def run_fits(parameters, df,df_all):
            "df": df_all[df_all.dataset.isin(backgrounds)],
            "blinded": False,
         }
+        for ds in signals:
+            fit_setup = {"label": ds, "mode": "sig", "year": year, "df": df[df.dataset == ds]}
+            fit_setups.append(fit_setup)
         fit_setups.append(fit_setup_multi)
         argset = {
             "fit_setup": fit_setups,
@@ -108,7 +111,7 @@ def fitter(args, parameters={}):
         category = args["category"]
     else:
         category = 'All'
-    save_path = save_path + f"/fits_{channel}_{category}_{label}/"
+    save_path = save_path + f"/fits_{channel}_{category}_geofit/"
     mkdir(save_path)
     #print(df)
     df = df[(df.channel_nominal == channel) & (df.category == category)]

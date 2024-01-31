@@ -145,7 +145,7 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         leg1.SetLineColor(0)
         leg1.SetTextSize(0.03)
         leg1.AddEntry(
-            h_pdf, "#scale[0.8]{#sigma_{eff} = %1.2f GeV}" % getEffSigma(h_pdf), "l"
+            h_pdf, "#scale[0.8]{#sigma_{eff} = %1.4f GeV}" % getEffSigma(h_pdf), "l"
         )
         # leg1.AddEntry(h_pdf_splitByYear['2017'],"2017: #scale[0.8]{#sigma_{eff} = %1.2f GeV}"%getEffSigma(h_pdf_splitByYear['2017']),"l")
         # leg1.AddEntry(h_pdf_splitByYear['2018'],"2018: #scale[0.8]{#sigma_{eff} = %1.2f GeV}"%getEffSigma(h_pdf_splitByYear['2018']),"l")
@@ -157,7 +157,7 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         leg2.SetTextSize(0.03)
         leg2.AddEntry(
             h_effSigma,
-            "#sigma_{eff} = %1.2f GeV" % (0.5 * (effSigma_high - effSigma_low)),
+            "#sigma_{eff} = %1.4f GeV" % (0.5 * (effSigma_high - effSigma_low)),
             "fl",
         )
         leg2.Draw("Same")
@@ -201,7 +201,7 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         fwhmText.SetNDC()
         fwhmText.SetTextSize(0.03)
         fwhmText.DrawLatex(
-            0.17 + offset, 0.25, "FWHM = %1.2f GeV" % (fwhm_high - fwhm_low)
+            0.17 + offset, 0.25, "FWHM = %1.4f GeV" % (fwhm_high - fwhm_low)
         )
     else:
         
