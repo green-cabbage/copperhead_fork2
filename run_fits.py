@@ -46,7 +46,7 @@ parameters = {
     "cats_by_score": True,
     #"cats_by_score": False,
     
-    "signals": ["ggh_powheg"],
+    "signals": ["ggh_powheg", "vbf_powheg"],
     "data": [ "data_x",
             ],
     #"regions": ["h-sidebands","h-peak"],
@@ -66,8 +66,9 @@ parameters["datasets"] = [
     #"data_F",
     #"data_G",
     #"data_H",
-    "data_x",
-    "ggh_powheg",
+    #"data_x",
+    #"ggh_powheg",
+    "vbf_powheg"
 
 ]
 
