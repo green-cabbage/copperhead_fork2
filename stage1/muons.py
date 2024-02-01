@@ -4,8 +4,8 @@ from python.math_tools import p4_sum, delta_r, cs_variables, cs_variables_pisa
 
 
 def fill_muons(processor, output, mu1, mu2, is_mc):
-    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso","mu1_bsConstrainedPt","mu1_bsConstrainedPtErr","mu1_bsConstrainedChi2","mu1_pt_raw"]
-    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso","mu2_bsConstrainedPt","mu2_bsConstrainedPtErr","mu2_bsConstrainedChi2","mu2_pt_raw"]
+    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso","mu1_pt_raw"]
+    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso","mu2_pt_raw"]
     dimuon_variable_names = [
         "dimuon_mass",
         "dimuon_ebe_mass_res",

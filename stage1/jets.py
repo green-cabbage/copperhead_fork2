@@ -135,15 +135,16 @@ def fill_jets(output, variables, jet1, jet2):
     )
 
     variables.mmj_min_dEta = np.where(
-        variables.mmj1_dEta,
-        variables.mmj2_dEta,
         (variables.mmj1_dEta < variables.mmj2_dEta),
+        variables.mmj1_dEta,
+        variables.mmj2_dEta,     
     )
 
     variables.mmj_min_dPhi = np.where(
+        (variables.mmj1_dPhi < variables.mmj2_dPhi),
         variables.mmj1_dPhi,
         variables.mmj2_dPhi,
-        (variables.mmj1_dPhi < variables.mmj2_dPhi),
+        
     )
 
 
