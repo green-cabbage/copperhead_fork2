@@ -165,7 +165,7 @@ parameters["datasets"] = [
     #"wwz",
     #wzz",
     #"zzz",
-    #"ggh_powheg",
+    "ggh_powheg",
     #"vbf_powheg",
 ]
 # using one small dataset for debugging

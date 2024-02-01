@@ -64,8 +64,8 @@ class DimuonProcessor(processor.ProcessorABC):
         # enable corrections
         self.do_roccor = True
         self.do_fsr = True
-        self.do_geofit = True
-        self.bsConst = False#~self.do_geofit
+        self.do_geofit = False
+        self.bsConst = True#~self.do_geofit
         self.auto_pu = True
         self.do_nnlops = True
         self.do_pdf = True

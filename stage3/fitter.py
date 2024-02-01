@@ -111,7 +111,7 @@ def fitter(args, parameters={}):
         category = args["category"]
     else:
         category = 'All'
-    save_path = save_path + f"/fits_{channel}_{category}_geofit/"
+    save_path = save_path + f"/fits_{channel}_{category}/"
     mkdir(save_path)
     #print(df)
     df = df[(df.channel_nominal == channel) & (df.category == category)]
