@@ -67,7 +67,7 @@ parameters["datasets"] = [
     #"data_G",
     #"data_H",
     #"data_x",
-    #"ggh_powheg",
+    "ggh_powheg",
     "vbf_powheg"
 
 ]

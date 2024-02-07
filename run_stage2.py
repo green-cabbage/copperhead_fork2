@@ -13,6 +13,7 @@ from stage3.fitter import run_fits
 from config.mva_bins import mva_bins
 from config.variables import variables_lookup
 import pandas as pd
+import pdb
 
 __all__ = ["dask"]
 
@@ -57,6 +58,7 @@ parameters = {
     # < general settings >
     "slurm_cluster_ip": slurm_cluster_ip,
     "global_path": "/depot/cms/hmm/vscheure",
+    #"global_path_out": "/home/notdepot/",
     "years": args.year,
     "label": args.label,
     #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
@@ -71,8 +73,8 @@ parameters = {
     "signals": ["ggh_powheg"],
     "data": [ "data_x",
             ],
-    "regions": ["h-sidebands","h-peak"],
-    #"regions": ["none"],
+    #"regions": ["h-sidebands","h-peak"],
+    "regions": ["none"],
     
     "syst_variations": ["nominal"],
     # "custom_npartitions": {
@@ -124,14 +126,14 @@ parameters = {
     # "mva_categorizer": "3layers_64_32_16_all_feat",
     # "vbf_mva_cutoff": 0.5,
     "bdt_models": {
-         "ggh": ["BDTperyear"],
+         #"ggh": ["BDTperyear"],
     },
     "mva_bins_original": mva_bins,
 }
 
 parameters["datasets"] = [
     #"data_A",
-    #"data_B",
+    "data_B",
     #"data_C",
     #"data_D",
     #"data_E",
@@ -141,7 +143,7 @@ parameters["datasets"] = [
     #"data_x",
     #"dy_M-50",
     #"dy_M-50_nocut",
-    "dy_M-100To200",
+    #"dy_M-100To200",
     #"dy_1j",
     #"dy_2j",
     #"dy_m105_160_amc",
@@ -248,7 +250,8 @@ if __name__ == "__main__":
                 df.loc[df.dataset=="data_G", "dataset"] = "data_x"
                 df.loc[df.dataset=="data_H", "dataset"] = "data_x"
             print("have df, starting to compute")
-            #print(df.compute())
+            print(df.compute())
+            #pdb.set_trace()
             #if not isinstance(df, dd.DataFrame):
                 #print("Dataframe not in correct format")
                 #continue

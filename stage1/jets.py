@@ -154,7 +154,7 @@ def jet_id(jets, parameters, year):
         pass_jet_id = jets.jetId >= 1
     elif "tight" in parameters["jet_id"]:
         if "2016" in year:
-            pass_jet_id = jets.jetId >= 3
+            pass_jet_id = jets.jetId >= 6
         else:
             pass_jet_id = jets.jetId >= 2
     return pass_jet_id
@@ -164,19 +164,29 @@ def jet_puid(jets, parameters, year):
     jet_puid_opt = parameters["jet_puid"]
     #puId = jets.puId17 if year == "2017" else jets.puId
     puId = jets.puId
-    jet_puid_wps = {
-        "loose": (puId >= 4) | (jets.pt > 50),
-        "medium": (puId >= 6) | (jets.pt > 50),
-        "tight": (puId >= 7) | (jets.pt > 50),
-    }
+    if "2016" in year: #Bug in PileUp ID in NanoAOD v9: Numbers are different
+        jet_puid_wps = {
+            "loose": (puId >= 1) | (jets.pt > 50),
+            "medium": (puId >= 3) | (jets.pt > 50),
+            "tight": (puId >= 7) | (jets.pt > 50),
+        }
+    else:
+        jet_puid_wps = {
+            "loose": (puId >= 4) | (jets.pt > 50),
+            "loose2017": (puId >= 4),
+            "medium": (puId >= 6) | (jets.pt > 50),
+            "tight": (puId >= 7) | (jets.pt > 50),
+        }
     pass_jet_puid = np.ones_like(jets.pt.values)
     if jet_puid_opt in ["loose", "medium", "tight"]:
         pass_jet_puid = jet_puid_wps[jet_puid_opt]
     elif "2017corrected" in jet_puid_opt:
-        eta_window = (abs(jets.eta) > 2.6) & (abs(jets.eta) < 3.0)
+        eta_window = (abs(jets.eta) > 2.6) & (abs(jets.eta) < 3.1)
         pass_jet_puid = (eta_window & (puId >= 7)) | (
-            (~eta_window) & jet_puid_wps["loose"]
+            (~eta_window) & jet_puid_wps["loose2017"]
         )
+    #with open(f'puid.txt', 'w') as f:
+        #print(pass_jet_puid, file=f)
     return pass_jet_puid
 
 

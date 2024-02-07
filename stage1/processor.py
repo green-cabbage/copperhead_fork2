@@ -27,7 +27,7 @@ from stage1.corrections.pdf_variations import add_pdf_variations
 from stage1.corrections.qgl_weights import qgl_weights
 from stage1.corrections.btag_weights import btag_weights_json
 
-# from stage1.corrections.puid_weights import puid_weights
+from stage1.corrections.puid_weights import puid_weights
 
 from stage1.muons import fill_muons
 from stage1.jets import prepare_jets, fill_jets, fill_softjets
@@ -251,8 +251,8 @@ class DimuonProcessor(processor.ProcessorABC):
             pt_to_print = ak.to_pandas((df["Muon", "pt"]))
             pd.set_option('display.min_rows', 200) 
             pd.set_option('display.max_rows', None)
-            with open(f'coffeatestfile1_{self.samp_info.year}.txt', 'w') as f:
-                   print(pt_to_print, file=f)
+            #with open(f'coffeatestfile1_{self.samp_info.year}.txt', 'w') as f:
+                   #print(pt_to_print, file=f)
             if self.do_fsr:
                 has_fsr = fsr_recovery(df)
                 df["Muon", "pt"] = df.Muon.pt_fsr
@@ -260,8 +260,8 @@ class DimuonProcessor(processor.ProcessorABC):
                 df["Muon", "phi"] = df.Muon.phi_fsr
                 df["Muon", "pfRelIso04_all"] = df.Muon.iso_fsr
             pt_to_print = ak.to_pandas((df["Muon", "pt"]))
-            with open(f'coffeatestfile2_{self.samp_info.year}.txt', 'w') as f:
-                    print(pt_to_print, file=f)
+            #with open(f'coffeatestfile2_{self.samp_info.year}.txt', 'w') as f:
+                    #print(pt_to_print, file=f)
             # if FSR was applied, 'pt_fsr' will be corrected pt
             # if FSR wasn't applied, just copy 'pt' to 'pt_fsr'
             df["Muon", "pt_fsr"] = df.Muon.pt
@@ -270,8 +270,8 @@ class DimuonProcessor(processor.ProcessorABC):
             if self.do_geofit and ("dxybs" in df.Muon.fields):
                 apply_geofit(df, self.year, ~has_fsr)
                 df["Muon", "pt"] = df.Muon.pt_gf
-            with open('coffeatestfile3.txt', 'w') as f:
-                    print(pt_to_print, file=f)
+            #with open('coffeatestfile3.txt', 'w') as f:
+                    #print(pt_to_print, file=f)
             if self.timer:
                 self.timer.add_checkpoint("Muon corrections")
 
@@ -690,13 +690,19 @@ class DimuonProcessor(processor.ProcessorABC):
         pass_jet_puid = jet_puid(jets, self.parameters, self.year)
 
         # Jet PUID scale factors
-        # if is_mc and False:  # disable for now
-        #     puid_weight = puid_weights(
-        #         self.evaluator, self.year, jets, pt_name,
-        #         jet_puid_opt, jet_puid, numevents
-        #     )
-        #     weights.add_weight('puid_wgt', puid_weight)
-
+        if is_mc:  # disable for now
+            jet_puid_opt = self.parameters["jet_puid"]
+            pt_name = "pt"
+            puId = jets.puId
+            puid_weight = puid_weights(
+                self.evaluator, self.year, jets, pt_name,
+                jet_puid_opt, pass_jet_puid, numevents
+            )
+            #weights.add_weight('puid_wgt', puid_weight)
+        with open('coutputjetid.txt', 'w') as f:
+            print(pass_jet_id, file=f)
+        with open('wgt.txt', 'w') as f:
+            print(jets["eta"], file=f)
         # ------------------------------------------------------------#
         # Select jets
         # ------------------------------------------------------------#
@@ -712,7 +718,11 @@ class DimuonProcessor(processor.ProcessorABC):
         )
 
         jets = jets[jet_selection]
-
+        jets_to_print = ["pt", "eta"]
+        with open('JETS2s.txt', 'w') as f:
+            print(jets[jets_to_print], file=f)
+        with open('muonss.txt', 'w') as f:
+            print(output["dimuon_mass"], file=f)
         # ------------------------------------------------------------#
         # Fill jet-related variables
         # ------------------------------------------------------------#
@@ -816,6 +826,7 @@ class DimuonProcessor(processor.ProcessorABC):
 
         for key, val in variables.items():
             output.loc[:, pd.IndexSlice[key, variation]] = val
+        columns_to_print = ["dimuon_mass", "jet1_eta", "njets"]
 
         return output
 

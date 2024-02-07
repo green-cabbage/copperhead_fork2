@@ -170,16 +170,16 @@ def submit_job(parameters):
         xrootdtimeout=2400,
     )
 
-    try:
-        run(
-            parameters["samp_infos"].fileset,
-            "Events",
-            processor_instance=DimuonProcessor(**processor_args),
-        )
+    #try:
+    run(
+        parameters["samp_infos"].fileset,
+        "Events",
+        processor_instance=DimuonProcessor(**processor_args),
+    )
 
-    except Exception as e:
-        tb = traceback.format_exc()
-        return "Failed: " + str(e) + " " + tb
+    #except Exception as e:
+        #tb = traceback.format_exc()
+        #return "Failed: " + str(e) + " " + tb
 
     return "Success!"
 
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=32,
+            n_workers=30,
             #dashboard_address=dash_local,
             threads_per_worker=1,
             memory_limit="6GB",
@@ -211,7 +211,7 @@ if __name__ == "__main__":
         "data": [
             #'test_file_data_A',
             #"data_A",
-            #"data_B",
+            "data_B",
             #"data_C",
             #"data_D",
             #"data_E",
@@ -220,7 +220,7 @@ if __name__ == "__main__":
             #"data_H",
        ],
         "signal": [
-            "ggh_powheg",
+            #"ggh_powheg",
             #"vbf_powheg",
            # "ggh_amcPS",
             #"vbf_powhegPS",
@@ -302,7 +302,7 @@ if __name__ == "__main__":
         out = submit_job(parameters)
         timings[f"process {lbl}"] = time.time() - tick2
 
-        #print(out)
+        print(out)
 
     elapsed = round(time.time() - tick, 3)
     print(f"Finished everything in {elapsed} s.")

@@ -28,7 +28,7 @@ def fill_muons(processor, output, mu1, mu2, is_mc):
         output[n] = 0.0
 
     # Fill single muon variables
-    for v in ["pt", "ptErr", "eta", "phi","bsConstrainedPt","bsConstrainedPtErr","bsConstrainedChi2","pt_raw"]:
+    for v in ["pt", "ptErr", "eta", "phi","pt_raw"]:
         output[f"mu1_{v}"] = mu1[v]
         output[f"mu2_{v}"] = mu2[v]
 

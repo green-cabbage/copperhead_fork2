@@ -4,7 +4,7 @@ import numpy as np
 
 class Weights(object):
     def __init__(self, data):
-        self.df = pd.DataFrame(1.0, index=data.index, columns=["nominal"])
+        self.df = pd.DataFrame(1.0, index=data.index, columns=["nominal","puid_wgt"])
         self.wgts = pd.DataFrame(index=data.index)
         self.variations = []
 
@@ -36,12 +36,16 @@ class Weights(object):
 
     def add_nom_weight(self, name, wgt):
         columns = self.df.columns
+
         self.df[f"{name}_off"] = self.df["nominal"]
         self.df[columns] = (
             self.df[columns].multiply(np.array(wgt), axis=0).astype(np.float64)
         )
         self.variations.append(name)
         self.wgts[name] = wgt
+        if name == "puid_wgt":
+            with open('iwgts.txt', 'w') as f:
+                print(wgt, file=f)
 
     def add_weight_with_variations(self, name, wgt, up, down):
         columns = self.df.columns

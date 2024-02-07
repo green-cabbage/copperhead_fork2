@@ -68,9 +68,9 @@ parameters = {
      #"channels": ["none"],
     #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
     #"regions": ["h-sidebands", "h-peak" ],
-    "regions": ["h-peak"],
+    #"regions": ["h-peak"],
     #"regions": ["h-sidebands"],
-    #"regions": ["none"],
+    "regions": ["none"],
     "syst_variations": ["nominal"],
     #
     # < plotting settings >
@@ -79,7 +79,7 @@ parameters = {
     "variables_lookup": variables_lookup,
     "save_plots": True,
     "plot_ratio": True,
-    "logscale" : False,
+    "logscale" : True,
     "plots_path": f"{args.plotsdir}/",
    "dnn_models": {
        #"vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
@@ -107,7 +107,7 @@ parameters = {
         # "vbf": ["pytorch_may24_pisa"],
     },
     "bdt_models": {
-        "ggh": ["BDTperyear_2018"],
+        #"ggh": ["BDTperyear_2018"],
     },
     #
     # < templates and datacards >
@@ -116,18 +116,18 @@ parameters = {
 }
 
 parameters["grouping"] = {
-    "data_A": "Data",
+    #"data_A": "Data",
     "data_B": "Data",
-    "data_C": "Data",
-    "data_D": "Data",
-    "data_E": "Data",
-    "data_F": "Data",
-    "data_G": "Data",
-    "data_H": "Data",
+    #"data_C": "Data",
+    #"data_D": "Data",
+    #"data_E": "Data",
+    #"data_F": "Data",
+    #"data_G": "Data",
+    #"data_H": "Data",
     #"data_x": "Data",
     #"dy_M-50": "DY",
     #"dy_M-50_nocut": "DY_nocut",
-    "dy_M-100To200": "DY",
+    #"dy_M-100To200": "DY",
     #"dy_M-50_01j": "DY_01J",
     #"dy_M-50_2j": "DY_2J",
     #"dy_M-100To200_01j": "DY_01J",
