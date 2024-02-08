@@ -82,7 +82,10 @@ parameters = {
     # },
     #
     # < settings for histograms >
-    "hist_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_pisa_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","dimuon_mass_res","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
+    "hist_vars":  ["jj_dEta","jj_mass","jj_dPhi","jj_eta","jj_pt","njets","jet1_pt","njets","jet1_eta","jet2_eta","jet2_pt"],
+    
+    #["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_pisa_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","dimuon_mass_res","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
+    
     "variables_lookup": variables_lookup,
     "save_hists": True,
     #
@@ -132,18 +135,18 @@ parameters = {
 }
 
 parameters["datasets"] = [
-    #"data_A",
+    "data_A",
     "data_B",
-    #"data_C",
-    #"data_D",
-    #"data_E",
-    #"data_F",
-    #"data_G",
-    #"data_H",
+    "data_C",
+    "data_D",
+    "data_E",
+    "data_F",
+    "data_G",
+    "data_H",
     #"data_x",
     #"dy_M-50",
     #"dy_M-50_nocut",
-    #"dy_M-100To200",
+    "dy_M-100To200",
     #"dy_1j",
     #"dy_2j",
     #"dy_m105_160_amc",
