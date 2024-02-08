@@ -145,8 +145,8 @@ def getGenMass(obj1,obj2):
     return result.mass
    
 def fill_muons(output, mu1, mu2):
-    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso", "mu1_charge"]
-    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso", "mu2_charge"]
+    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso", "mu1_charge", "genpt"]
+    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso", "mu2_charge", "genpt"]
     dimuon_variable_names = [
         "dimuon_mass",
         "dimuon_ebe_mass_res",
@@ -170,7 +170,7 @@ def fill_muons(output, mu1, mu2):
         output[n] = 0.0
 
     # Fill single muon variables
-    for v in ["pt", "ptErr", "eta", "phi"]:
+    for v in ["pt", "ptErr", "eta", "phi", "genpt"]:
         output[f"mu1_{v}"] = mu1[v]
         output[f"mu2_{v}"] = mu2[v]
     
@@ -219,12 +219,12 @@ events = NanoEventsFactory.from_root(
     fname,
     schemaclass=NanoAODSchema.v6,
     #metadata={"dataset": "DY"},
-    entry_stop=1000000,
+    entry_stop=10000,
 ).events()
 print(events.fields)
 print(events.event.fields)
 print(events.Muon.fields)
-pdb.set_trace()
+#pdb.set_trace()
 #has_fsr = fsr_recovery(events)
 #events["Muon", "pt"] = events.Muon.pt_fsr
 #events["Muon", "eta"] = events.Muon.eta_fsr
@@ -335,6 +335,14 @@ mu2.index = mu2.index.droplevel("subentry")
 
 
 fill_muons(output,mu1,mu2)
+
+if sys.argv[1]!="data":
+    GenPt = output["mu1_genpt"]
+    output["GenPtRes"] = abs(GenPt-output["mu1_pt"])/GenPt
+    #EtaHist, bins = plt.hist(, 20 )
+    output.plot.scatter(x="mu1_eta", y="GenPtRes")
+    plt.savefig("genptvseta.png")
+    
 #print(output)
 Analysis_DF = output[["runID", "lumiID", "eventID","mu1_charge", "mu1_pt","mu2_charge", "mu2_pt", "dimuon_mass"]]
 #pdb.set_trace()
@@ -400,7 +408,7 @@ if(sys.argv[2]=="cats"):
        
         if sys.argv[1]!="data":
             GenMass = getGenMass(mu1_cat,mu2_cat)
-            Residuals = (Mass-GenMass)/GenMass
+            Residuals = abs(Mass-GenMass)/GenMass
             #Residuals_cleaned =[]
                 #plt.show()
                 #sys.exit()
