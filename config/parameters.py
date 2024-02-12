@@ -23,7 +23,7 @@ parameters.update(
         "jet_pt_cut": for_all_years(25.0),
         "jet_eta_cut": for_all_years(4.7),
         "jet_id": {"2016preVFP": "loose","2016postVFP": "loose", "2017": "tight", "2018": "tight"},
-        "jet_puid": {"2016preVFP": "loose","2016postVFP": "loose", "2017": "2017corrected", "2018": "medium"},
+        "jet_puid": {"2016preVFP": "loose","2016postVFP": "loose", "2017": "2017corrected", "2018": "loose"},
         "min_dr_mu_jet": for_all_years(0.4),
         "btag_loose_wp": {"2016preVFP": 0.2027,"2016postVFP": 0.1918 ,"2017": 0.1355, "2018": 0.1208},
         "btag_medium_wp": {"2016preVFP": 0.6001,"2016postVFP": 0.4847, "2017": 0.4506, "2018": 0.4168},

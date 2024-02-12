@@ -102,24 +102,24 @@ jec_parameters["jer_tags"] = {
 
 jec_parameters["jec_data_tags"] = {
     "2016preVFP": {
-        "Summer16_07Aug2017BCD_V11_DATA": ["B", "C", "D"],
-        "Summer16_07Aug2017EF_V11_DATA": ["E", "F"],
+        "Summer19UL16APV_RunBCD_V7_DATA": ["B", "C", "D"],
+        "Summer19UL16APV_RunEF_V7_DATA": ["E", "F"],
     },
     "2016postVFP": {
-        "Summer16_07Aug2017EF_V11_DATA": ["F"],
-        "Summer16_07Aug2017GH_V11_DATA": ["G", "H"],
+        "Summer19UL16_RunFGH_V7_DATA": ["F","G","H"],
     },
     "2017": {
-        "Fall17_17Nov2017B_V32_DATA": ["B"],
-        "Fall17_17Nov2017C_V32_DATA": ["C"],
-        "Fall17_17Nov2017DE_V32_DATA": ["D", "E"],
-        "Fall17_17Nov2017F_V32_DATA": ["F"],
+        "Summer19UL17_RunB_V5_DATA": ["B"],
+        "Summer19UL17_RunC_V5_DATA": ["C"],
+        "Summer19UL17_RunD_V5_DATA": ["D"],
+        "Summer19UL17_RunE_V5_DATA": ["E"],
+        "Summer19UL17_RunF_V5_DATA": ["F"],
     },
     "2018": {
-        "Autumn18_RunA_V19_DATA": ["A"],
-        "Autumn18_RunB_V19_DATA": ["B"],
-        "Autumn18_RunC_V19_DATA": ["C"],
-        "Autumn18_RunD_V19_DATA": ["D"],
+        "Summer19UL18_RunA_V5_DATA": ["A"],
+        "Summer19UL18_RunB_V5_DATA": ["B"],
+        "Summer19UL18_RunC_V5_DATA": ["C"],
+        "Summer19UL18_RunD_V5_DATA": ["D"],
     },
 }
 

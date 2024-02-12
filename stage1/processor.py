@@ -408,8 +408,8 @@ class DimuonProcessor(processor.ProcessorABC):
 
         # We only need to reapply JEC for 2018 data
         # (unless new versions of JEC are released)
-        if ("data" in dataset) and ("2018" in self.year):
-            self.do_jec = True
+        #if ("data" in dataset) and ("2018" in self.year):
+            #self.do_jec = True
 
         jets = apply_jec(
             df,
@@ -698,15 +698,27 @@ class DimuonProcessor(processor.ProcessorABC):
                 self.evaluator, self.year, jets, pt_name,
                 jet_puid_opt, pass_jet_puid, numevents
             )
-            #weights.add_weight('puid_wgt', puid_weight)
-        with open('coutputjetid.txt', 'w') as f:
-            print(pass_jet_id, file=f)
-        with open('wgt.txt', 'w') as f:
-            print(jets["eta"], file=f)
+            weights.add_weight('puid_wgt', puid_weight)
+        #with open('coutputjetid.txt', 'w') as f:
+            #print(pass_jet_id, file=f)
+        #with open('wgt.txt', 'w') as f:
+            #print(jets["eta"], file=f)
         # ------------------------------------------------------------#
         # Select jets
         # ------------------------------------------------------------#
         jets["clean"] = clean
+        jets["HEMVeto"] = True
+        if self.year == "2018":
+            jets.loc[
+            (
+                (jets.pt >= 20.0)
+                & (jets.eta >= -3.0)
+                & (jets.eta <= -1.3)
+                & (jets.phi >= -1.57)
+                & (jets.phi <= -0.87)
+            ),
+                "HEMVeto",
+            ] = False
 
         jet_selection = (
             pass_jet_id
@@ -715,14 +727,15 @@ class DimuonProcessor(processor.ProcessorABC):
             & jets.clean
             & (jets.pt > self.parameters["jet_pt_cut"])
             & (abs(jets.eta) < self.parameters["jet_eta_cut"])
+            & jets.HEMVeto 
         )
 
         jets = jets[jet_selection]
         jets_to_print = ["pt", "eta"]
-        with open('JETS2s.txt', 'w') as f:
-            print(jets[jets_to_print], file=f)
-        with open('muonss.txt', 'w') as f:
-            print(output["dimuon_mass"], file=f)
+        #with open('JETS2s.txt', 'w') as f:
+            #print(jets[jets_to_print], file=f)
+        #with open('muonss.txt', 'w') as f:
+            #print(output["dimuon_mass"], file=f)
         # ------------------------------------------------------------#
         # Fill jet-related variables
         # ------------------------------------------------------------#

@@ -50,13 +50,18 @@ if use_local_cluster:
     slurm_cluster_ip = ""
     dashboard_address = f"{node_ip}:34875"
 else:
-    slurm_cluster_ip = f"{node_ip}:{args.slurm_port}"
-    dashboard_address = f"{node_ip}:8787"
+    # connect to existing Slurm cluster
+    from dask_gateway import Gateway
+    gateway = Gateway()
+    # replace with actual cluster name:
+    cluster_name = "e4de106d3ef242cd93e2fb08b48b02c7"
+    client = gateway.connect(cluster_name).get_client()
+    
 
 # global parameters
 parameters = {
     # < general settings >
-    "slurm_cluster_ip": slurm_cluster_ip,
+    #"slurm_cluster_ip": slurm_cluster_ip,
     "global_path": "/depot/cms/hmm/vscheure",
     #"global_path_out": "/home/notdepot/",
     "years": args.year,
@@ -82,7 +87,7 @@ parameters = {
     # },
     #
     # < settings for histograms >
-    "hist_vars":  ["jj_dEta","jj_mass","jj_dPhi","jj_eta","jj_pt","njets","jet1_pt","njets","jet1_eta","jet2_eta","jet2_pt"],
+    "hist_vars":  ["dimuon_mass","dimuon_pt","mu1_pt","jj_dEta","jj_mass","jj_dPhi","jj_eta","jj_pt","njets","jet1_pt","njets","jet1_eta","jet2_eta","jet2_pt"],
     
     #["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_pisa_mass_res","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","dimuon_mass_res","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",],
     
@@ -132,6 +137,7 @@ parameters = {
          #"ggh": ["BDTperyear"],
     },
     "mva_bins_original": mva_bins,
+    #"client" : client,
 }
 
 parameters["datasets"] = [
@@ -189,11 +195,11 @@ if __name__ == "__main__":
             memory_limit="32GB",
         )
     else:
-        print(
-            f"Connecting to Slurm cluster at {slurm_cluster_ip}."
-            f" Dashboard address: {dashboard_address}"
-        )
-        client = Client(parameters["slurm_cluster_ip"])
+        print(f"connected to cluster {cluster_name}")
+            #f"Connecting to Slurm cluster at {slurm_cluster_ip}."
+            #f" Dashboard address: {dashboard_address}"
+        #)
+        #client = Client(parameters["slurm_cluster_ip"])
     parameters["ncpus"] = len(client.scheduler_info()["workers"])
     print(f"Connected to cluster! #CPUs = {parameters['ncpus']}")
 
