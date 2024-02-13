@@ -33,21 +33,21 @@ The analysis workflow is efficiently parallelised using [dask/distributed](https
 It is possible to create a cluster with other batch submission systems (`HTCondor`, `PBS`, etc., see full list in [Dask-Jobqueue API](https://jobqueue.dask.org/en/latest/api.html#)).
 
 ## Installation instructions
-Work from a `conda` environment to avoid version conflicts:
+
+On Purdue Analysis Facility:
+
 ```bash
-module load anaconda/5.3.1-py37
-conda create --name hmumu python=3.7
-source activate hmumu
+conda activate /depot/cms/kernel/python3-ml
 ```
 Installation:
 ```bash
-git clone https://github.com/Run3HmmAnalysis/copperhead
+git clone https://github.com/vscheure/copperhead
 cd copperhead
-python3 -m pip install --user --upgrade -r requirements.txt
+git fetch origin devUL
+git checkout devUL
 ```
 If accessing datasets via `xRootD` will be needed:
 ```bash
-source /cvmfs/cms.cern.ch/cmsset_default.sh
 . setup_proxy.sh
 ```
 
