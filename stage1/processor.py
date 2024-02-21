@@ -403,8 +403,13 @@ class DimuonProcessor(processor.ProcessorABC):
 
         prepare_jets(df, is_mc)
         jets = df.Jet
-
-        self.do_jec = False
+        pd.set_option('display.min_rows', 200) 
+        pd.set_option('display.max_rows', None)
+        jets_to_print = ["pt", "eta"]
+        jetsak = ak.to_pandas(jets[jets_to_print])
+        with open('beforeApplyJEC.txt', 'w') as f:
+            print(jetsak[jets_to_print], file=f)
+        self.do_jec = True
 
         # We only need to reapply JEC for 2018 data
         # (unless new versions of JEC are released)
@@ -423,7 +428,10 @@ class DimuonProcessor(processor.ProcessorABC):
             self.jec_factories,
             self.jec_factories_data,
         )
-
+        jets_to_print = ["pt", "eta"]
+        jetsak = ak.to_pandas(jets[jets_to_print])
+        with open('afterApplyJEC.txt', 'w') as f:
+            print(jetsak[jets_to_print], file=f)
         # ------------------------------------------------------------#
         # Calculate other event weights
         # ------------------------------------------------------------#
