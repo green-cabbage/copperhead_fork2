@@ -1,5 +1,6 @@
 def for_all_years(value):
-    out = {k: value for k in ["2016preVFP","2016postVFP", "2017", "2018"]}
+    out = {k: value for k in ["2016preVFP", "2016postVFP", "2017", "2018"]}
+    #out = {k: value for k in ["2016", "2017", "2018"]}
     return out
 
 
@@ -87,17 +88,17 @@ jec_parameters["jec_levels_data"] = for_all_years(
 )
 
 jec_parameters["jec_tags"] = {
-    "2016preVFP": "Summer16_07Aug2017_V11_MC",
-    "2016postVFP": "Summer16_07Aug2017_V11_MC",
-    "2017": "Fall17_17Nov2017_V32_MC",
-    "2018": "Autumn18_V19_MC",
+    "2016preVFP": "Summer19UL16APV_V7_MC",
+    "2016postVFP": "Summer19UL16_V7_MC",
+    "2017": "Summer19UL17_V5_MC",
+    "2018": "Summer19UL18_V5_MC",
 }
 
 jec_parameters["jer_tags"] = {
-    "2016preVFP": "Summer16_25nsV1_MC",
-    "2016postVFP": "Summer16_25nsV1_MC",
-    "2017": "Fall17_V3_MC",
-    "2018": "Autumn18_V7_MC",
+    "2016preVFP": "Summer20UL16APV_JRV3_MC",
+    "2016postVFP": "Summer20UL16_JRV3_MC",
+    "2017": "Summer19UL17_JRV2_MC",
+    "2018": "Summer19UL18_JRV2_MC",
 }
 
 jec_parameters["jec_data_tags"] = {
@@ -125,5 +126,5 @@ jec_parameters["jec_data_tags"] = {
 
 jer_variations = ["jer1", "jer2", "jer3", "jer4", "jer5", "jer6"]
 jec_parameters["jer_variations"] = {
-    year: get_variations(jer_variations) for year in ["2016preVFP","2016postVFP", "2017", "2018"]
+    year: get_variations(jer_variations) for year in ["2016preVFP", "2016postVFP", "2017", "2018"]
 }

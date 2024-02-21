@@ -193,10 +193,10 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=30,
+            n_workers=50,
             #dashboard_address=dash_local,
             threads_per_worker=1,
-            memory_limit="6GB",
+            memory_limit="4GB",
         )
     else:
         # connect to existing Slurm cluster
