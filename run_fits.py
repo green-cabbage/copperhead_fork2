@@ -47,10 +47,11 @@ parameters = {
     #"cats_by_score": False,
     
     "signals": ["ggh_powheg"],
-    "data": [ "data_x",
+    "data": [ "data_C",
             ],
     #"regions": ["h-sidebands","h-peak"],
-    "regions": ["h-peak"],
+    "regions": ["z-peak"],
+    "is_Z": True,
     
     "syst_variations": ["nominal"],
 
@@ -60,14 +61,14 @@ parameters = {
 parameters["datasets"] = [
     #"data_A",
     #"data_B",
-    #"data_C",
+    "data_C",
     #"data_D",
     #"data_E",
     #"data_F",
     #"data_G",
     #"data_H",
-    "data_x",
-    "ggh_powheg",
+    #"data_x",
+    #"ggh_powheg",
 
 ]
 

@@ -103,17 +103,19 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
                 rt.RooFit.LineColor(colors[count]),
                 rt.RooFit.Name(model.GetName()),
             )
-            leg0.AddEntry(model, "#line{" + model.GetName() + "}{model}", "l")
+            #leg0.AddEntry(model, "#line{" + model.GetName() + "}{model}", "l")
+            leg0.AddEntry(model, model.GetName() + "model", "l")
             count += 1
     # upper_pad = rt.TPad("up_cat"+category,"up_cat"+category,0.0,0.2,1.0,1.0,21)
     # lower_pad = rt.TPad("lp_cat"+category,"lp_cat"+category,0.0,0.0,1.0,0.2,22)
     xframe.SetMinimum(0.0001)
     xframe.Draw()
     #print('Hallo before ggh')
-    if "ggh_powheg" in label:
+    if ("ggh_powheg" in label) or ("Z" in label)  :
         print("Fitting ggH signal")
         # Add TLatex to plot
         for model_key, model in models.items():
+            
             h_pdf = model.createHistogram("h_pdf", mh_ggh, rt.RooFit.Binning(80))
         #print(h_pdf.GetMaximum())
         effSigma = getEffSigma(h_pdf)
@@ -137,28 +139,41 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         leg0.SetLineColor(0)
         leg0.SetTextSize(0.03)
         leg0.AddEntry(h_data, "Simulation", "lep")
-        leg0.AddEntry(h_pdf, "#splitline{Double Crystal-Ball}{model}", "l")
+        #leg0.AddEntry(h_pdf, "#splitline{Double Crystal-Ball}{model}", "l")
+        leg0.AddEntry(h_pdf, "DCB model", "l")
         leg0.Draw("Same")
 
         leg1 = rt.TLegend(0.17 + offset, 0.45, 0.4 + offset, 0.61)
         leg1.SetFillStyle(0)
         leg1.SetLineColor(0)
         leg1.SetTextSize(0.03)
+        for model_key, model in models.items():
+            print (model_key)
+            #key = model_key.split("dcb_")[1]
+            if "All" in model_key:
+                key = "ggh_All"
+            else:
+                key = model_key.split("dcb_")[1]
+            print(key)
+            sigma = ws.var(f"sigma_{key}").getVal()
+            sigmaErr = ws.var(f"sigma_{key}").getError()
+            
         leg1.AddEntry(
-            h_pdf, "#scale[0.8]{#sigma_{eff} = %1.4f GeV}" % getEffSigma(h_pdf), "l"
+            h_pdf, f"Sigma = {sigma}+-{sigmaErr} GeV", "l"
         )
         # leg1.AddEntry(h_pdf_splitByYear['2017'],"2017: #scale[0.8]{#sigma_{eff} = %1.2f GeV}"%getEffSigma(h_pdf_splitByYear['2017']),"l")
         # leg1.AddEntry(h_pdf_splitByYear['2018'],"2018: #scale[0.8]{#sigma_{eff} = %1.2f GeV}"%getEffSigma(h_pdf_splitByYear['2018']),"l")
         # leg1.Draw("Same")
 
-        leg2 = rt.TLegend(0.15 + offset, 0.3, 0.5 + offset, 0.45)
+        leg2 = rt.TLegend(0.07 + offset, 0.45, 0.5 + offset, 0.45)
         leg2.SetFillStyle(0)
         leg2.SetLineColor(0)
         leg2.SetTextSize(0.03)
         leg2.AddEntry(
-            h_effSigma,
-            "#sigma_{eff} = %1.4f GeV" % (0.5 * (effSigma_high - effSigma_low)),
-            "fl",
+            #h_effSigma,
+            #"#sigma_{eff} = %1.2f GeV" % (0.5 * (effSigma_high - effSigma_low)),
+            #"fl",
+             h_pdf, f"#sigma = {sigma:.3f}+-{sigmaErr:.3f} GeV", "p"
         )
         leg2.Draw("Same")
         h_effSigma.SetLineColor(15)
@@ -201,7 +216,7 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         fwhmText.SetNDC()
         fwhmText.SetTextSize(0.03)
         fwhmText.DrawLatex(
-            0.17 + offset, 0.25, "FWHM = %1.4f GeV" % (fwhm_high - fwhm_low)
+            0.20 + offset, 0.38, "FWHM = %1.2f GeV" % (fwhm_high - fwhm_low)
         )
     else:
         

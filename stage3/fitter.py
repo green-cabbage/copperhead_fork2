@@ -2,7 +2,7 @@ import ROOT as rt
 import pandas as pd
 from python.workflow_noDask import non_parallelize
 from stage3.fit_plots import plot
-from stage3.fit_models import chebyshev, doubleCB, SumTwoExpPdf, bwZ, bwGamma, bwZredux, bernstein
+from stage3.fit_models import chebyshev, doubleCB, SumTwoExpPdf, bwZ, bwGamma, bwZredux, bernstein,BWxDCB,Voigtian
 import pdb
 rt.RooMsgService.instance().setGlobalKillBelow(rt.RooFit.ERROR)
 #t.gSystem.Load ("../CMSSW_12_4_15/lib/el8_amd64_gcc10/libHiggsAnalysisCombinedLimit.so")
@@ -16,12 +16,22 @@ def run_fits(parameters, df,df_all):
     signal_ds = parameters.get("signals", [])
     data_ds = parameters.get("data", [])
     year = parameters.get("years")[0]
+    is_Z = parameters.get("is_Z")
     all_datasets = df.dataset.unique()
     signals = [ds for ds in all_datasets if ds in signal_ds]
     backgrounds = [ds for ds in all_datasets if ds in data_ds]
     fit_setups = []
-
-    if len(backgrounds) > 0:
+    if is_Z == True:
+        fit_setup = {"label": "Zfit", "mode": "Z", "year": year, "df":  df_all[df_all.dataset.isin(backgrounds)]}
+        fit_setups.append(fit_setup)
+        argset = {
+            "fit_setup": fit_setups,
+            "channel": parameters["mva_channels"],
+            "category": ["All"]
+        }
+        fit_ret = non_parallelize(fitter, argset, parameters)
+        return fit_ret
+    elif len(backgrounds) > 0:
         fit_setup_multi = {
            "label": "background_all",
            "mode": "bkg_all",
@@ -47,7 +57,7 @@ def run_fits(parameters, df,df_all):
         #print (parameters)
         fit_ret = non_parallelize(fitter, argset, parameters)
     fit_setups = []
-    if len(backgrounds) > 0:
+    if len(backgrounds) > 0 & (is_Z ==False):
         if simple ==False:
             fit_setup = {
                 "label": "background_cats",
@@ -65,9 +75,10 @@ def run_fits(parameters, df,df_all):
                 "blinded": False,
             }
         fit_setups.append(fit_setup)
-    for ds in signals:
-        fit_setup = {"label": ds, "mode": "sig", "year": year, "df": df[df.dataset == ds]}
-        fit_setups.append(fit_setup)
+    if is_Z ==False:
+        for ds in signals:
+            fit_setup = {"label": ds, "mode": "sig", "year": year, "df": df[df.dataset == ds]}
+            fit_setups.append(fit_setup)
        
 
     argset = {
@@ -107,11 +118,11 @@ def fitter(args, parameters={}):
     save = parameters.get("save_fits", False)
     save_path = parameters.get("save_fits_path", "fits/")
     channel = args["channel"]
-    if mode != 'bkg_all':
+    if (mode != 'bkg_all') or (mode != 'Z') :
         category = args["category"]
     else:
         category = 'All'
-    save_path = save_path + f"/fits_{channel}_{category}/"
+    save_path = save_path + f"/fits_{channel}_{category}_nocorr/"
     mkdir(save_path)
     #print(df)
     df = df[(df.channel_nominal == channel) & (df.category == category)]
@@ -124,7 +135,7 @@ def fitter(args, parameters={}):
     #norm = 1.
     
     the_fitter = Fitter(
-        fitranges={"low": 110,"low_signal": 118, "high": 150,"high_signal": 132, "SR_left": 120, "SR_right": 130},
+        fitranges={"low": 110,"low_signal": 118,"low_Z": 80, "high": 150,"high_signal": 132,"high_Z": 100, "SR_left": 120, "SR_right": 130},
         #fitranges_signal={"low": 115, "high": 135},
         fitmodels={
             "bwz": bwZ,
@@ -133,11 +144,14 @@ def fitter(args, parameters={}):
             "bernstein": bernstein,
             "SumTwoExpPdf": SumTwoExpPdf,
             "dcb": doubleCB,
+            "BWxDCB": BWxDCB,
+            "Voigtian": Voigtian,
             "chebyshev": chebyshev,
         },
         requires_order=["chebyshev", "bernstein"],
         channel=channel,
         mode=mode,
+        category = category,
         filename_ext="",
         
     )
@@ -230,6 +244,23 @@ def fitter(args, parameters={}):
             save_path=save_path,
             norm=norm,
         )
+    if mode == "Z":
+        print("doing Z fits")
+        chi2 = the_fitter.simple_fit(
+            dataset=df,
+            label=label,
+            category=category,  # temporary
+            blinded=False,
+            model_names=["BWxDCB"],
+            model_names_multi=[],
+            fix_parameters=True,
+            store_multipdf=False,
+            doProdPDF=False,
+            title="Z",
+            save=True,
+            save_path=save_path,
+            norm=norm,
+        )
     ret = {"label": label, "channel": channel, "category": category, "chi2": chi2}
     return ret
 
@@ -237,7 +268,7 @@ def fitter(args, parameters={}):
 class Fitter(object):
     def __init__(self, **kwargs):
         self.fitranges = kwargs.get(
-            "fitranges", {"low": 110,"low_signal": 118, "high": 150,"high_signal": 132, "SR_left": 120, "SR_right": 130}
+            "fitranges", {"low": 110,"low_signal": 120,"low_Z": 80, "high": 150,"high_signal": 130,"high_Z": 100, "SR_left": 120, "SR_right": 130}
         )
         self.fitmodels = kwargs.get("fitmodels", {})
         self.requires_order = kwargs.get("requires_order", [])
@@ -247,8 +278,9 @@ class Fitter(object):
         self.data_registry = {}
         self.model_registry = []
         self.mode = kwargs.get("mode", "sig")
+        self.category = kwargs.get("category", "All")
         binned=False
-        self.workspace = self.create_workspace(self.mode,binned)
+        self.workspace = self.create_workspace(self.mode,binned, self.category)
 
     def simple_fit(
         self,
@@ -318,11 +350,38 @@ class Fitter(object):
                 )
         return chi2
 
-    def create_workspace(self, mode, binned=False):
+    def create_workspace(self, mode, binned=False, category = "All"):
         w = rt.RooWorkspace("w", "w")
         if mode == "sig":
+            '''
+            if "cat0" in category:
+                mh_ggh = rt.RooRealVar(
+                    "mh_ggh", "mh_ggh", 119, 131
+                )
+            elif ("cat1" in category) :
+                mh_ggh = rt.RooRealVar(
+                    "mh_ggh", "mh_ggh", 119.09, 130.91
+                )
+            elif ("cat2" in category) :
+                mh_ggh = rt.RooRealVar(
+                    "mh_ggh", "mh_ggh", 120.18, 129.73
+                )
+            elif "cat3" in category:
+                mh_ggh = rt.RooRealVar(
+                    "mh_ggh", "mh_ggh", 120.22, 129.80
+                )
+            elif "cat4" in category:
+                mh_ggh = rt.RooRealVar(
+                    "mh_ggh", "mh_ggh", 121, 129
+                )
+            '''
+            #else:
             mh_ggh = rt.RooRealVar(
                 "mh_ggh", "mh_ggh", self.fitranges["low_signal"], self.fitranges["high_signal"]
+            )
+        elif mode == "Z":
+            mh_ggh = rt.RooRealVar(
+                "mh_ggh", "mh_ggh", self.fitranges["low_Z"], self.fitranges["high_Z"]
             )
         else:
             mh_ggh = rt.RooRealVar(
@@ -334,7 +393,10 @@ class Fitter(object):
         mh_ggh.setRange(
             "sideband_right", self.fitranges["SR_right"], self.fitranges["high"]
         )
-        mh_ggh.setRange("window", self.fitranges["low"], self.fitranges["high"])
+        if mode == "Z":
+            mh_ggh.setRange("window", self.fitranges["low_Z"], self.fitranges["high_Z"])
+        else:
+            mh_ggh.setRange("window", self.fitranges["low"], self.fitranges["high"])
         mh_ggh.SetTitle("m_{#mu#mu}")
         mh_ggh.setUnit("GeV")
         if binned:
@@ -490,8 +552,8 @@ class Fitter(object):
         model_key = model_name + tag
         if model_key not in self.model_registry:
             self.model_registry.append(model_key)
-        # self.workspace.Import(model)
-        getattr(self.workspace, "import")(model)
+        self.workspace.Import(model)
+        #getattr(self.workspace, "import")(model)
 
     def fit(
         self,
@@ -750,20 +812,20 @@ class Fitter(object):
                 )
             print(pdfs[model_key])
             
-            if fix_parameters:
-                pdfs[model_key].getParameters(rt.RooArgSet()).setAttribAll("Constant")
-                a1 = self.workspace.var(f"alpha1{tag}")
-                a2 = self.workspace.var(f"alpha2{tag}")
-                n1 = self.workspace.var(f"n1{tag}")
-                n2 = self.workspace.var(f"n2{tag}")
-                mean = self.workspace.var(f"mean{tag}")
-                sigma = self.workspace.var(f"sigma{tag}")
-                mean.Print()
-                sigma.Print()
-                a1.Print()
-                a2.Print()
-                n1.Print()
-                n2.Print()
+            #if fix_parameters:
+                #pdfs[model_key].getParameters(rt.RooArgSet()).setAttribAll("Constant")
+                #a1 = self.workspace.var(f"alpha1{tag}")
+                #a2 = self.workspace.var(f"alpha2{tag}")
+                #n1 = self.workspace.var(f"n1{tag}")
+                #n2 = self.workspace.var(f"n2{tag}")
+                #mean = self.workspace.var(f"mean{tag}")
+                #sigma = self.workspace.var(f"sigma{tag}")
+                #mean.Print()
+                #sigma.Print()
+                #a1.Print()
+                #a2.Print()
+                #n1.Print()
+                #n2.Print()
             chi2[model_key] = self.get_chi2(model_key, ds_name, ndata)
             print(f"Chi2 = {chi2[model_key]}")
             pdfs_to_plot = {}

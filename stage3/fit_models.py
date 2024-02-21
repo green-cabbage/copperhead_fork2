@@ -406,27 +406,29 @@ def Voigtian(x, tag):
     sigma = rt.RooRealVar("sigma" + tag, "sigma", 2, 0.0, 5.0)
 
     bwWidth.setConstant(True)
-    bwmZ.setConstant(True)
+    #bwmZ.setConstant(True)
     
     model = rt.RooVoigtian("Voigtian" + tag, "Voigtian", x, bwmZ, bwWidth, sigma)
     return model, [bwmZ, bwWidth, sigma]
     
 def BWxDCB(x,tag):
-    mean = rt.RooRealVar("mean" + tag, "mean", 0, 0,0)
-    sigma = rt.RooRealVar("sigma" + tag, "sigma", 2, 0.0, 5.0)
-    alpha1 = rt.RooRealVar("alpha1" + tag, "alpha1", 2, 0.001, 25)
-    n1 = rt.RooRealVar("n1" + tag, "n1", 1.5, 0, 25)
-    alpha2 = rt.RooRealVar("alpha2" + tag, "alpha2", 2.0, 0.001, 25)
-    n2 = rt.RooRealVar("n2" + tag, "n2", 1.5, 0, 25)
-    DCB = rt.RooDoubleCB("dcb" + tag, "dcb", x, mean, sigma, alpha1, n1, alpha2, n2)
-    
 
-    bwWidth = rt.RooRealVar("bwz_Width" + tag, "widthZ", 2.5, 0, 30)
-    bwmZ = rt.RooRealVar("bwz_mZ" + tag, "mZ", 91.2, 90, 92)
-    expParam = rt.RooRealVar("bwz_expParam" + tag, "expParam", -1e-03, -1e-02, 1e-02)
+    mean = rt.RooRealVar("mean" , "mean",0)
+    sigma = rt.RooRealVar("sigma" , "sigma", 2, .5, 4.0)
+    alpha1 = rt.RooRealVar("alpha1" , "alpha1", 2, 0.00, 25)
+    n1 = rt.RooRealVar("n1" , "n1", 10, -25, 25)
+    alpha2 = rt.RooRealVar("alpha2" , "alpha2", 2.0, 0.00, 25)
+    n2 = rt.RooRealVar("n2" , "n2", 25, -65, 65)
+    DCB = rt.RooDoubleCB("dcb" , "dcb", x, mean, sigma, alpha1, n1, alpha2, n2)
+
+
+    bwWidth = rt.RooRealVar("bwz_Width" , "widthZ", 2.5, 0, 30)
+    bwmZ = rt.RooRealVar("bwz_mZ" , "mZ", 91.19, 90, 92)
+    expParam = rt.RooRealVar("bwz_expParam" , "expParam", -1e-03, -1e-02, 1e-02)
+
 
     bwWidth.setConstant(True)
-    bwmZ.setConstant(True)
+    #bwmZ.setConstant(True)
 
     BWZ = rt.RooBreitWigner(
         "bwz" + tag, "BWZ",
@@ -434,6 +436,8 @@ def BWxDCB(x,tag):
     )
     
     x.setBins(10000,"cache")
+    x.setMin("cache",50.5) ;
+    x.setMax("cache",130.5) ;
     model = rt.RooFFTConvPdf("BWDCB","BW (X) DCB",x, BWZ, DCB) 
 
     return model, [mean, sigma, alpha1, n1, alpha2, n2]
