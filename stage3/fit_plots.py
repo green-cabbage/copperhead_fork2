@@ -150,13 +150,16 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         for model_key, model in models.items():
             print (model_key)
             #key = model_key.split("dcb_")[1]
-            if "All" in model_key:
-                key = "ggh_All"
+            if ("All" in model_key) or ("VoigtianxErf" in model_key):
+                key = "_ggh_All"
+            elif "BWxDCB" in model_key:
+                key = ""
             else:
-                key = model_key.split("dcb_")[1]
+                key = model_key.split("dcb")[1]
             print(key)
-            sigma = ws.var(f"sigma_{key}").getVal()
-            sigmaErr = ws.var(f"sigma_{key}").getError()
+            
+            sigma = ws.var(f"sigma{key}").getVal()
+            sigmaErr = ws.var(f"sigma{key}").getError()
             
         leg1.AddEntry(
             h_pdf, f"Sigma = {sigma}+-{sigmaErr} GeV", "l"

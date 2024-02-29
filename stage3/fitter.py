@@ -2,7 +2,7 @@ import ROOT as rt
 import pandas as pd
 from python.workflow_noDask import non_parallelize
 from stage3.fit_plots import plot
-from stage3.fit_models import chebyshev, doubleCB, SumTwoExpPdf, bwZ, bwGamma, bwZredux, bernstein,BWxDCB,Voigtian
+from stage3.fit_models import chebyshev, doubleCB, doubleCB_forZ, SumTwoExpPdf, bwZ, bwGamma, bwZredux, bernstein,BWxDCB,VoigtianxErf,Erf
 import pdb
 rt.RooMsgService.instance().setGlobalKillBelow(rt.RooFit.ERROR)
 #t.gSystem.Load ("../CMSSW_12_4_15/lib/el8_amd64_gcc10/libHiggsAnalysisCombinedLimit.so")
@@ -12,7 +12,7 @@ def mkdir(path):
         os.mkdir(path)
     except Exception:
         pass
-def run_fits(parameters, df,df_all):
+def run_fits(parameters, df,df_all,tag):
     signal_ds = parameters.get("signals", [])
     data_ds = parameters.get("data", [])
     year = parameters.get("years")[0]
@@ -22,7 +22,7 @@ def run_fits(parameters, df,df_all):
     backgrounds = [ds for ds in all_datasets if ds in data_ds]
     fit_setups = []
     if is_Z == True:
-        fit_setup = {"label": "Zfit", "mode": "Z", "year": year, "df":  df_all[df_all.dataset.isin(backgrounds)]}
+        fit_setup = {"label": f"Zfit_{tag}", "mode": "Z", "year": year, "df":  df_all[df_all.dataset.isin(backgrounds)]}
         fit_setups.append(fit_setup)
         argset = {
             "fit_setup": fit_setups,
@@ -122,7 +122,11 @@ def fitter(args, parameters={}):
         category = args["category"]
     else:
         category = 'All'
-    save_path = save_path + f"/fits_{channel}_{category}_nocorr/"
+    
+    if mode == "Z":
+        save_path = save_path + f"/calib_fits/"
+    else:
+        save_path = save_path + f"/fits_{channel}_{category}/"
     mkdir(save_path)
     #print(df)
     df = df[(df.channel_nominal == channel) & (df.category == category)]
@@ -145,7 +149,7 @@ def fitter(args, parameters={}):
             "SumTwoExpPdf": SumTwoExpPdf,
             "dcb": doubleCB,
             "BWxDCB": BWxDCB,
-            "Voigtian": Voigtian,
+            "Voigtian": VoigtianxErf,
             "chebyshev": chebyshev,
         },
         requires_order=["chebyshev", "bernstein"],
@@ -252,6 +256,7 @@ def fitter(args, parameters={}):
             category=category,  # temporary
             blinded=False,
             model_names=["BWxDCB"],
+            #model_names=["VoigtianxErf"],
             model_names_multi=[],
             fix_parameters=True,
             store_multipdf=False,
@@ -536,7 +541,17 @@ class Fitter(object):
         if model_name not in self.fitmodels.keys():
             raise Exception(f"Error: model {model_name} does not exist!")
         tag = f"_{self.channel}_{category}"
-        if order is None:
+        if model_name == "BWxDCB":
+            DCB_forZ, params1 = doubleCB_forZ(self.workspace.obj("mh_ggh"), tag)
+            BW_forZ, params2 = bwZ(self.workspace.obj("mh_ggh"), tag)
+            self.workspace.Import(DCB_forZ)
+            self.workspace.Import(BW_forZ)
+            self.workspace.obj("mh_ggh").setBins(10000,"cache")
+            self.workspace.obj("mh_ggh").setMin("cache",50.5) ;
+            self.workspace.obj("mh_ggh").setMax("cache",130.5) ;
+            model = rt.RooFFTConvPdf(f"{model_name}{tag}",f"{model_name}{tag}",self.workspace.obj("mh_ggh"), BW_forZ, DCB_forZ) 
+            print(model)
+        elif order is None:
             model, params = self.fitmodels[model_name](self.workspace.obj("mh_ggh"), tag)
             #print(model)
         else:
@@ -552,7 +567,7 @@ class Fitter(object):
         model_key = model_name + tag
         if model_key not in self.model_registry:
             self.model_registry.append(model_key)
-        self.workspace.Import(model)
+        self.workspace.Import(model,rt.RooFit.RenameConflictNodes("_pdf"))
         #getattr(self.workspace, "import")(model)
 
     def fit(

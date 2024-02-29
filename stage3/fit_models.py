@@ -36,7 +36,7 @@ def bwZ(x, tag):
     expParam = rt.RooRealVar("bwz_expParam" + tag, "expParam", -1e-03, -1e-02, 1e-02)
 
     bwWidth.setConstant(True)
-    bwmZ.setConstant(True)
+    #bwmZ.setConstant(True)
 
     bwmodel = rt.RooGenericPdf(
         "bwz" + tag,
@@ -399,6 +399,17 @@ def doubleCB(x, tag):
     model = rt.RooDoubleCB("dcb" + tag, "dcb", x, mean, sigma, alpha1, n1, alpha2, n2)
     return model, [mean, sigma, alpha1, n1, alpha2, n2]
 
+def doubleCB_forZ(x, tag):
+    mean = rt.RooRealVar("mean" , "mean",0)
+    sigma = rt.RooRealVar("sigma" , "sigma", 2, .5, 4.0)
+    alpha1 = rt.RooRealVar("alpha1" , "alpha1", 2, 0.001, 45)
+    n1 = rt.RooRealVar("n1" , "n1", 10, -75, 75)
+    alpha2 = rt.RooRealVar("alpha2" , "alpha2", 2.0, 0.001, 45)
+    n2 = rt.RooRealVar("n2" , "n2", 25, -65, 65)
+    #mean.setConstant(True)
+    model = rt.RooDoubleCB("dcb" + tag, "dcb", x, mean, sigma, alpha1, n1, alpha2, n2)
+    return model, [mean, sigma, alpha1, n1, alpha2, n2]
+
 
 def Voigtian(x, tag):
     bwWidth = rt.RooRealVar("bwz_Width" + tag, "widthZ", 2.5, 0, 30)
@@ -410,6 +421,46 @@ def Voigtian(x, tag):
     
     model = rt.RooVoigtian("Voigtian" + tag, "Voigtian", x, bwmZ, bwWidth, sigma)
     return model, [bwmZ, bwWidth, sigma]
+
+def VoigtianxErf(x, tag):
+
+
+    # Define the variable and parameters
+    bwmZ = rt.RooRealVar("bwmZ", "Mean", 91.2, 90, 92)
+    sigma = rt.RooRealVar("sigma"+tag, "Width", 2, 0.0, 5.0)
+    bwWidth = rt.RooRealVar("bwz_Width", "Width", 2.5, 0, 30)
+    slope = rt.RooRealVar("slope"+tag, "Slope", 0, 0.01, 1.)
+    offset = rt.RooRealVar("offset"+tag, "Offset", 91.2, 90, 92)
+
+    # Define the Voigtian function
+    voigt = rt.RooVoigtian("Voigtian" + tag, "Voigtian", x, bwmZ, bwWidth, sigma)
+    bwWidth.setConstant(True)
+
+    # Define the error function multiplied by an exponential for background modeling
+    erf_exp = rt.RooFormulaVar("erf_exp"+tag, "Erf * Exp"+tag, "TMath::Erf((@0 - @2) * @1) * TMath::Exp(-(@0 - @2) * @1)", rt.RooArgList(x, slope, offset))
+
+
+
+    # Combine the signal and background components
+    model = rt.RooAddPdf("VoigtianxErf", "VoigtianxErf", rt.RooArgList(voigt, erf_exp))
+
+    return model, [bwmZ, bwWidth, sigma]
+def Erf(x, tag):
+
+
+    # Define the variable and parameters
+
+    slope = rt.RooRealVar("slope"+tag, "Slope", 0, 0.01, 1.)
+    offset = rt.RooRealVar("offset"+tag, "Offset", 91.2, 81, 105)
+
+
+    # Define the error function multiplied by an exponential for background modeling
+    model = rt.RooGenericPdf("erf_exp"+tag, "erf_exp"+tag, "TMath::Erf(@0) * TMath::Exp(-(@0 - @2) * @1)", rt.RooArgList(x, slope, offset))
+
+
+
+
+    return model, [slope, offset]
     
 def BWxDCB(x,tag):
 
