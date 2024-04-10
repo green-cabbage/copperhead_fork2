@@ -208,7 +208,7 @@ if sys.argv[1]=="dataRun3":
 if sys.argv[1] =="Z":
     fname = "root://cmsxrootd.fnal.gov///store/mc/RunIISummer20UL18NanoAODv9/DY1JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/120000/3F74AD49-80AE-9B4B-9B30-CE5E644724E4.root"
 if (sys.argv[1] =="Higgs") or   (sys.argv[1] =="cats"):
-    fname="root://eos.cms.rcac.purdue.edu//store/user/vscheure/GluGluHToMuMu_M125_TuneCP5_13TeV-powheg-pythia8/crab_ggHMuMuNanov12/240124_195025/0000/GluGluHToMuMu_ULRun2_2018_NANOAODv12_3.root"
+    fname="root://eos.cms.rcac.purdue.edu//store/user/vscheure/GluGluHToMuMu_M125_TuneCP5_13TeV-powheg-pythia8/crab_ggHMuMuNanov12_2/240125_131743/0000/GluGluHToMuMu_ULRun2_2018_NANOAODv12_5.root"
 if sys.argv[1] == "v12":
     fname= "root://cmsxrootd.fnal.gov///store/mc/Run3Summer22EENanoAODv12/DYJetsToLL_M-50_TuneCP5_13p6TeV-madgraphMLM-pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v5-v2/30000/505c3e6c-6ed4-4d8d-9e46-6753dd018ca8.root"
 if sys.argv[1] == "v11":
@@ -219,25 +219,31 @@ events = NanoEventsFactory.from_root(
     fname,
     schemaclass=NanoAODSchema.v6,
     #metadata={"dataset": "DY"},
-    entry_stop=10000,
+    #entry_stop=10000,
 ).events()
 print(events.fields)
 print(events.event.fields)
-print(events.Muon.fields)
+print(events.Jet.fields)
+print(events.FatJet.fields)
 #pdb.set_trace()
-#has_fsr = fsr_recovery(events)
-#events["Muon", "pt"] = events.Muon.pt_fsr
-#events["Muon", "eta"] = events.Muon.eta_fsr
-#events["Muon", "phi"] = events.Muon.phi_fsr
-#events["Muon", "pfRelIso04_all"] = events.Muon.iso_fsr
+has_fsr = fsr_recovery(events)
+events["Muon", "pt"] = events.Muon.pt_fsr
+events["Muon", "eta"] = events.Muon.eta_fsr
+events["Muon", "phi"] = events.Muon.phi_fsr
+events["Muon", "pfRelIso04_all"] = events.Muon.iso_fsr
 
 numevents= len(events)#
 mask = np.ones(numevents, dtype=bool)
 #apply_geofit(events, "2018", mask)
 #events["Muon", "pt"] = events.Muon.pt_gf
+BSConstraint_mask = ((events.Muon.bsConstrainedChi2 <30))
+BSConstraint_mask = ak.fill_none(BSConstraint_mask, False)
+            
+#events["Muon", "pt"] = ak.where(BSConstraint_mask, events.Muon.bsConstrainedPt, events.Muon.pt)
+#events["Muon", "ptErr"] = ak.where(BSConstraint_mask, events.Muon.bsConstrainedPtErr, events.Muon.ptErr)
 
-#apply_roccor(events, roccor_lookup, 1)
-#events["Muon", "pt"] = events.Muon.pt_roch
+apply_roccor(events, roccor_lookup, 1)
+events["Muon", "pt"] = events.Muon.pt_roch
 
 #events.Muon["genPt"] = events.Muon.matched_gen.pt
 GenMu_columns = ["pt",
@@ -339,8 +345,17 @@ fill_muons(output,mu1,mu2)
 if sys.argv[1]!="data":
     GenPt = output["mu1_genpt"]
     output["GenPtRes"] = abs(GenPt-output["mu1_pt"])/GenPt
-    #EtaHist, bins = plt.hist(, 20 )
-    output.plot.scatter(x="mu1_eta", y="GenPtRes")
+    EtaBins = [-2.5,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,2.5]
+    EtaBins_toPlot = [-2.25,-1.75,-1.25,-0.75,-0.25,0.25,0.75,1.25,1.75,2.25]
+    GenPt_etabinned = []
+    GenPt_toPlot = []
+    for i in range(len(EtaBins)-1):
+        output[f"mubin{i}"] = (((output.mu1_eta)>EtaBins[i]) &((output.mu1_eta)<EtaBins[i+1]))
+        GenPt_etabinned.append(output["GenPtRes"][output[f"mubin{i}"]])
+        GenPt_toPlot.append(np.mean(GenPt_etabinned[i]))
+    print(GenPt_toPlot)
+    plt.scatter(x=EtaBins_toPlot,y=GenPt_toPlot)
+    #output.plot.scatter(x="mu1_eta", y="GenPtRes")
     plt.savefig("genptvseta.png")
     
 #print(output)

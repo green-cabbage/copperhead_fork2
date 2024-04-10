@@ -32,6 +32,7 @@ def plotter(ws, objNames, isBlinded, channel, category, OutputFilename, title):
     count = 0
     for name in objNames:
         if "model" in name:
+            print("plotting pdf")
             print(name)
             ws.pdf(name).plotOn(
                 xframe,
@@ -41,7 +42,6 @@ def plotter(ws, objNames, isBlinded, channel, category, OutputFilename, title):
                 rt.RooFit.Name(name),
             )
             count += 1
-            # ws.pdf(name).plotOn(xframe,rt.RooFit.Range("window"))
         elif "ds_fake" in name:
             ws.obj(name).plotOn(xframe, rt.RooFit.Binning(80))
         elif "ds" in name:
@@ -72,8 +72,8 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
     xframe = mh_ggh.frame(rt.RooFit.Title(title + " Fit in cat" + category))
     # dataset.plotOn(xframe,rt.RooFit.CutRange("sideband_left"))
     # dataset.plotOn(xframe,rt.RooFit.CutRange("sideband_right"))
-
-    ws.obj(ds_name).plotOn(xframe, rt.RooFit.Binning(80))
+    #ws.obj(ds_name).createHistogram("h_data_plot", rt.RooFit.Binning(80))
+    ws.obj(ds_name).plotOn(xframe, rt.RooFit.Binning(80),rt.RooFit.Name(ds_name) )
     #print('Hallo')
     leg0 = rt.TLegend(0.15 + offset, 0.6, 0.5 + offset, 0.82)
     leg0.SetFillStyle(0)
@@ -96,13 +96,57 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         count = 0
         #print('Hallo before plot')
         for model_key, model in models.items():
+            if "Voigt" in model.GetName(): # Plot backgorund contribution separately
+                bkgfrac = ws.var("bkgfrac").getVal()
+                print(bkgfrac)
+                print("plotting BKG func")
+                ws.pdf("erf_exp_ggh_All").plotOn(
+                xframe,
+                rt.RooFit.Range("window"),
+                rt.RooFit.NormRange("window"),
+                rt.RooFit.LineColor(colors[count+1]),
+                rt.RooFit.Name("erf_exp_ggh_all"),
+                rt.RooFit.Normalization(1.0-bkgfrac)
+                )
+            #if "BWxDCB" in model.GetName(): # Calculate and Plot backgorund contribution separately -> DOES NOT WORK (as in is incorrect)
+                #expparam = ws.var("bwz_expParam_ggh_All").getVal()
+                #BWWidth =  ws.var("bwz_Width_ggh_All").getVal()
+                #bwz_mZ =  ws.var("bwz_mZ_ggh_All").getVal()
+                #norm = ws.var("BWxDCB_ggh_All_norm").getVal()
+                #bwpure = rt.RooFormulaVar(
+                    #"bwzpure",
+                    #"(@3*@2)/(pow(@0-@1,2)+0.25*pow(@2,2))",
+                    #rt.RooArgList(mh_ggh, bwz_mZ, BWWidth),
+                    #)
+                #bwpureexp = rt.RooFormulaVar(
+                    #"bwzpureexp",
+                   #"exp(@0*@3)*(@2)*(@4)/(pow(@0-@1,2)+0.25*pow(@2,2))",
+                    #rt.RooArgList(mh_ggh, bwz_mZ, BWWidth, expparam),
+                    #)
+                #BKGPDF = rt.RooFormulaVar(
+                    #"BKG",
+                    #"(@0)-(@1)",
+                    #rt.RooArgList(bwpureexp,bwpure),)
+                #print("plotting BKG func")
+                #BKGPDF.plotOn(
+                #xframe,
+                #rt.RooFit.Range("window"),
+                #rt.RooFit.NormRange("window"),
+                #rt.RooFit.LineColor(colors[count+1]),
+                #rt.RooFit.Name("BKGPDF"),
+                #rt.RooFit.Normalization(norm)
+                #)
             model.plotOn(
                 xframe,
                 rt.RooFit.Range("window"),
-                # rt.RooFit.NormRange("window"),
+                rt.RooFit.NormRange("window"),
                 rt.RooFit.LineColor(colors[count]),
                 rt.RooFit.Name(model.GetName()),
             )
+            nparam = model.getParameters(ws.obj(ds_name)).getSize()
+            chi2 = xframe.chiSquare(model.GetName(), ds_name, nparam)
+            chi2_var = rt.RooRealVar(f"chi2{model.GetName()}", f"chi2{model.GetName()}", chi2)
+            ws.Import(chi2_var)
             #leg0.AddEntry(model, "#line{" + model.GetName() + "}{model}", "l")
             leg0.AddEntry(model, model.GetName() + "model", "l")
             count += 1
@@ -150,10 +194,11 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         for model_key, model in models.items():
             print (model_key)
             #key = model_key.split("dcb_")[1]
-            if ("All" in model_key) or ("VoigtianxErf" in model_key):
-                key = "_ggh_All"
-            elif "BWxDCB" in model_key:
+            if "BWxDCB" in model_key:
                 key = ""
+            elif ("All" in model_key) or ("VoigtianxErf" in model_key):
+                key = "_ggh_All"
+
             else:
                 key = model_key.split("dcb")[1]
             print(key)
@@ -164,11 +209,12 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         leg1.AddEntry(
             h_pdf, f"Sigma = {sigma}+-{sigmaErr} GeV", "l"
         )
+
         # leg1.AddEntry(h_pdf_splitByYear['2017'],"2017: #scale[0.8]{#sigma_{eff} = %1.2f GeV}"%getEffSigma(h_pdf_splitByYear['2017']),"l")
         # leg1.AddEntry(h_pdf_splitByYear['2018'],"2018: #scale[0.8]{#sigma_{eff} = %1.2f GeV}"%getEffSigma(h_pdf_splitByYear['2018']),"l")
         # leg1.Draw("Same")
 
-        leg2 = rt.TLegend(0.07 + offset, 0.45, 0.5 + offset, 0.45)
+        leg2 = rt.TLegend(0.07 + offset, 0.45, 0.5 + offset, 0.55)
         leg2.SetFillStyle(0)
         leg2.SetLineColor(0)
         leg2.SetTextSize(0.03)
@@ -177,6 +223,9 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
             #"#sigma_{eff} = %1.2f GeV" % (0.5 * (effSigma_high - effSigma_low)),
             #"fl",
              h_pdf, f"#sigma = {sigma:.3f}+-{sigmaErr:.3f} GeV", "p"
+        )
+        leg2.AddEntry(
+            h_pdf, f"Chi2 = {chi2:.3f}", "p"
         )
         leg2.Draw("Same")
         h_effSigma.SetLineColor(15)
@@ -218,9 +267,9 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         fwhmText.SetTextAlign(11)
         fwhmText.SetNDC()
         fwhmText.SetTextSize(0.03)
-        fwhmText.DrawLatex(
-            0.20 + offset, 0.38, "FWHM = %1.2f GeV" % (fwhm_high - fwhm_low)
-        )
+        #fwhmText.DrawLatex(
+            #0.20 + offset, 0.38, "FWHM = %1.2f GeV" % (fwhm_high - fwhm_low)
+        #)
     else:
         
 

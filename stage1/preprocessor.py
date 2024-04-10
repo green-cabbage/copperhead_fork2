@@ -79,18 +79,18 @@ class SamplesInfo(object):
         self.server = kwargs.pop("server", "root://eos.cms.rcac.purdue.edu/")
         self.timeout = kwargs.pop("timeout", 300)
         self.debug = kwargs.pop("debug", False)
-        datasets_from = kwargs.pop("datasets_from", "UL")
+        self.datasets_from = kwargs.pop("datasets_from", "UL")
         self.parameters = {k: v[self.year] for k, v in parameters.items()}
 
         self.is_mc = True
 
-        if "purdue" in datasets_from:
+        if "purdue" in self.datasets_from:
             from config.datasets import datasets
-        if "UL" in datasets_from:
+        if "UL" in self.datasets_from:
             from config.datasets_someUL import datasets
-        if "Run3" in datasets_from:
+        if "Run3" in self.datasets_from:
             from config.datasets_Run3 import datasets
-        elif "pisa" in datasets_from:
+        elif "pisa" in self.datasets_from:
             from config.datasets_pisa import datasets
 
         self.paths = datasets[self.year]

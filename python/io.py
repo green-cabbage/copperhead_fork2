@@ -48,12 +48,15 @@ def save_stage1_output_to_parquet(output, out_dir):
         mkdir(f"{out_dir}/{dataset}")
         df.to_parquet(path=f"{out_dir}/{dataset}/{name}.parquet")
         
-def save_stage2_output_to_csv(output, out_dir):
+def save_stage2_output_to_csv(output, out_dir, name = ""):
 
     for dataset in output.dataset.unique():
         df = output[output.dataset == dataset]
-        name = dataset
-        print(name)
+        if name == "":
+            name = dataset
+            print(name)
+        else: 
+            name = name
         if df.shape[0] == 0:
             return
         mkdir(f"{out_dir}/{dataset}")

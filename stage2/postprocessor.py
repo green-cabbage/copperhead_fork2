@@ -9,7 +9,7 @@ from python.io import (
     save_stage2_output_parquet,
     split_df
 )
-from stage2.categorizer import (split_into_channels, categorize_by_score, categorize_by_eta)
+from stage2.categorizer import (split_into_channels, categorize_by_score, categorize_by_eta, categorize_by_CalibCat, categorize_by_ClosureCat)
 from stage2.mva_evaluators import (
     evaluate_pytorch_dnn,
     # evaluate_pytorch_dnn_pisa,
@@ -137,7 +137,7 @@ def on_partition(args, parameters):
 
     # < categorization into channels (ggH, VBF, etc.) >
     # split_into_channels(df, v="nominal", vbf_mva_cutoff=vbf_mva_cutoff)
-    split_into_channels(df, v="nominal",ggHsplit=False)
+    split_into_channels(df, v="nominal",ggHsplit=False) #NEEDS TO BE CHANGED WHEN SWITCHING FROM ALL GGH to JET WISE GGH ---> TO BE FIXED
     if parameters["channels"] == ["none"]:
         df.loc[df['channel_nominal'] != "none", 'channel_nominal'] = 'none'
     regions = [r for r in parameters["regions"] if r in df.region.unique()]
@@ -241,10 +241,15 @@ def on_partition(args, parameters):
     #print(df)
     #For ggh: categorise by score based on signal eff
     df["category"] = "All"
+    df["categoryPlot"] = "All"
     if parameters["cats_by_score"]:
         categorize_by_score(df, bdt_models, mode = "fixed_ggh", year = parameters["years"][0])
     elif parameters["cats_by_eta"]:
         categorize_by_eta(df)
+    elif parameters["cats_by_CalibCat"]:
+        categorize_by_CalibCat(df)
+    elif parameters["cats_by_ClosureCat"]:
+        categorize_by_ClosureCat(df)
     #print(df)
     #for i in range(5):
         #df_test = df[df["category"] == f"BDTperyear_2017_cat{i}"]
@@ -260,6 +265,7 @@ def on_partition(args, parameters):
     # not parallelizing for now - nested parallelism leads to a lock
     hist_info_rows = []
     for var_name in parameters["hist_vars"]:
+        print("making histograms")
         hist_info_row = make_histograms(
             df, var_name, year, dataset, regions, channels, categories, npart, parameters
         )

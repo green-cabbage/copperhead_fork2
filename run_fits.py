@@ -3,6 +3,7 @@ import tqdm
 import argparse
 import pandas as pd
 from stage3.fitter import run_fits
+import pdb
 
 
 
@@ -47,7 +48,10 @@ parameters = {
     #"cats_by_score": False,
     
     "signals": ["ggh_powheg"],
-    "data": [ "data_C",
+    "data": ["data_A",
+             "data_B",
+             "data_C",
+            "data_D",
             ],
     #"regions": ["h-sidebands","h-peak"],
     "regions": ["z-peak"],
@@ -59,9 +63,9 @@ parameters = {
 }
 
 parameters["datasets"] = [
-    #"data_A",
+    "data_A",
     #"data_B",
-    "data_C",
+    #"data_C",
     #"data_D",
     #"data_E",
     #"data_F",
@@ -104,8 +108,11 @@ if __name__ == "__main__":
 
             # read stage2 outputs
             for pat in path:
-                df = pd.read_csv(f"{pat}/{dataset}.csv")
-                df_all = pd.read_csv(f"{pat}/{dataset}_nocats.csv")
+                do_calib_fits=False
+                do_closure_fits=True
+                if not do_closure_fits:
+                    df = pd.read_csv(f"{pat}/{dataset}.csv")
+                    df_all = pd.read_csv(f"{pat}/{dataset}_nocats.csv")
                 if args.year[0] == "combined":
                     columns_to_check = ["score_BDTperyear_2016postVFP_nominal", "score_BDTperyear_2016preVFP_nominal", "score_BDTperyear_2017_nominal", "score_BDTperyear_2018_nominal"]
                 #else:
@@ -114,7 +121,68 @@ if __name__ == "__main__":
 
                 # Drop rows where all specified columns have NaN values
                 #df_all_filtered = df_all.dropna(subset=columns_to_check, how='all')
-                print(df)
-                #print(df_all_filtered)
+                #print(df.keys)
+                
 
-                run_fits(parameters, df,df_all)
+                if do_calib_fits:
+                    df_all = df
+                    BB = ((abs(df["mu1_eta"])<=0.9) & (abs(df["mu2_eta"])<=0.9))
+                    BO = ((abs(df["mu1_eta"])<=0.9) & ((abs(df["mu2_eta"])>0.9) & (abs(df["mu2_eta"]) <=1.8)))
+                    BE = ((abs(df["mu1_eta"])<=0.9) & ((abs(df["mu2_eta"])>1.8) & (abs(df["mu2_eta"]) <=2.4)))
+                    OB = (((abs(df["mu1_eta"])>0.9) & (abs(df["mu1_eta"]) <=1.8)) & (abs(df["mu2_eta"])<=0.9))
+                    OO = (((abs(df["mu1_eta"])>0.9) & (abs(df["mu1_eta"]) <=1.8)) & ((abs(df["mu2_eta"])>0.9) & (abs(df["mu2_eta"]) <=1.8)))
+                    OE = (((abs(df["mu1_eta"])>0.9) & (abs(df["mu1_eta"]) <=1.8)) & ((abs(df["mu2_eta"])>1.8) & (abs(df["mu2_eta"]) <=2.4)))
+                    EB = (((abs(df["mu1_eta"])>1.8) & (abs(df["mu1_eta"]) <=2.4)) & (abs(df["mu2_eta"])<=0.9))
+                    EO = (((abs(df["mu1_eta"])>1.8) & (abs(df["mu1_eta"]) <=2.4)) & ((abs(df["mu2_eta"])>0.9) & (abs(df["mu2_eta"]) <=1.8)))
+                    EE = (((abs(df["mu1_eta"])>1.8) & (abs(df["mu1_eta"]) <=2.4)) & ((abs(df["mu2_eta"])>1.8) & (abs(df["mu2_eta"]) <=2.4)))
+                    selections = [((df["mu1_pt"]>30)&(df["mu1_pt"]<=45)&(BB | OB | EB)),
+                                  ((df["mu1_pt"]>30)&(df["mu1_pt"]<=45)&(BO | OO | EO)),
+                                  ((df["mu1_pt"]>30)&(df["mu1_pt"]<=45)&(BE | OE | EE)),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&BB),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&BO),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&BE),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&OB),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&OO),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&OE),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&EB),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&EO),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&EE),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&BB),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&BO),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&BE),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&OB),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&OO),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&OE),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&EB),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&EO),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&EE),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&BB),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&BO),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&BE),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&OB),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&OO),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&OE),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&EB),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&EO),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&EE),]
+                    
+                    for i in range(len(selections)):
+                        if  i==11:
+                            selection = selections[i]
+                            df_i = df[(selection==True)]
+                            print(df_i)
+                            tag = f"{parameters['label']}_calib_cat{i}"
+                            run_fits(parameters, df_i,df_i,tag)
+
+                elif do_closure_fits:
+                    for i in [1]:
+                        df = pd.read_csv(f"{pat}/{dataset}_Closure_cat{i}.csv")
+                        
+                        df["category"] = "All"
+                        print(df)
+                        tag = f"{parameters['label']}_closure_cat{i}"
+                        run_fits(parameters, df,df,tag)
+
+                else:
+                    tag = ""
+                    run_fits(parameters, df,df_all,tag)

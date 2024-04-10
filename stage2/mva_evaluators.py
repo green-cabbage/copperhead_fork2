@@ -4,37 +4,8 @@ import torch
 from stage2.mva_models import Net,NetSimple, NetPisaRun2, NetPisaRun2Combination, MvaCategorizer
 
 
-training_features = [
-    "dimuon_mass",
-    "dimuon_pt",
-    "dimuon_pt_log",
-    "dimuon_eta",
-    # "dimuon_ebe_mass_res",
-    # "dimuon_ebe_mass_res_rel",
-    # "dimuon_cos_theta_cs",
-    # "dimuon_phi_cs",
-    "dimuon_pisa_mass_res",
-    "dimuon_pisa_mass_res_rel",
-    "dimuon_cos_theta_cs_pisa",
-    "dimuon_phi_cs_pisa",
-    "jet1_pt",
-    "jet1_eta",
-    "jet1_phi",
-    "jet1_qgl",
-    "jet2_pt",
-    "jet2_eta",
-    "jet2_phi",
-    "jet2_qgl",
-    "jj_mass",
-    "jj_mass_log",
-    "jj_dEta",
-    "rpt",
-    "ll_zstar_log",
-    "mmj_min_dEta",
-    "nsoftjets5",
-    "htsoft2",
-]
-training_features = ['dimuon_cos_theta_cs', 'dimuon_dEta', 'dimuon_dPhi', 'dimuon_dR', 'dimuon_eta', 'dimuon_phi', 'dimuon_phi_cs', 'dimuon_pt', 'dimuon_pt_log', 'jet1_eta_nominal', 'jet1_phi_nominal', 'jet1_pt_nominal', 'jet1_qgl_nominal', 'jet2_eta_nominal', 'jet2_phi_nominal', 'jet2_pt_nominal', 'jet2_qgl_nominal', 'jj_dEta_nominal', 'jj_dPhi_nominal', 'jj_eta_nominal', 'jj_mass_nominal', 'jj_mass_log_nominal', 'jj_phi_nominal', 'jj_pt_nominal', 'll_zstar_log_nominal', 'mmj1_dEta_nominal', 'mmj1_dPhi_nominal', 'mmj2_dEta_nominal', 'mmj2_dPhi_nominal', 'mmj_min_dEta_nominal', 'mmj_min_dPhi_nominal', 'mmjj_eta_nominal', 'mmjj_mass_nominal', 'mmjj_phi_nominal', 'mmjj_pt_nominal', 'mu1_eta', 'mu1_iso', 'mu1_phi', 'mu1_pt_over_mass', 'mu2_eta', 'mu2_iso', 'mu2_phi', 'mu2_pt_over_mass', 'zeppenfeld_nominal']
+
+
 
 training_features_mass = [
     "dimuon_mass",
@@ -68,8 +39,8 @@ training_features_nomass = [
 ]
 
 
-def prepare_features(df, parameters, channel, variation="nominal", add_year=False):
-    global training_features
+def prepare_features(df, training_features,parameters, channel, variation="nominal", add_year=False):
+    #global training_features
     if add_year:
         
         features = training_features + ["year"]
@@ -145,7 +116,37 @@ def evaluate_mva_categorizer(df, model_name, score_name, parameters):
 
 
 def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
-    features = prepare_features(df, parameters, channel, variation, add_year=False)
+    training_features = [
+    "dimuon_mass",
+    "dimuon_pt",
+    "dimuon_pt_log",
+    "dimuon_eta",
+    # "dimuon_ebe_mass_res",
+    # "dimuon_ebe_mass_res_rel",
+    # "dimuon_cos_theta_cs",
+    # "dimuon_phi_cs",
+    "dimuon_pisa_mass_res",
+    "dimuon_pisa_mass_res_rel",
+    "dimuon_cos_theta_cs_pisa",
+    "dimuon_phi_cs_pisa",
+    "jet1_pt",
+    "jet1_eta",
+    "jet1_phi",
+    #"jet1_qgl",
+    "jet2_pt",
+    "jet2_eta",
+    "jet2_phi",
+    #"jet2_qgl",
+    "jj_mass",
+    "jj_mass_log",
+    "jj_dEta",
+    "rpt",
+    "ll_zstar_log",
+    "mmj_min_dEta",
+    "nsoftjets5",
+    "htsoft2",
+]
+    features = prepare_features(df, training_features, parameters, channel, variation, add_year=False)
     try:
         df = df.compute()
     except Exception:
@@ -339,9 +340,21 @@ def evaluate_pytorch_dnn_pisa(
 
 
 def evaluate_bdt(df, variation, model, parameters, score_name):
+    training_features = ['dimuon_cos_theta_cs', 'dimuon_dEta', 'dimuon_dPhi', 'dimuon_dR', 'dimuon_eta', 'dimuon_phi', 'dimuon_phi_cs', 'dimuon_pt', 'dimuon_pt_log', 'jet1_eta_nominal', 'jet1_phi_nominal', 'jet1_pt_nominal', 'jet1_qgl_nominal', 'jet2_eta_nominal', 'jet2_phi_nominal', 'jet2_pt_nominal', 'jet2_qgl_nominal', 'jj_dEta_nominal', 'jj_dPhi_nominal', 'jj_eta_nominal', 'jj_mass_nominal', 'jj_mass_log_nominal', 'jj_phi_nominal', 'jj_pt_nominal', 'll_zstar_log_nominal', 'mmj1_dEta_nominal', 'mmj1_dPhi_nominal', 'mmj2_dEta_nominal', 'mmj2_dPhi_nominal', 'mmj_min_dEta_nominal', 'mmj_min_dPhi_nominal', 'mmjj_eta_nominal', 'mmjj_mass_nominal', 'mmjj_phi_nominal', 'mmjj_pt_nominal', 'mu1_eta', 'mu1_iso', 'mu1_phi', 'mu1_pt_over_mass', 'mu2_eta', 'mu2_iso', 'mu2_phi', 'mu2_pt_over_mass', 'zeppenfeld_nominal']
     # if parameters["do_massscan"]:
     #     mass_shift = parameters["mass"] - 125.0
-    features = prepare_features(df, parameters, variation, add_year=False)
+
+    df.loc[:,'mu1_pt_over_mass'] = np.divide(df['mu1_pt'], df['dimuon_mass'])
+    df.loc[:,'mu2_pt_over_mass'] = np.divide(df['mu2_pt'], df['dimuon_mass'])
+    #df['njets_nominal']= 
+    df['njets_nominal'].fillna(0)
+
+    #df[df['njets_nominal']<2]['jj_dPhi_nominal'] = -1
+    
+    df.fillna(-99.0)
+    df.loc[:,'mmj_min_dEta_nominal'] = df["mmj2_dEta_nominal"]
+    df.loc[:,'mmj_min_dPhi_nominal'] = df["mmj2_dPhi_nominal"]
+    features = prepare_features(df,training_features, parameters, variation, add_year=False)
     #model = f"{model}_{parameters['years'][0]}"
     score_name = f"score_{model}_{variation}"
     try:
@@ -354,7 +367,9 @@ def evaluate_bdt(df, variation, model, parameters, score_name):
 
     df.loc[:, score_name] = 0
     nfolds = 4
-    
+    columns_print = ['njets_nominal','jj_dPhi_nominal','jj_mass_log_nominal', 'jj_phi_nominal', 'jj_pt_nominal', 'll_zstar_log_nominal', 'mmj1_dEta_nominal','jet2_pt_nominal']
+    columns2 = ['mmj1_dEta_nominal', 'mmj1_dPhi_nominal', 'mmj2_dEta_nominal', 'mmj2_dPhi_nominal', 'mmj_min_dEta_nominal', 'mmj_min_dPhi_nominal']
+
     for i in range(nfolds):
         # train_folds = [(i + f) % nfolds for f in [0, 1]]
         # val_folds = [(i + f) % nfolds for f in [2]]
@@ -371,6 +386,10 @@ def evaluate_bdt(df, variation, model, parameters, score_name):
         if df_i.shape[0] == 0:
             continue
         df_i.loc[df_i.region != "h-peak", "dimuon_mass"] = 125.0
+        with open("df.txt", "w") as f:
+            print(df[columns_print], file=f)
+        with open("df2.txt", "w") as f:
+            print(df[columns2], file=f)
         # if parameters["do_massscan"]:
         #     df_i.loc[:, "dimuon_mass"] = df_i["dimuon_mass"] - mass_shift
         df_i = (df_i[features] - scalers[0]) / scalers[1]
@@ -384,4 +403,7 @@ def evaluate_bdt(df, variation, model, parameters, score_name):
                     bdt_model.predict_proba(df_i.values)[:, 1]
                 ).ravel()
             df.loc[eval_filter, score_name] = prediction  # np.arctanh((prediction))
+        with open("scorename.txt", "w") as f:
+            print(df[score_name], file=f)
+    
     return df[score_name]

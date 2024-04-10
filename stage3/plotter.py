@@ -102,12 +102,12 @@ def plot(args, parameters={}):
     hist = args["df"].loc[(args["df"].var_name == var_name) & (args["df"].year == year)]
     pd.set_option('display.max_colwidth', None)
 
-    print(hist)
+    #print(hist)
     if var_name in variables_lookup.keys():
         var = parameters["variables_lookup"][var_name]
     else:
         if "score" in var_name:
-            var = Variable(var_name, var_name, 20, 0, 5)
+            var = Variable(var_name, var_name, 50, 0, 1)
         else:
             var = Variable(var_name, var_name, 20, 0, 5)
             
@@ -142,20 +142,21 @@ def plot(args, parameters={}):
         if len(entry.entry_list) == 0:
             continue
 
-        plottables_df = get_plottables(hist, entry, year, var_name, slicer)
+        plottables_df = get_plottables(hist, entry, year, var_name, slicer,parameters)
         plottables = plottables_df["hist"].values.tolist()
         if len(plottables) == 0:
             continue
-        #print(plottables_df)
+        print(plottables)
         sumw2 = plottables_df["sumw2"].values.tolist()
         labels = plottables_df["label"].values.tolist()
         total_yield += sum([p.sum() for p in plottables])
 
 
         yerr = np.sqrt(sum(plottables).values()) if entry.yerr else None
-
+        binning = np.linspace(var.xmin,var.xmax,var.nbins)
         hep.histplot(
             plottables,
+            #bins = binning,
             label=labels,
             ax=ax1,
             yerr=yerr,
@@ -164,7 +165,11 @@ def plot(args, parameters={}):
             **entry.plot_opts,
         )
 
+       # if entry.entry_type == "step":
+        #    if parameters["logscale"]==False:
+                
         # MC errors
+        
         if entry.entry_type == "stack":
             total_bkg = sum(plottables).values()
             total_sumw2 = sum(sumw2).values()
@@ -176,9 +181,11 @@ def plot(args, parameters={}):
                     y2=np.r_[err[1, :], err[1, -1]],
                     **stat_err_opts,
                 )
+    if parameters["logscale"]:
+        ax1.set_yscale("log")
+        ax1.set_ylim(0.001, 1e9)
 
-    ax1.set_yscale("log")
-    ax1.set_ylim(0.001, 1e9)
+    ax1.set_xlim(var.xmin, var.xmax)  
     ax1.legend(prop={"size": "x-small"})
 
     if parameters["plot_ratio"]:
@@ -194,14 +201,14 @@ def plot(args, parameters={}):
 
         if len(entries["errorbar"].entry_list) > 0:
             # get Data yields
-            num_df = get_plottables(hist, entries["errorbar"], year, var.name, slicer)
+            num_df = get_plottables(hist, entries["errorbar"], year, var.name, slicer,parameters)
             num = num_df["hist"].values.tolist()
             if len(num) > 0:
                 num = sum(num).values()
 
         if len(entries["stack"].entry_list) > 0:
             # get MC yields and sumw2
-            den_df = get_plottables(hist, entries["stack"], year, var.name, slicer)
+            den_df = get_plottables(hist, entries["stack"], year, var.name, slicer,parameters)
             den = den_df["hist"].values.tolist()
             den_sumw2 = den_df["sumw2"].values.tolist()
             if len(den) > 0:
@@ -256,7 +263,7 @@ def plot(args, parameters={}):
     return total_yield
 
 
-def get_plottables(hist, entry, year, var_name, slicer):
+def get_plottables(hist, entry, year, var_name, slicer,parameters):
     slicer[var_name] = slice(None)
     #print(entry)
     #print(entry.groups)
@@ -287,19 +294,34 @@ def get_plottables(hist, entry, year, var_name, slicer):
         nevts = sum(hist_values_group).sum()
         #print(plottables_df)
         if nevts > 0:
-            plottables_df = plottables_df.append(
-                pd.DataFrame(
-                    [
-                        {
-                            "label": group,
-                            "hist": sum(hist_values_group),
-                            "sumw2": sum(hist_sumw2_group),
-                            "integral": sum(hist_values_group).sum(),
-                        }
-                    ]
-                ),
-                ignore_index=True,
-            )
+            if entry.entry_type == "step" and parameters["logscale"]==False:
+                plottables_df = plottables_df.append(
+                    pd.DataFrame(
+                        [
+                            {
+                                "label": f"{group} x 1000",
+                                "hist": 1000*sum(hist_values_group),
+                                "sumw2": 1000*sum(hist_sumw2_group),
+                                "integral": 1000*sum(hist_values_group).sum(),
+                            }
+                        ]
+                    ),
+                    ignore_index=True,
+                )
+            else:
+                plottables_df = plottables_df.append(
+                    pd.DataFrame(
+                        [
+                            {
+                                "label": group,
+                                "hist": sum(hist_values_group),
+                                "sumw2": sum(hist_sumw2_group),
+                                "integral": sum(hist_values_group).sum(),
+                            }
+                        ]
+                    ),
+                    ignore_index=True,
+                )
 
     plottables_df.sort_values(by="integral", inplace=True)
     return plottables_df

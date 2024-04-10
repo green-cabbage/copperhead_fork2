@@ -32,8 +32,8 @@ def bwGamma(x, tag):
 # --------------------------------------------------------
 def bwZ(x, tag):
     bwWidth = rt.RooRealVar("bwz_Width" + tag, "widthZ", 2.5, 0, 30)
-    bwmZ = rt.RooRealVar("bwz_mZ" + tag, "mZ", 91.2, 90, 92)
-    expParam = rt.RooRealVar("bwz_expParam" + tag, "expParam", -1e-03, -1e-02, 1e-02)
+    bwmZ = rt.RooRealVar("bwz_mZ" + tag, "mZ", 91.2, 87, 95)
+    expParam = rt.RooRealVar("bwz_expParam" + tag, "expParam", -8e-02, -1., 5e-01)
 
     bwWidth.setConstant(True)
     #bwmZ.setConstant(True)
@@ -401,11 +401,11 @@ def doubleCB(x, tag):
 
 def doubleCB_forZ(x, tag):
     mean = rt.RooRealVar("mean" , "mean",0)
-    sigma = rt.RooRealVar("sigma" , "sigma", 2, .5, 4.0)
-    alpha1 = rt.RooRealVar("alpha1" , "alpha1", 2, 0.001, 45)
-    n1 = rt.RooRealVar("n1" , "n1", 10, -75, 75)
-    alpha2 = rt.RooRealVar("alpha2" , "alpha2", 2.0, 0.001, 45)
-    n2 = rt.RooRealVar("n2" , "n2", 25, -65, 65)
+    sigma = rt.RooRealVar("sigma" , "sigma", 2, .2, 4.0)
+    alpha1 = rt.RooRealVar("alpha1" , "alpha1", 2, -5, 45)
+    n1 = rt.RooRealVar("n1" , "n1", 10, -175, 185)
+    alpha2 = rt.RooRealVar("alpha2" , "alpha2", 2.0, -5, 65)
+    n2 = rt.RooRealVar("n2" , "n2", 25, -185, 385)
     #mean.setConstant(True)
     model = rt.RooDoubleCB("dcb" + tag, "dcb", x, mean, sigma, alpha1, n1, alpha2, n2)
     return model, [mean, sigma, alpha1, n1, alpha2, n2]
@@ -450,17 +450,21 @@ def Erf(x, tag):
 
     # Define the variable and parameters
 
-    slope = rt.RooRealVar("slope"+tag, "Slope", 0, 0.01, 1.)
-    offset = rt.RooRealVar("offset"+tag, "Offset", 91.2, 81, 105)
+    slope = rt.RooRealVar("slope"+tag, "Slope", 0, 0, 1.)
+    offset = rt.RooRealVar("offset"+tag, "Offset", 91.2, 80, 105)
+    slope2 = rt.RooRealVar("slope2"+tag, "Slope", 0, 0, 1.)
+    offset2 = rt.RooRealVar("offset2"+tag, "Offset", 91.2, 81, 105)
 
 
     # Define the error function multiplied by an exponential for background modeling
-    model = rt.RooGenericPdf("erf_exp"+tag, "erf_exp"+tag, "TMath::Erf(@0) * TMath::Exp(-(@0 - @2) * @1)", rt.RooArgList(x, slope, offset))
+    model = rt.RooGenericPdf("erf_exp"+tag, "erf_exp"+tag, "TMath::Erfc((@2 - @0) * @1) * TMath::Exp(-(@0 - @4) * @3)", rt.RooArgList(x, slope, offset, slope2, offset2))
+
+    #model = rt.RooGenericPdf("erf_exp"+tag, "erf_exp"+tag, "TMath::Erf(TMath::Abs(@0 - @2) * @1)", rt.RooArgList(x, slope,offset))
 
 
 
 
-    return model, [slope, offset]
+    return model, [slope, offset,slope2, offset2]
     
 def BWxDCB(x,tag):
 

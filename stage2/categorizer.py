@@ -1,5 +1,9 @@
 def split_into_channels(df, v="", nochannels=False, ggHsplit = True):
-    df.loc[df[f"njets_{v}"] ==-999, f"njets_{v}"] = 0.0
+    df.loc[df[f"njets_{v}"] ==-99, f"njets_{v}"] = 0.0
+    columns_print = [f"njets_{v}"]
+    with open("dfsplitintoc.txt", "w") as f:
+        print(df[columns_print], file=f)
+    print(df)
     df.loc[:, f"channel_{v}"] = "none"
     if nochannels == False:
         df.loc[
@@ -50,11 +54,18 @@ def categorize_by_score(df, scores, mode="uniform",year="2018", **kwargs):
                 #score_ggh = df[df.loc[(df.channel_nominal == channel) & (df.dataset == "ggh_powheg"), f"score_{score_name}_nominal"]]
                 signal_eff_bins = {}
                 signal_eff_bins["2018"] = [0.0, 
-                                           0.34052810072898865, 
-                                           0.6200955510139465, 
-                                           0.7057817578315735, 
-                                           0.8094207644462585, 
-                                           1]
+                                           0.578787624835968, 
+                                           0.7073342800140381, 
+                                           0.7585148215293884, 
+                                           0.8222802877426147,
+                                           1]#BDTv12
+                    #[0.0, 
+                                           #0.34052810072898865, 
+                                           #0.6200955510139465, 
+                                           #0.7057817578315735, 
+                                           #0.8094207644462585, 
+                                           #1]#BDTperyear
+                     
                 signal_eff_bins["2017"] = [0.0, 
                                            0.33528196811676025, 
                                            0.5249117016792297, 
@@ -102,6 +113,77 @@ def categorize_by_eta(df , **kwargs):
         
         df.loc[cut, "category"] = cat_name
 
+
+def categorize_by_CalibCat(df , **kwargs):
+    nbins = kwargs.pop("nbins", 4)
+
+    print(f"doing categorisation for calibration")
+    BB = ((abs(df["mu1_eta"])<=0.9) & (abs(df["mu2_eta"])<=0.9))
+    BO = ((abs(df["mu1_eta"])<=0.9) & ((abs(df["mu2_eta"])>0.9) & (abs(df["mu2_eta"]) <=1.8)))
+    BE = ((abs(df["mu1_eta"])<=0.9) & ((abs(df["mu2_eta"])>1.8) & (abs(df["mu2_eta"]) <=2.4)))
+    OB = (((abs(df["mu1_eta"])>0.9) & (abs(df["mu1_eta"]) <=1.8)) & (abs(df["mu2_eta"])<=0.9))
+    OO = (((abs(df["mu1_eta"])>0.9) & (abs(df["mu1_eta"]) <=1.8)) & ((abs(df["mu2_eta"])>0.9) & (abs(df["mu2_eta"]) <=1.8)))
+    OE = (((abs(df["mu1_eta"])>0.9) & (abs(df["mu1_eta"]) <=1.8)) & ((abs(df["mu2_eta"])>1.8) & (abs(df["mu2_eta"]) <=2.4)))
+    EB = (((abs(df["mu1_eta"])>1.8) & (abs(df["mu1_eta"]) <=2.4)) & (abs(df["mu2_eta"])<=0.9))
+    EO = (((abs(df["mu1_eta"])>1.8) & (abs(df["mu1_eta"]) <=2.4)) & ((abs(df["mu2_eta"])>0.9) & (abs(df["mu2_eta"]) <=1.8)))
+    EE = (((abs(df["mu1_eta"])>1.8) & (abs(df["mu1_eta"]) <=2.4)) & ((abs(df["mu2_eta"])>1.8) & (abs(df["mu2_eta"]) <=2.4)))
+    selections = [((df["mu1_pt"]>30)&(df["mu1_pt"]<=45)&(BB | OB | EB)),
+                                  ((df["mu1_pt"]>30)&(df["mu1_pt"]<=45)&(BO | OO | EO)),
+                                  ((df["mu1_pt"]>30)&(df["mu1_pt"]<=45)&(BE | OE | EE)),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&BB),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&BO),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&BE),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&OB),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&OO),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&OE),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&EB),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&EO),
+                                  ((df["mu1_pt"]>45)&(df["mu1_pt"]<=52)&EE),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&BB),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&BO),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&BE),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&OB),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&OO),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&OE),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&EB),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&EO),
+                                  ((df["mu1_pt"]>52)&(df["mu1_pt"]<=62)&EE),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&BB),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&BO),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&BE),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&OB),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&OO),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&OE),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&EB),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&EO),
+                                  ((df["mu1_pt"]>62)&(df["mu1_pt"]<=200)&EE),]
+    for i in range(len(selections)):
+
+        cat_name = f"Calibration_cat{i}"
+        df.loc[selections[i], "category"] = cat_name
+        #print(df.loc[selections[i]])
+
+def categorize_by_ClosureCat(df , **kwargs):
+    nbins = kwargs.pop("nbins", 4)
+
+    print(f"doing categorisation for closure test")
+    selections = [((df["dimuon_ebe_mass_res"]>0.6)&(df["dimuon_ebe_mass_res"]<=0.7)),
+                                  ((df["dimuon_ebe_mass_res"]>0.7)&(df["dimuon_ebe_mass_res"]<=0.8)),
+                                  ((df["dimuon_ebe_mass_res"]>0.8)&(df["dimuon_ebe_mass_res"]<=0.9)),
+                                  ((df["dimuon_ebe_mass_res"]>0.9)&(df["dimuon_ebe_mass_res"]<=1.0)),
+                                  ((df["dimuon_ebe_mass_res"]>1.0)&(df["dimuon_ebe_mass_res"]<=1.1)),
+                                  ((df["dimuon_ebe_mass_res"]>1.1)&(df["dimuon_ebe_mass_res"]<=1.2)),
+                                  ((df["dimuon_ebe_mass_res"]>1.3)&(df["dimuon_ebe_mass_res"]<=1.4)),
+                                  ((df["dimuon_ebe_mass_res"]>1.4)&(df["dimuon_ebe_mass_res"]<=1.5)),
+                                  ((df["dimuon_ebe_mass_res"]>1.5)&(df["dimuon_ebe_mass_res"]<=1.7)),
+                                  ((df["dimuon_ebe_mass_res"]>1.7)&(df["dimuon_ebe_mass_res"]<=2.0)),
+                                  ((df["dimuon_ebe_mass_res"]>2.0)&(df["dimuon_ebe_mass_res"]<=2.5)),
+                                  ((df["dimuon_ebe_mass_res"]>2.5)&(df["dimuon_ebe_mass_res"]<=3.5)),]
+    for i in range(len(selections)):
+
+        cat_name = f"Closure_cat{i}"
+        df.loc[selections[i], "category"] = cat_name
+        #print(df.loc[selections[i]])
                 
                 
 def categorize_dnn_output(df, score_name, channel, region, year, yearstr):

@@ -4,11 +4,14 @@ import awkward as ak
 from python.math_tools import p4_sum, delta_r, rapidity
 
 
-def prepare_jets(df, is_mc):
+def prepare_jets(df, is_mc, is_v9):
     # Initialize missing fields (needed for JEC)
     df["Jet", "pt_raw"] = (1 - df.Jet.rawFactor) * df.Jet.pt
     df["Jet", "mass_raw"] = (1 - df.Jet.rawFactor) * df.Jet.mass
-    #df["Jet", "rho"] = ak.broadcast_arrays(df.fixedGridRhoFastjetAll, df.Jet.pt)[0]
+    if is_v9:
+        df["Jet", "rho"] = ak.broadcast_arrays(df.fixedGridRhoFastjetAll, df.Jet.pt)[0]
+    else:
+        df["Jet", "rho"] = ak.broadcast_arrays(df.Rho.fixedGridRhoFastjetAll, df.Jet.pt)[0]
 
     if is_mc:
         df["Jet", "pt_gen"] = ak.values_astype(
@@ -19,23 +22,75 @@ def prepare_jets(df, is_mc):
         df["Jet", "has_matched_gen"] = False
 
 
-def fill_jets(output, variables, jet1, jet2):
-    variable_names = [
+def fill_jets(output, variables, jet1, jet2, is_v9):
+    if is_v9 == True:
+        variable_names = [
         "jet1_pt",
         "jet1_eta",
         "jet1_rap",
         "jet1_phi",
-        #"jet1_qgl",
+        "jet1_PNetQvG",
+        "jet1_btagDeepFlavQG",
         "jet1_jetId",
-        #"jet1_puId",
-        "jet1_has_matched_gen" "jet2_pt",
+        "jet1_puId",
+        "jet1_has_matched_gen",
+        "jet2_pt",
         "jet2_eta",
         "jet2_rap",
         "jet2_phi",
-        #"jet2_qgl",
+        "jet2_btagDeepFlavQG",
+        "jet2_jetId",
+        "jet2_puId",
+        "jet2_has_matched_gen",
+        "jj_mass",
+        "jj_mass_log",
+        "jj_pt",
+        "jj_eta",
+        "jj_phi",
+        "jj_dEta",
+        "jj_dPhi",
+        "mmj1_dEta",
+        "mmj1_dPhi",
+        "mmj1_dR",
+        "mmj2_dEta",
+        "mmj2_dPhi",
+        "mmj2_dR",
+        "mmj_min_dEta",
+        "mmj_min_dPhi",
+        "mmjj_pt",
+        "mmjj_eta",
+        "mmjj_phi",
+        "mmjj_mass",
+        "rpt",
+        "zeppenfeld",
+        "ll_zstar_log",
+        "nsoftjets2",
+        "nsoftjets5",
+        "htsoft2",
+        "htsoft5",
+        "selection",
+    ]
+    else:
+        variable_names = [
+        "jet1_pt",
+        "jet1_eta",
+        "jet1_rap",
+        "jet1_phi",
+        #"jet1_PNetQvG",
+        "jet1_btagDeepFlavQG",
+        "jet1_jetId",
+        #"jet1_puId",
+        "jet1_has_matched_gen",
+        "jet2_pt",
+        "jet2_eta",
+        "jet2_rap",
+        "jet2_phi",
+        #jet2_PNetQvG",
+        "jet2_btagDeepFlavQG",
         "jet2_jetId",
         #"jet2_puId",
-        "jet2_has_matched_gen" "jj_mass",
+        "jet2_has_matched_gen",
+        "jj_mass",
         "jj_mass_log",
         "jj_pt",
         "jj_eta",
@@ -64,18 +119,25 @@ def fill_jets(output, variables, jet1, jet2):
         "selection",
     ]
 
+
     for v in variable_names:
         variables[v] = -999.0
 
     # Fill single jet variables
-    for v in ["pt", "eta", "phi", 
-              #"qgl", 
-              "jetId", 
-              #"puId",
-              "has_matched_gen"]:
-        variables[f"jet1_{v}"] = jet1[v]
-        variables[f"jet2_{v}"] = jet2[v]
-
+    if is_v9:
+        for v in ["pt", "eta", "phi", 
+                  "qgl", 
+                  "jetId", 
+                  "puId",
+                  "has_matched_gen"]:
+            variables[f"jet1_{v}"] = jet1[v]
+            variables[f"jet2_{v}"] = jet2[v]
+    else:
+        for v in ["pt", "eta", "phi", 
+                  "jetId", 
+                  "has_matched_gen"]:
+            variables[f"jet1_{v}"] = jet1[v]
+            variables[f"jet2_{v}"] = jet2[v]
     variables.jet1_rap = rapidity(jet1)
     variables.jet2_rap = rapidity(jet2)
 

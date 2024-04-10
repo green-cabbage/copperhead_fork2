@@ -14,14 +14,20 @@ def make_histograms(df, var_name, year, dataset, regions, channels, categories, 
     if var_name in parameters["variables_lookup"].keys():
         var = parameters["variables_lookup"][var_name]
     else:
-        var = Variable(var_name, var_name, 50, 0, 5)
+        var = Variable(var_name, var_name, 40, 0, 1)
     #print(var_name)
 
     # prepare list of systematic variations
-    wgt_variations = [w for w in df.columns if ("wgt_" in w)]
+    do_variations = False
+    if do_variations:
+        wgt_variations = [w for w in df.columns if (("wgt_" in w) and ("nominal" not in w))]
+    else: 
+        wgt_variations = []
+    wgt_variations.append("wgt_nominal")
     syst_variations = parameters.get("syst_variations", ["nominal"])
     variations = []
     for w in wgt_variations:
+        print(w)
         for v in syst_variations:
             variation = get_variation(w, v)
             if variation:
@@ -39,7 +45,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, categories, 
     # add axis for observable variable
     if "score" in var.name:
         #print(var.name)
-        if "BDT" in var.name: 
+        if "ggH" in var.name: 
             model_name = var.name.replace("score_", "").replace("_nominal", "")
             model_name = f"{model_name}_{year}"
         else:
@@ -55,7 +61,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, categories, 
             bins = np.arange(41) / 40.0
         hist = hist.Var(bins, name=var.name)
     else:
-        hist = hist.Reg(var.nbins, var.xmin, var.xmax, name=var.name, label=var.caption)
+        hist = hist.Reg(var.nbins, var.xmin, var.xmax, flow = True, name=var.name, label=var.caption)
 
     # add axis for systematic variation
     hist = hist.StrCat(variations, name="variation")
@@ -83,6 +89,8 @@ def make_histograms(df, var_name, year, dataset, regions, channels, categories, 
         category = loop_arg["category"]
         w = loop_arg["w"]
         v = loop_arg["v"]
+        #print("w")
+        #print("v")
         variation = get_variation(w, v)
         if not variation:
             continue
@@ -154,7 +162,8 @@ def make_histograms(df, var_name, year, dataset, regions, channels, categories, 
 
 
 def get_variation(wgt_variation, sys_variation):
-    if "nominal" in wgt_variation:
+    #if "nominal" in wgt_variation:
+    if wgt_variation == "wgt_nominal":
         if "nominal" in sys_variation:
             return "nominal"
         else:

@@ -59,27 +59,31 @@ parameters = {
     "slurm_cluster_ip": slurm_cluster_ip,
     "years": args.year,
     "global_path": "/depot/cms/hmm/vscheure/",
+    #"global_path": "/work/users/vscheure",
     "label": args.label,
      #"channels": ["vbf"],
     "channels": ["ggh"],
-    #"category": ["BDTperyear_2018_cat0","BDTperyear_2018_cat2","BDTperyear_2018_cat2","BDTperyear_2018_cat3","BDTperyear_2018_cat4"],
-    "category": ["EtaCats_cat0","EtaCats_cat1","EtaCats_cat2"],
-    #"category":["All"],
+    #"category": ["BDTv12_2018_cat0","BDTv12_2018_cat1","BDTv12_2018_cat2","BDTv12_2018_cat3","BDTv12_2018_cat4"],
+    #"category": ["EtaCats_cat0","EtaCats_cat1","EtaCats_cat2"],
+    "category":["All"],
+    #"category": [f"Calibration_cat{i}" for i in range(30)],
       #"channels": ["ggh_0jets"],
      #"channels": ["none"],
-    #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
-    #"regions": ["h-sidebands", "h-peak" ],
-    "regions": ["h-peak"],
+    #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets"],
+    "regions": ["h-sidebands", "h-peak" ],
+    #"regions": ["h-peak"],
     #"regions": ["h-sidebands"],
-    #"regions": ["none"],
+    #"regions": ["z-peak"],
     "syst_variations": ["nominal"],
     #
     # < plotting settings >
-    "plot_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res", "mu1_eta","jet1_pt",'mu2_eta',"mu1_pt",'dimuon_eta',],#["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res","dimuon_cos_theta_cs","zeppenfeld",'dimuon_eta',"jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","mu1_pt","mu1_eta","jet1_pt","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",'jet1_qgl', 'mu2_eta', 'mu2_iso',], 
+    #"plot_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res", "mu1_eta",'mu2_eta',"mu1_phi",'mu2_phi',"mu1_pt","dimuon_ebe_mass_res_raw","zpt_weight","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",'jet1_qgl',"jet2_eta", "jet2_phi",'jet2_qgl', 'mu2_iso','jet2_pt','jet1_pt','mu2_pt'], 
+    "plot_vars":  ["dimuon_pt"],
     #"plot_vars": ["njets"],
     "variables_lookup": variables_lookup,
     "save_plots": True,
     "plot_ratio": True,
+    "logscale" : False,
     "plots_path": f"{args.plotsdir}/",
    #"dnn_models": {
        #"vbf": ["ValerieDNNtest2","ValerieDNNtest3"],
@@ -107,7 +111,7 @@ parameters = {
         # "vbf": ["pytorch_may24_pisa"],
     #},
     "bdt_models": {
-    #"ggh": ["BDTperyear"],
+    "ggh": ["BDTperyear_2018"],
     },
     #
     # < templates and datacards >
@@ -120,12 +124,12 @@ parameters["grouping"] = {
     "data_B": "Data",
     "data_C": "Data",
     "data_D": "Data",
-    "data_E": "Data",
-    "data_F": "Data",
-    "data_G": "Data",
-    "data_H": "Data",
+    #"data_E": "Data",
+    #"data_F": "Data",
+    #"data_G": "Data",
+    #"data_H": "Data",
     #"data_x": "Data",
-    #"dy_M-50": "DY",
+    "dy_M-50": "DY",
     #"dy_M-50_nocut": "DY_nocut",
     "dy_M-100To200": "DY",
     #"dy_M-50_01j": "DY_01J",
@@ -205,12 +209,13 @@ if __name__ == "__main__":
     # add MVA scores to the list of variables to plot
     dnn_models = []
     #dnn_models = list(parameters["dnn_models"].values())
-    bdt_models = []
-    #bdt_models = list(parameters["bdt_models"].values())
+    #bdt_models = []
+    bdt_models = list(parameters["bdt_models"].values())
     for models in dnn_models + bdt_models:
        for model in models:
+            print("score_" + model)
             parameters["plot_vars"] += ["score_" + model]
-            parameters["templates_vars"] += ["score_" + model]
+            #parameters["templates_vars"] += ["score_" + model]
 
     parameters["datasets"] = parameters["grouping"].keys()
 

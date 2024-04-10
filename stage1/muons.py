@@ -3,12 +3,17 @@ import numpy as np
 from python.math_tools import p4_sum, delta_r, cs_variables, cs_variables_pisa
 
 
-def fill_muons(processor, output, mu1, mu2, is_mc):
-    mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso","mu1_bsConstrainedPt","mu1_bsConstrainedPtErr","mu1_bsConstrainedChi2","mu1_pt_raw"]
-    mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso","mu2_bsConstrainedPt","mu2_bsConstrainedPtErr","mu2_bsConstrainedChi2","mu2_pt_raw"]
+def fill_muons(processor, output, mu1, mu2, is_mc, is_v9):
+    if is_v9:
+        mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso","mu1_pt_raw"]
+        mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso","mu2_pt_raw"]
+    else:
+        mu1_variable_names = ["mu1_pt", "mu1_pt_over_mass", "mu1_eta", "mu1_phi", "mu1_iso","mu1_bsConstrainedPt","mu1_bsConstrainedPtErr","mu1_bsConstrainedChi2","mu1_pt_raw"]
+        mu2_variable_names = ["mu2_pt", "mu2_pt_over_mass", "mu2_eta", "mu2_phi", "mu2_iso","mu2_bsConstrainedPt","mu2_bsConstrainedPtErr","mu2_bsConstrainedChi2","mu2_pt_raw"]
     dimuon_variable_names = [
         "dimuon_mass",
         "dimuon_ebe_mass_res",
+        "dimuon_ebe_mass_res_raw",
         "dimuon_ebe_mass_res_rel",
         "dimuon_pt",
         "dimuon_pt_log",
@@ -28,10 +33,14 @@ def fill_muons(processor, output, mu1, mu2, is_mc):
         output[n] = 0.0
 
     # Fill single muon variables
-    for v in ["pt", "ptErr", "eta", "phi","bsConstrainedPt","bsConstrainedPtErr","bsConstrainedChi2","pt_raw"]:
-        output[f"mu1_{v}"] = mu1[v]
-        output[f"mu2_{v}"] = mu2[v]
-
+    if is_v9:
+        for v in ["pt", "ptErr", "eta", "phi","pt_raw"]:
+            output[f"mu1_{v}"] = mu1[v]
+            output[f"mu2_{v}"] = mu2[v]
+    else:
+        for v in ["pt", "ptErr", "eta", "phi","bsConstrainedPt","bsConstrainedPtErr","bsConstrainedChi2","pt_raw"]:
+            output[f"mu1_{v}"] = mu1[v]
+            output[f"mu2_{v}"] = mu2[v]
     output["mu1_iso"] = mu1.pfRelIso04_all
     output["mu2_iso"] = mu2.pfRelIso04_all
 
@@ -57,6 +66,8 @@ def fill_muons(processor, output, mu1, mu2, is_mc):
     output["dimuon_ebe_mass_res"] = mass_resolution(
         is_mc, processor.evaluator, output, processor.year
     )
+    output["dimuon_ebe_mass_res_raw"] = mass_resolution_raw(output)
+    
     output["dimuon_ebe_mass_res_rel"] = output.dimuon_ebe_mass_res / output.dimuon_mass
 
     output["dimuon_pisa_mass_res_rel"] = mass_resolution_pisa(
@@ -119,6 +130,13 @@ def fill_muons_Simple(processor, output, mu1, mu2, is_mc):
     output["dimuon_dPhi"] = mm_dphi
     output["dimuon_dR"] = mm_dr
 
+
+def mass_resolution_raw(df):
+    # Returns absolute non-calibrated mass resolution!
+    dpt1 = (df.mu1_ptErr * df.dimuon_mass) / (2 * df.mu1_pt)
+    dpt2 = (df.mu2_ptErr * df.dimuon_mass) / (2 * df.mu2_pt)
+
+    return np.sqrt(dpt1 * dpt1 + dpt2 * dpt2)
 
 
 def mass_resolution(is_mc, evaluator, df, year):

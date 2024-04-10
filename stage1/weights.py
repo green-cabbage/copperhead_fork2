@@ -37,6 +37,7 @@ class Weights(object):
     def add_nom_weight(self, name, wgt):
         columns = self.df.columns
         self.df[f"{name}_off"] = self.df["nominal"]
+        self.df[f"{name}_nominal"]= np.array(wgt).astype(np.float64)
         self.df[columns] = (
             self.df[columns].multiply(np.array(wgt), axis=0).astype(np.float64)
         )

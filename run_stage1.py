@@ -131,7 +131,7 @@ parameters = {
     "maxchunks": mch,
     #
     # < processing settings >
-    "regions": ["h-sidebands", "h-peak" ],
+    "regions": ["z-peak","h-sidebands", "h-peak" ],
     "pt_variations": pt_variations,
     "do_btag_syst": True,
     "save_output": True,
@@ -196,14 +196,20 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=32,
+            n_workers=50,
             #dashboard_address=dash_local,
             threads_per_worker=1,
-            memory_limit="6GB",
+            memory_limit="15GB",
         )
     else:
         # connect to existing Slurm cluster
-        parameters["client"] = Client(parameters["slurm_cluster_ip"])
+        from dask_gateway import Gateway
+        gateway = Gateway()
+        # replace with actual cluster name:
+        cluster_name = args.slurm_port
+        client = gateway.connect(cluster_name).get_client()
+        parameters["client"] = client
+        #print(cluster)
     print("Client created")
 
     # datasets to process (split into groups for convenience)
@@ -236,7 +242,7 @@ if __name__ == "__main__":
         ],
         "main_mc": [
             #"dy_M-50",
-            #"dy_M-100To200",
+            "dy_M-100To200",
             #"dy_M-50_nocut",
             #"dy_1j",
             #"dy_2j",
