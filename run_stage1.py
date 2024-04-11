@@ -117,7 +117,7 @@ parameters = {
     "label": args.label,
     "local_cluster": local_cluster,
     "slurm_cluster_ip": slurm_cluster_ip,
-    "global_path": "/depot/cms/hmm/vscheure/",
+    "global_path": "/depot/cms/users/yun79/hmm/copperheadV1clean",
     #
     # < input data settings >
     # 'xrootd': True,
@@ -131,7 +131,7 @@ parameters = {
     "maxchunks": mch,
     #
     # < processing settings >
-    "regions": ["z-peak","h-sidebands", "h-peak" ],
+    "regions": ["h-sidebands", "h-peak" ],
     "pt_variations": pt_variations,
     "do_btag_syst": True,
     "save_output": True,
@@ -196,20 +196,14 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=50,
+            n_workers=1,#32
             #dashboard_address=dash_local,
             threads_per_worker=1,
-            memory_limit="15GB",
+            memory_limit="6GB",
         )
     else:
         # connect to existing Slurm cluster
-        from dask_gateway import Gateway
-        gateway = Gateway()
-        # replace with actual cluster name:
-        cluster_name = args.slurm_port
-        client = gateway.connect(cluster_name).get_client()
-        parameters["client"] = client
-        #print(cluster)
+        parameters["client"] = Client(parameters["slurm_cluster_ip"])
     print("Client created")
 
     # datasets to process (split into groups for convenience)
@@ -220,16 +214,16 @@ if __name__ == "__main__":
         "data": [
             #'test_file_data_A',
             "data_A",
-            "data_B",
-            "data_C",
-            "data_D",
+            # "data_B",
+            # "data_C",
+            # "data_D",
             #"data_E",
             #"data_F",
             #"data_G",
             #"data_H",
        ],
         "signal": [
-            "ggh_powheg",
+            # "ggh_powheg",
             #"vbf_powheg",
            # "ggh_amcPS",
             #"vbf_powhegPS",
@@ -242,7 +236,7 @@ if __name__ == "__main__":
         ],
         "main_mc": [
             #"dy_M-50",
-            "dy_M-100To200",
+            #"dy_M-100To200",
             #"dy_M-50_nocut",
             #"dy_1j",
             #"dy_2j",
