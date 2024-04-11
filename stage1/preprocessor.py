@@ -167,6 +167,16 @@ class SamplesInfo(object):
         print(all_files[0])
         filelist=[]
         all_files_clean=[]
+
+        # testing -----------------------------------------------
+        all_files = [
+            # 'root://eos.cms.rcac.purdue.edu//store/mc/RunIISummer20UL18NanoAODv9/VBFHToMuMu_M125_TuneCP5_withDipoleRecoil_13TeV-powheg-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/2820000/083C985C-C112-3B46-A053-D72C1F83309D.root' # VBF
+            # "root://eos.cms.rcac.purdue.edu:1094///store/mc/RunIISummer20UL18NanoAODv9/GluGluHToMuMu_M125_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/2810000/C4DAB63C-E2A1-A541-93A8-3F46315E362C.root", # ggH
+            # "root://eos.cms.rcac.purdue.edu:1094///store/mc/RunIISummer20UL18NanoAODv9/DYJetsToLL_M-100to200_TuneCP5_13TeV-amcatnloFXFX-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/40000/AA6F89B0-EDAA-3942-A3BB-BC3709722EB4.root", # dy_M-100To200
+            "root://eos.cms.rcac.purdue.edu:1094///store/data/Run2018A/SingleMuon/NANOAOD/UL2018_MiniAODv2_NanoAODv9-v2/2550000/AA26E054-373D-5241-A1B8-66F0D9D76632.root", # data A
+        ]
+        #------------------------------------------------------------
+        
         for f in all_files:
             filename = f.split("/")[-1]
             print(filename)
