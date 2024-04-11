@@ -19,6 +19,9 @@ import dask
 from dask.distributed import Client
 
 from functools import partial
+import numpy as np
+import sys
+np.set_printoptions(threshold=sys.maxsize)
 
 
 __all__ = ["dask"]

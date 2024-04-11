@@ -19,6 +19,7 @@ def apply_jec(
 
     # Correct jets (w/o uncertainties)
     if do_jec:
+        print("doing jec!")
         if is_mc:
             factory = jec_factories["jec"]
         else:
