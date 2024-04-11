@@ -637,7 +637,7 @@ class DimuonProcessor(processor.ProcessorABC):
         output = output.reindex(sorted(output.columns), axis=1)
         output.columns = ["_".join(col).strip("_") for col in output.columns.values]
         # region cutting temporarily turned off for quick testing start---------------------
-        # output = output[output.region.isin(self.regions)]
+        output = output[output.region.isin(self.regions)]
         # region cutting temporarily turned off for quick testing end---------------------
         #print(output["LHEMass"])
         #print(output["dimuon_mass"])
@@ -777,19 +777,19 @@ class DimuonProcessor(processor.ProcessorABC):
         pass_jet_id = jet_id(jets, self.parameters, self.year)
         # print(f"pass  pass_jet_id: {(pass_jet_id)}")
         # print(f"pass from_numpy pass_jet_id: {ak.from_numpy(pass_jet_id)}")
-        njets = (
-            jets
-            .reset_index()
-            .groupby("entry")["subentry"]
-            .nunique()
-        )
-        # print(f"njets: {(njets)[output.event_selection]}")
-        njets_pass_jet_id = (
-            jets[pass_jet_id]
-            .reset_index()
-            .groupby("entry")["subentry"]
-            .nunique()
-        )
+        # njets = (
+        #     jets
+        #     .reset_index()
+        #     .groupby("entry")["subentry"]
+        #     .nunique()
+        # )
+        # # print(f"njets: {(njets)[output.event_selection]}")
+        # njets_pass_jet_id = (
+        #     jets[pass_jet_id]
+        #     .reset_index()
+        #     .groupby("entry")["subentry"]
+        #     .nunique()
+        # )
         # print(f"njets_pass_jet_id: {(njets_pass_jet_id)[output.event_selection].to_numpy()}")
         # print(f"np sum njets_pass_jet_id: {np.sum((njets_pass_jet_id)[output.event_selection])}")
         # pass_jet_id_sum = (
@@ -804,12 +804,12 @@ class DimuonProcessor(processor.ProcessorABC):
         # print(f"sum pass_jet_id: {np.sum(ak.from_numpy(pass_jet_id)[output.event_selection])}")
         if self.is_v9:
             pass_jet_puid = jet_puid(jets, self.parameters, self.year)
-            njets_pass_jet_puid = (
-                jets[pass_jet_puid]
-                .reset_index()
-                .groupby("entry")["subentry"]
-                .nunique()
-            )
+            # njets_pass_jet_puid = (
+            #     jets[pass_jet_puid]
+            #     .reset_index()
+            #     .groupby("entry")["subentry"]
+            #     .nunique()
+            # )
             # print(f"njets pass_jet_puid: {(njets_pass_jet_puid)[output.event_selection].to_numpy()}")
             # print(f"np sum njets pass_jet_puid: {np.sum((njets_pass_jet_puid)[output.event_selection])}")
 
@@ -842,12 +842,12 @@ class DimuonProcessor(processor.ProcessorABC):
         # print(f"sum jet_selection: {np.sum(ak.from_numpy(jet_selection)[output.event_selection])}")
         jets = jets[jet_selection]
         
-        njets_post_selection = (
-            jets
-            .reset_index()
-            .groupby("entry")["subentry"]
-            .nunique()
-        )
+        # njets_post_selection = (
+        #     jets
+        #     .reset_index()
+        #     .groupby("entry")["subentry"]
+        #     .nunique()
+        # )
         # print(f"njets_post_selection: {(njets_post_selection)[output.event_selection].to_numpy().shape}")
         # print(f"njets_post_selection: {(njets_post_selection)[output.event_selection].to_numpy()}")
         # print(f"np sum njets_post_selection: {np.sum((njets_post_selection)[output.event_selection])}")
