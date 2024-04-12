@@ -24,6 +24,7 @@ def btag_weights_json(processor, systs, jets, weights, bjet_sel_mask, btag_file)
     btag["wgt"] = jets["btag_wgt"].prod(level=0)
     btag["wgt"] = btag["wgt"].fillna(1.0)
     btag.loc[btag.wgt < 0.01, "wgt"] = 1.0
+    print(f"jets.btag_wgt: {jets.btag_wgt}")
     #print(f"len btag2 {len(btag)}")
     #print(f"len jets2 {len(jets)}")
     flavors = {
@@ -76,6 +77,7 @@ def btag_weights_json(processor, systs, jets, weights, bjet_sel_mask, btag_file)
         .multiply(btag.wgt[bjet_sel_mask], axis=0)
         .sum()
     )
+    print(f"btag_wgt b4 normalization: {btag.wgt.to_numpy()[bjet_sel_mask]}")
     btag.wgt = btag.wgt * sum_before / sum_after
     #print(f"len btag.wgt {len(btag.wgt)}")
     #print(f"len jets3 {len(jets)}")
