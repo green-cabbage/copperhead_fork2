@@ -207,7 +207,11 @@ parameters["muSFFileList"] = {
         ],
 }
 
-parameters["zpt_weights_file"] = for_all_years("data/reweight_zpt_2018_nJetBinned_new.histo.root")
+parameters["zpt_weights_file"] = {"2016preVFP": "data/reweight_zpt_2017_nJetBinned_new.histo.root",
+                                  "2016postVFP": "data/reweight_zpt_2016_nJetBinned_new.histo.root",
+                                  "2017": "data/reweight_zpt_2017_nJetBinned_new.histo.root",
+                                  "2018": "data/reweight_zpt_2018_nJetBinned_new.histo.root",
+                                 }
 parameters["puid_sf_file"] = for_all_years("data/PUID_106XTraining_ULRun2_EffSFandUncties_v1.root")
 parameters["res_calib_path"] = for_all_years("data/res_calib/")
 

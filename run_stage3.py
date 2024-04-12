@@ -77,8 +77,8 @@ parameters = {
     "syst_variations": ["nominal"],
     #
     # < plotting settings >
-    #"plot_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res", "mu1_eta",'mu2_eta',"mu1_phi",'mu2_phi',"mu1_pt","dimuon_ebe_mass_res_raw","zpt_weight","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",'jet1_qgl',"jet2_eta", "jet2_phi",'jet2_qgl', 'mu2_iso','jet2_pt','jet1_pt','mu2_pt'], 
-    "plot_vars":  ["dimuon_pt"],
+    "plot_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res", "mu1_eta",'mu2_eta',"mu1_phi",'mu2_phi',"mu1_pt","dimuon_ebe_mass_res_raw","zpt_weight","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",'jet1_qgl',"jet2_eta", "jet2_phi",'jet2_qgl', 'mu2_iso','jet2_pt','jet1_pt','mu2_pt'], 
+    #"plot_vars":  ["dimuon_pt"],
     #"plot_vars": ["njets"],
     "variables_lookup": variables_lookup,
     "save_plots": True,
@@ -111,7 +111,7 @@ parameters = {
         # "vbf": ["pytorch_may24_pisa"],
     #},
     "bdt_models": {
-    "ggh": ["BDTperyear_2018"],
+    #"ggh": ["ggHnew_2018"],
     },
     #
     # < templates and datacards >
@@ -124,10 +124,10 @@ parameters["grouping"] = {
     "data_B": "Data",
     "data_C": "Data",
     "data_D": "Data",
-    #"data_E": "Data",
-    #"data_F": "Data",
-    #"data_G": "Data",
-    #"data_H": "Data",
+    "data_E": "Data",
+    "data_F": "Data",
+    "data_G": "Data",
+    "data_H": "Data",
     #"data_x": "Data",
     "dy_M-50": "DY",
     #"dy_M-50_nocut": "DY_nocut",
@@ -163,7 +163,7 @@ parameters["grouping"] = {
     #"zzz": "VVV",
     #"ggh_amcPS": "ggH",
     "ggh_powheg": "ggH",
-    #"vbf_powheg": "VBF",
+    "vbf_powheg": "VBF",
     #"vbf_powheg_dipole_01j": "VBF_01J",
     # "vbf_powheg_dipole_0j": "VBF_0J",
     # "vbf_powheg_dipole_1j": "VBF_1J",

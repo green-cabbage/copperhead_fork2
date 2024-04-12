@@ -173,6 +173,7 @@ class SamplesInfo(object):
             #print(filelist)
             if filename not in filelist:
                 filelist.append(filename)
+                #if (filename == "AA26E054-373D-5241-A1B8-66F0D9D76632.root") or (filename == "AA6F89B0-EDAA-3942-A3BB-BC3709722EB4.root"):
                 all_files_clean.append(f)
         print(f"Removed double files: {len(all_files_clean)} files")
         sumGenWgts = 0

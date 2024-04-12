@@ -786,6 +786,22 @@ class DimuonProcessor(processor.ProcessorABC):
         # Select jets
         # ------------------------------------------------------------#
         jets["clean"] = clean
+        jets["HEMVeto"] = True
+
+        ##### 2018 HEM veto #####
+        if self.year == "2018":
+            jets.loc[
+            (
+                (jets.pt >= 20.0)
+                & (jets.eta >= -3.0)
+                & (jets.eta <= -1.3)
+                & (jets.phi >= -1.57)
+                & (jets.phi <= -0.87)
+            ),
+                "HEMVeto",
+            ] = False
+        #---------------
+        
         if self.is_v9 == False:      # Add dummy entries for stuff that is not available in Nanov12
             pass_jet_puid = True
             jets.qgl = 999
@@ -796,6 +812,7 @@ class DimuonProcessor(processor.ProcessorABC):
             & jets.clean
             & (jets.pt > self.parameters["jet_pt_cut"])
             & (abs(jets.eta) < self.parameters["jet_eta_cut"])
+            & jets.HEMVeto 
         )
 
         jets = jets[jet_selection]
@@ -850,12 +867,14 @@ class DimuonProcessor(processor.ProcessorABC):
         # Calculate QGL weights, btag SF and apply btag veto
         # ------------------------------------------------------------#
 
-        if is_mc and variation == "nominal":
-            # --- QGL weights --- #
-            isHerwig = "herwig" in dataset
+        if is_mc and (variation == "nominal"):
+        
+            if self.is_v9:
+                # --- QGL weights --- #
+                isHerwig = "herwig" in dataset
 
-            #qgl_wgts = qgl_weights(jet1, jet2, isHerwig, output, variables, njets)
-            #weights.add_weight("qgl_wgt", qgl_wgts, how="all")
+                qgl_wgts = qgl_weights(jet1, jet2, isHerwig, output, variables, njets)
+                weights.add_weight("qgl_wgt", qgl_wgts, how="all")
 
             # --- Btag weights --- #
             bjet_sel_mask = output.event_selection #& two_jets & vbf_cut
@@ -940,7 +959,7 @@ class DimuonProcessor(processor.ProcessorABC):
         zpt_filename = self.parameters["zpt_weights_file"]
         self.extractor.add_weight_sets([f"* * {zpt_filename}"])
         if "2016" in self.year:
-            self.zpt_path = "zpt_weights/2016_value"
+            self.zpt_path = "zpt_weights_all"
         else:
             self.zpt_path = "zpt_weights_all"
         # PU ID weights
@@ -951,7 +970,7 @@ class DimuonProcessor(processor.ProcessorABC):
         for mode in ["Data", "MC"]:
             if "2016" in self.year:
                 yearstr = "2016"
-            if "2022" in self.year:
+            elif "2022" in self.year:
                 yearstr = "2018"
             else:
                 yearstr=self.year #Work around before there are seperate new files for pre and postVFP
