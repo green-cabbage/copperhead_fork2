@@ -200,7 +200,7 @@ class DimuonProcessor(processor.ProcessorABC):
             
             # original lumi weight start -------------------------------
             weights.add_weight("lumi", self.lumi_weights[dataset])
-            print(f"self.lumi_weights[dataset]: {self.lumi_weights[dataset]}")
+            # print(f"self.lumi_weights[dataset]: {self.lumi_weights[dataset]}")
             # original lumi weight end ----------------------------------
 
             # # testing for smaller files-----------------------------------
@@ -652,20 +652,12 @@ class DimuonProcessor(processor.ProcessorABC):
             or ("gjet" in c[0])
             or ("gjj" in c[0])
         ]
-        print(f"types of weights applied: {weights.df.columns}")
-        print(f"input maxchunks: {len(output)}")
+        # print(f"types of weights applied: {weights.df.columns}")
+        # print(f"input maxchunks: {len(output)}")
         output = output.loc[output.event_selection, columns_to_save]
         output = output.reindex(sorted(output.columns), axis=1)
         output.columns = ["_".join(col).strip("_") for col in output.columns.values]
         output = output[output.region.isin(self.regions)]
-        #print(output["LHEMass"])
-        #print(output["dimuon_mass"])
-        #with open("hello2.txt", "w") as f:
-                
-            #print(output[["zpt_weight", "njets_nominal", "dimuon_pt"]], file =f)
-
-
-
 
         
         to_return = None
@@ -812,6 +804,22 @@ class DimuonProcessor(processor.ProcessorABC):
         # Select jets
         # ------------------------------------------------------------#
         jets["clean"] = clean
+        jets["HEMVeto"] = True
+
+        ##### 2018 HEM veto #####
+        if self.year == "2018":
+            jets.loc[
+            (
+                (jets.pt >= 20.0)
+                & (jets.eta >= -3.0)
+                & (jets.eta <= -1.3)
+                & (jets.phi >= -1.57)
+                & (jets.phi <= -0.87)
+            ),
+                "HEMVeto",
+            ] = False
+        #---------------
+        
         if self.is_v9 == False:      # Add dummy entries for stuff that is not available in Nanov12
             pass_jet_puid = True
             jets.qgl = 999
@@ -822,6 +830,7 @@ class DimuonProcessor(processor.ProcessorABC):
             & jets.clean
             & (jets.pt > self.parameters["jet_pt_cut"])
             & (abs(jets.eta) < self.parameters["jet_eta_cut"])
+            & jets.HEMVeto 
         )
 
         jets = jets[jet_selection]
