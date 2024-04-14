@@ -197,8 +197,27 @@ class DimuonProcessor(processor.ProcessorABC):
             mask = np.ones(numevents, dtype=bool)
             genweight = df.genWeight
             weights.add_weight("genwgt", genweight)
+            
+            # original lumi weight start -------------------------------
             weights.add_weight("lumi", self.lumi_weights[dataset])
+            print(f"self.lumi_weights[dataset]: {self.lumi_weights[dataset]}")
+            # original lumi weight end ----------------------------------
+
+            # # testing for smaller files-----------------------------------
+            # xsec = cross_sections[dataset]
+            # print(f"xsec: {xsec}")
+            # lumi = 59970.0 *np.ones(numevents, dtype=bool)
+            # sumWeights = ak.sum(genweight)
+            # print(f"type(sumWeights): {type(sumWeights)}")
+            # print(f"sumWeights: {sumWeights}")
+            # weights.add_weight("lumi", lumi*xsec/sumWeights)
+            # # testing end ---------------------------------------------
+
+
             #print(df.Pileup.nTrueInt)
+            # deactivate pu wgt for now start ----------------------------
+            
+            
             pu_wgts = pu_evaluator(
                 #self.pu_lookups,
                 self.parameters,
@@ -207,9 +226,11 @@ class DimuonProcessor(processor.ProcessorABC):
                 self.auto_pu,
             )
             weights.add_weight("pu_wgt", pu_wgts, how="all")
-
+            # deactivate pu wgt for now end ----------------------------
+            
             if self.parameters["do_l1prefiring_wgts"]:
                 if "L1PreFiringWeight" in df.fields:
+                    print("applying L1 prefiring wgts!")
                     l1pfw = l1pf_weights(df)
                     weights.add_weight("l1prefiring_wgt", l1pfw, how="all")
                 else:
@@ -271,6 +292,7 @@ class DimuonProcessor(processor.ProcessorABC):
         
         # Rochester correction
         if self.do_roccor:
+            print("doing rochester!")
             apply_roccor(df, self.roccor_lookup, is_mc)
             df["Muon", "pt"] = df.Muon.pt_roch
 
@@ -290,7 +312,7 @@ class DimuonProcessor(processor.ProcessorABC):
             # FSR recovery
             
             if self.do_fsr:
-                
+                print("doing fsr!")
                 has_fsr = fsr_recovery(df)
                 df["Muon", "pt"] = df.Muon.pt_fsr
                 df["Muon", "eta"] = df.Muon.eta_fsr
@@ -440,6 +462,7 @@ class DimuonProcessor(processor.ProcessorABC):
             # update event selection with leading muon pT cut
             output["pass_leading_pt"] = pass_leading_pt
             output["event_selection"] = output.event_selection & output.pass_leading_pt
+            print(f"sum output.event_selection : {np.sum(output.event_selection)}")
 
             # --------------------------------------------------------#
             # Fill dimuon and muon variables
@@ -600,6 +623,7 @@ class DimuonProcessor(processor.ProcessorABC):
         do_zpt = ('dy' in dataset)
         #do_zpt = False
         if do_zpt:
+            print("doing Zpt weights!")
             output["njets"] = output["njets"].fillna(0.0)
             zpt_weight = np.ones(numevents, dtype=float) 
             zpt_weight =\
@@ -628,6 +652,8 @@ class DimuonProcessor(processor.ProcessorABC):
             or ("gjet" in c[0])
             or ("gjj" in c[0])
         ]
+        print(f"types of weights applied: {weights.df.columns}")
+        print(f"input maxchunks: {len(output)}")
         output = output.loc[output.event_selection, columns_to_save]
         output = output.reindex(sorted(output.columns), axis=1)
         output.columns = ["_".join(col).strip("_") for col in output.columns.values]
@@ -852,12 +878,14 @@ class DimuonProcessor(processor.ProcessorABC):
 
         if is_mc and variation == "nominal":
             # --- QGL weights --- #
+            print(f"doing qgl wgts!")
             isHerwig = "herwig" in dataset
 
-            #qgl_wgts = qgl_weights(jet1, jet2, isHerwig, output, variables, njets)
-            #weights.add_weight("qgl_wgt", qgl_wgts, how="all")
+            qgl_wgts = qgl_weights(jet1, jet2, isHerwig, output, variables, njets)
+            weights.add_weight("qgl_wgt", qgl_wgts, how="all")
 
             # --- Btag weights --- #
+            print(f"doing btag wgts!")
             bjet_sel_mask = output.event_selection #& two_jets & vbf_cut
 
             btag_wgt, btag_syst = btag_weights_json(
