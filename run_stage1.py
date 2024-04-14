@@ -199,7 +199,7 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=1, # 50
+            n_workers=50, # 50
             #dashboard_address=dash_local,
             threads_per_worker=1,
             memory_limit="15GB",

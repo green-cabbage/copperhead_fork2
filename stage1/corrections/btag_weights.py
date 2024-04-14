@@ -77,7 +77,7 @@ def btag_weights_json(processor, systs, jets, weights, bjet_sel_mask, btag_file)
         .multiply(btag.wgt[bjet_sel_mask], axis=0)
         .sum()
     )
-    print(f"btag_wgt b4 normalization: {btag.wgt.to_numpy()[bjet_sel_mask]}")
+    # print(f"btag_wgt b4 normalization: {btag.wgt.to_numpy()[bjet_sel_mask]}")
     btag.wgt = btag.wgt * sum_before / sum_after
     #print(f"len btag.wgt {len(btag.wgt)}")
     #print(f"len jets3 {len(jets)}")

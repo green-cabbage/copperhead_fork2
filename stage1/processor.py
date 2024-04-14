@@ -200,17 +200,18 @@ class DimuonProcessor(processor.ProcessorABC):
 
             
             # original lumi weight start -------------------------------
-            # weights.add_weight("lumi", self.lumi_weights[dataset])
+            weights.add_weight("lumi", self.lumi_weights[dataset])
+            print(f"self.lumi_weights[dataset]: {self.lumi_weights[dataset]}")
             # original lumi weight end ----------------------------------
 
             # # testing for smaller files-----------------------------------
-            xsec = cross_sections[dataset]
-            print(f"xsec: {xsec}")
-            lumi = 59970.0 *np.ones(numevents, dtype=bool)
-            sumWeights = ak.sum(genweight)
-            print(f"type(sumWeights): {type(sumWeights)}")
-            print(f"sumWeights: {sumWeights}")
-            weights.add_weight("lumi", lumi*xsec/sumWeights)
+            # xsec = cross_sections[dataset]
+            # print(f"xsec: {xsec}")
+            # lumi = 59970.0 *np.ones(numevents, dtype=bool)
+            # sumWeights = ak.sum(genweight)
+            # print(f"type(sumWeights): {type(sumWeights)}")
+            # print(f"sumWeights: {sumWeights}")
+            # weights.add_weight("lumi", lumi*xsec/sumWeights)
             # # testing end ---------------------------------------------
             
             
@@ -940,7 +941,7 @@ class DimuonProcessor(processor.ProcessorABC):
             btag_wgt, btag_syst = btag_weights_json(
                 self, self.btag_systs, jets, weights, bjet_sel_mask, self.btag_json
             )
-            print(f"btag_wgt: {btag_wgt[output.event_selection].to_numpy()}")
+            # print(f"btag_wgt: {btag_wgt[output.event_selection].to_numpy()}")
             weights.add_weight("btag_wgt", btag_wgt)
 
             # --- Btag weights variations --- #
