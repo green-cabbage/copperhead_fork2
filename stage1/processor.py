@@ -67,10 +67,10 @@ class DimuonProcessor(processor.ProcessorABC):
         else:
             self.is_v9 = False
             
-        self.do_roccor = True # True
-        self.do_fsr = True # True
+        self.do_roccor = True
+        self.do_fsr = True
         if self.is_v9:
-            self.do_geofit = True # True
+            self.do_geofit = True
             self.bsConst = False
         else:
             self.do_geofit = False # False by default, but can be applied
@@ -197,26 +197,8 @@ class DimuonProcessor(processor.ProcessorABC):
             mask = np.ones(numevents, dtype=bool)
             genweight = df.genWeight
             weights.add_weight("genwgt", genweight)
-
-            
-            # original lumi weight start -------------------------------
             weights.add_weight("lumi", self.lumi_weights[dataset])
-            print(f"self.lumi_weights[dataset]: {self.lumi_weights[dataset]}")
-            # original lumi weight end ----------------------------------
-
-            # # testing for smaller files-----------------------------------
-            # xsec = cross_sections[dataset]
-            # print(f"xsec: {xsec}")
-            # lumi = 59970.0 *np.ones(numevents, dtype=bool)
-            # sumWeights = ak.sum(genweight)
-            # print(f"type(sumWeights): {type(sumWeights)}")
-            # print(f"sumWeights: {sumWeights}")
-            # weights.add_weight("lumi", lumi*xsec/sumWeights)
-            # # testing end ---------------------------------------------
-            
-            
             #print(df.Pileup.nTrueInt)
-            # deactivate pu wgt for now start ----------------------------
             pu_wgts = pu_evaluator(
                 #self.pu_lookups,
                 self.parameters,
@@ -225,11 +207,9 @@ class DimuonProcessor(processor.ProcessorABC):
                 self.auto_pu,
             )
             weights.add_weight("pu_wgt", pu_wgts, how="all")
-            # deactivate pu wgt for now end ----------------------------
-            
+
             if self.parameters["do_l1prefiring_wgts"]:
                 if "L1PreFiringWeight" in df.fields:
-                    print("applying L1 prefiring wgts!")
                     l1pfw = l1pf_weights(df)
                     weights.add_weight("l1prefiring_wgt", l1pfw, how="all")
                 else:
@@ -291,7 +271,6 @@ class DimuonProcessor(processor.ProcessorABC):
         
         # Rochester correction
         if self.do_roccor:
-            print("doing rochester!")
             apply_roccor(df, self.roccor_lookup, is_mc)
             df["Muon", "pt"] = df.Muon.pt_roch
 
@@ -311,7 +290,7 @@ class DimuonProcessor(processor.ProcessorABC):
             # FSR recovery
             
             if self.do_fsr:
-                print("doing fsr!")
+                
                 has_fsr = fsr_recovery(df)
                 df["Muon", "pt"] = df.Muon.pt_fsr
                 df["Muon", "eta"] = df.Muon.eta_fsr
@@ -324,7 +303,6 @@ class DimuonProcessor(processor.ProcessorABC):
 
             # GeoFit correction
             if self.do_geofit and ("dxybs" in df.Muon.fields):
-                print("doing geofit!")
                 apply_geofit(df, self.year, ~has_fsr)
                 df["Muon", "pt"] = df.Muon.pt_gf
 
@@ -462,7 +440,6 @@ class DimuonProcessor(processor.ProcessorABC):
             # update event selection with leading muon pT cut
             output["pass_leading_pt"] = pass_leading_pt
             output["event_selection"] = output.event_selection & output.pass_leading_pt
-            print(f"sum output.event_selection : {np.sum(output.event_selection)}")
 
             # --------------------------------------------------------#
             # Fill dimuon and muon variables
@@ -484,11 +461,10 @@ class DimuonProcessor(processor.ProcessorABC):
 
         prepare_jets(df, is_mc, self.is_v9)
         jets = df.Jet
-        # print(f"pre JEC ak njets:{ak.to_numpy(ak.num(jets, axis=1))[output.event_selection]}")
-        self.do_jec = True #True
 
-        print(f"self.do_jecunc: {self.do_jecunc}")
-        print(f"self.do_jerunc: {self.do_jerunc}")
+        self.do_jec = True
+
+
         jets = apply_jec(
             df,
             jets,
@@ -516,7 +492,7 @@ class DimuonProcessor(processor.ProcessorABC):
             # --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 
             # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
-            do_musf = True #True
+            do_musf = True
             if do_musf:
                 muID, muIso, muTrig = musf_evaluator(
                     self.musf_lookup, self.year, numevents, mu1, mu2
@@ -622,11 +598,9 @@ class DimuonProcessor(processor.ProcessorABC):
 
         
         do_zpt = ('dy' in dataset)
-        # do_zpt = False
+        #do_zpt = False
         if do_zpt:
-            print("doing Zpt weights!")
             output["njets"] = output["njets"].fillna(0.0)
-            # print(f"njets: {output.njets.to_numpy().flatten()[output.event_selection].astype(int)}")
             zpt_weight = np.ones(numevents, dtype=float) 
             zpt_weight =\
                      self.evaluator[self.zpt_path](output['dimuon_pt'].values, output['njets']["nominal"].values).flatten()
@@ -654,14 +628,10 @@ class DimuonProcessor(processor.ProcessorABC):
             or ("gjet" in c[0])
             or ("gjj" in c[0])
         ]
-        print(f"types of weights applied: {weights.df.columns}")
-        print(f"input maxchunks: {len(output)}")
         output = output.loc[output.event_selection, columns_to_save]
         output = output.reindex(sorted(output.columns), axis=1)
         output.columns = ["_".join(col).strip("_") for col in output.columns.values]
-        # region cutting temporarily turned off for quick testing start---------------------
         output = output[output.region.isin(self.regions)]
-        # region cutting temporarily turned off for quick testing end---------------------
         #print(output["LHEMass"])
         #print(output["dimuon_mass"])
         #with open("hello2.txt", "w") as f:
@@ -798,43 +768,8 @@ class DimuonProcessor(processor.ProcessorABC):
         # ------------------------------------------------------------#
 
         pass_jet_id = jet_id(jets, self.parameters, self.year)
-        # print(f"pass  pass_jet_id: {(pass_jet_id)}")
-        # print(f"pass from_numpy pass_jet_id: {ak.from_numpy(pass_jet_id)}")
-        # njets = (
-        #     jets
-        #     .reset_index()
-        #     .groupby("entry")["subentry"]
-        #     .nunique()
-        # )
-        # # print(f"njets: {(njets)[output.event_selection]}")
-        # njets_pass_jet_id = (
-        #     jets[pass_jet_id]
-        #     .reset_index()
-        #     .groupby("entry")["subentry"]
-        #     .nunique()
-        # )
-        # print(f"njets_pass_jet_id: {(njets_pass_jet_id)[output.event_selection].to_numpy()}")
-        # print(f"np sum njets_pass_jet_id: {np.sum((njets_pass_jet_id)[output.event_selection])}")
-        # pass_jet_id_sum = (
-        #     pass_jet_id
-        #     .reset_index()
-        #     .groupby("entry")["subentry"]
-        #     .sum()
-        # )
-        # print(f"pass_jet_id: {pass_jet_id}")
-        # print(f"pass_jet_id_sum: {pass_jet_id_sum}")
-        # print(f"pass_jet_id_sum: {(pass_jet_id_sum)[output.event_selection]}")
-        # print(f"sum pass_jet_id: {np.sum(ak.from_numpy(pass_jet_id)[output.event_selection])}")
         if self.is_v9:
             pass_jet_puid = jet_puid(jets, self.parameters, self.year)
-            # njets_pass_jet_puid = (
-            #     jets[pass_jet_puid]
-            #     .reset_index()
-            #     .groupby("entry")["subentry"]
-            #     .nunique()
-            # )
-            # print(f"njets pass_jet_puid: {(njets_pass_jet_puid)[output.event_selection].to_numpy()}")
-            # print(f"np sum njets pass_jet_puid: {np.sum((njets_pass_jet_puid)[output.event_selection])}")
 
         # Jet PUID scale factors
         if is_mc and self.is_v9:  # puID field not available in Nanov12
@@ -862,18 +797,8 @@ class DimuonProcessor(processor.ProcessorABC):
             & (jets.pt > self.parameters["jet_pt_cut"])
             & (abs(jets.eta) < self.parameters["jet_eta_cut"])
         )
-        # print(f"sum jet_selection: {np.sum(ak.from_numpy(jet_selection)[output.event_selection])}")
+
         jets = jets[jet_selection]
-        
-        # njets_post_selection = (
-        #     jets
-        #     .reset_index()
-        #     .groupby("entry")["subentry"]
-        #     .nunique()
-        # )
-        # print(f"njets_post_selection: {(njets_post_selection)[output.event_selection].to_numpy().shape}")
-        # print(f"njets_post_selection: {(njets_post_selection)[output.event_selection].to_numpy()}")
-        # print(f"np sum njets_post_selection: {np.sum((njets_post_selection)[output.event_selection])}")
 
         # ------------------------------------------------------------#
         # Fill jet-related variables
@@ -929,25 +854,21 @@ class DimuonProcessor(processor.ProcessorABC):
             # --- QGL weights --- #
             isHerwig = "herwig" in dataset
 
-            # qgl is already deactivated for some reason
             #qgl_wgts = qgl_weights(jet1, jet2, isHerwig, output, variables, njets)
             #weights.add_weight("qgl_wgt", qgl_wgts, how="all")
 
             # --- Btag weights --- #
-            # turn off Btag for now start --------------------------
-            print(f"doing btag wgts!")
             bjet_sel_mask = output.event_selection #& two_jets & vbf_cut
 
             btag_wgt, btag_syst = btag_weights_json(
                 self, self.btag_systs, jets, weights, bjet_sel_mask, self.btag_json
             )
-            # print(f"btag_wgt: {btag_wgt[output.event_selection].to_numpy()}")
             weights.add_weight("btag_wgt", btag_wgt)
 
             # --- Btag weights variations --- #
             for name, bs in btag_syst.items():
                 weights.add_weight(f"btag_wgt_{name}", bs, how="only_vars")
-            # turn off Btag for now end --------------------------
+
 
 
         # Separate from ttH and VH phase space
@@ -978,7 +899,6 @@ class DimuonProcessor(processor.ProcessorABC):
         # --------------------------------------------------------------#
 
         variables.update({"wgt_nominal": weights.get_weight("nominal")})
-        
 
         # All variables are affected by jet pT because of jet selections:
         # a jet may or may not be selected depending on pT variation.

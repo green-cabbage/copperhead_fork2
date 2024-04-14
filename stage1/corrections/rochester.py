@@ -1,46 +1,13 @@
 import numpy as np
 import awkward as ak
-import correctionlib.schemav2 as cs
 
 
 def apply_roccor(df, rochester, is_mc):
     if is_mc:
         hasgen = ~np.isnan(ak.fill_none(df.Muon.matched_gen.pt, np.nan))
-        # original start -----------------------------------------------------------
         mc_rand = np.random.rand(*ak.to_numpy(ak.flatten(df.Muon.pt)).shape)
         mc_rand = ak.unflatten(mc_rand, ak.num(df.Muon.pt, axis=1))
-        # original end -----------------------------------------------------------
 
-        # correctionlib.schemav2 mc_rand start -----------------------------------------------------------
-        # resrng = cs.Correction(
-        #     name="resrng",
-        #     description="Deterministic smearing value generator",
-        #     version=1,
-        #     inputs=[
-        #         cs.Variable(name="pt", type="real", description="Unsmeared jet pt"),
-        #         cs.Variable(name="eta", type="real", description="Jet pseudorapdity"),
-        #         cs.Variable(name="phi", type="real", description="Jet phi"),
-        #         cs.Variable(name="charge", type="real", description="Muon charge"),
-        #     ],
-        #     output=cs.Variable(name="rng", type="real"),
-        #     data=cs.HashPRNG(
-        #         nodetype="hashprng",
-        #         # inputs=["pt"],
-        #         inputs=["pt", "eta", "phi", "charge"],
-        #         distribution="stdflat",
-        #     )
-        # )
-        
-        # mc_rand = resrng.to_evaluator().evaluate(
-        #     ak.flatten(df.Muon.pt),
-        #     ak.flatten(df.Muon.eta),
-        #     ak.flatten(df.Muon.phi),
-        #     ak.flatten(df.Muon.charge),
-        # )
-        # mc_rand = ak.unflatten(mc_rand, ak.num(df.Muon.pt, axis=1))
-        
-        # correctionlib.schemav2 mc_rand end --------------------------------------------------------------
-        
         corrections = np.array(ak.flatten(ak.ones_like(df.Muon.pt)))
         errors = np.array(ak.flatten(ak.ones_like(df.Muon.pt)))
         mc_kspread = rochester.kSpreadMC(

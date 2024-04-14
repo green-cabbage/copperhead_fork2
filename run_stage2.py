@@ -83,8 +83,8 @@ parameters = {
     # },
     #
     # < settings for histograms >
-    "hist_vars":  ["dimuon_mass","dimuon_pt"],
-    #"hist_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res", "mu1_eta",'mu2_eta',"mu1_phi",'mu2_phi',"mu1_pt","dimuon_ebe_mass_res_raw","zpt_weight","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",'jet1_qgl',"jet2_eta", "jet2_phi",'jet2_qgl', 'mu2_iso','jet2_pt','jet1_pt','mu2_pt'],    #['dimuon_cos_theta_cs', 'dimuon_dEta', 'dimuon_dPhi', 'dimuon_dR',  'dimuon_phi', 'dimuon_phi_cs', 'dimuon_pt', 'dimuon_pt_log', 'jet1_eta', 'jet1_phi', 'jet1_pt', 'jet1_qgl', 'jet2_eta', 'jet2_phi', 'jet2_pt', 'jet2_qgl', 'jj_dEta', 'jj_dPhi', 'jj_eta', 'jj_mass', 'jj_mass_log', 'jj_phi', 'jj_pt', 'll_zstar_log', 'mmj1_dEta', 'mmj1_dPhi', 'mmj2_dEta', 'mmj2_dPhi', 'mmj_min_dEta', 'mmj_min_dPhi', 'mmjj_eta', 'mmjj_mass', 'mmjj_phi', 'mmjj_pt', 'mu1_eta', 'mu1_iso', 'mu1_phi', 'mu1_pt_over_mass', 'mu2_eta', 'mu2_iso', 'mu2_phi', 'mu2_pt_over_mass', 'zeppenfeld'],
+    #"hist_vars":  ["dimuon_mass","dimuon_pt"],
+    "hist_vars":  ["dimuon_mass","dimuon_pt","dimuon_ebe_mass_res", "mu1_eta",'mu2_eta',"mu1_phi",'mu2_phi',"mu1_pt","dimuon_ebe_mass_res_raw","zpt_weight","dimuon_cos_theta_cs","zeppenfeld","jj_dEta","dimuon_phi_cs","jj_mass","dimuon_dR","njets","njets","mmj_min_dEta","mmj2_dPhi","jet1_eta", "jet1_phi",'jet1_qgl',"jet2_eta", "jet2_phi",'jet2_qgl', 'mu2_iso','jet2_pt','jet1_pt','mu2_pt'],    #['dimuon_cos_theta_cs', 'dimuon_dEta', 'dimuon_dPhi', 'dimuon_dR',  'dimuon_phi', 'dimuon_phi_cs', 'dimuon_pt', 'dimuon_pt_log', 'jet1_eta', 'jet1_phi', 'jet1_pt', 'jet1_qgl', 'jet2_eta', 'jet2_phi', 'jet2_pt', 'jet2_qgl', 'jj_dEta', 'jj_dPhi', 'jj_eta', 'jj_mass', 'jj_mass_log', 'jj_phi', 'jj_pt', 'll_zstar_log', 'mmj1_dEta', 'mmj1_dPhi', 'mmj2_dEta', 'mmj2_dPhi', 'mmj_min_dEta', 'mmj_min_dPhi', 'mmjj_eta', 'mmjj_mass', 'mmjj_phi', 'mmjj_pt', 'mu1_eta', 'mu1_iso', 'mu1_phi', 'mu1_pt_over_mass', 'mu2_eta', 'mu2_iso', 'mu2_phi', 'mu2_pt_over_mass', 'zeppenfeld'],
     
 
     "variables_lookup": variables_lookup,
@@ -130,7 +130,7 @@ parameters = {
     # "mva_categorizer": "3layers_64_32_16_all_feat",
     # "vbf_mva_cutoff": 0.5,
     "bdt_models": {
-         "ggh": ["BDTperyear"],
+         #"ggh": ["ggHnew"],
     },
     "mva_bins_original": mva_bins,
 }
@@ -140,10 +140,10 @@ parameters["datasets"] = [
     "data_B",
     "data_C",
     "data_D",
-    #"data_E",
-    #"data_F",
-    #"data_G",
-    #"data_H",
+    "data_E",
+    "data_F",
+    "data_G",
+    "data_H",
     #"data_x",
     #"dy_M-50",
     #"dy_M-50_nocut",
@@ -170,7 +170,7 @@ parameters["datasets"] = [
     #wzz",
     #"zzz",
     "ggh_powheg",
-    #"vbf_powheg",
+    "vbf_powheg",
 ]
 # using one small dataset for debugging
 #parameters["datasets"] = ["ggh_localTest"]

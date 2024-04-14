@@ -19,9 +19,6 @@ import dask
 from dask.distributed import Client
 
 from functools import partial
-import numpy as np
-import sys
-np.set_printoptions(threshold=sys.maxsize)
 
 
 __all__ = ["dask"]
@@ -120,7 +117,7 @@ parameters = {
     "label": args.label,
     "local_cluster": local_cluster,
     "slurm_cluster_ip": slurm_cluster_ip,
-    "global_path": "/depot/cms/users/yun79/hmm/copperheadV1clean",
+    "global_path": "/depot/cms/hmm/vscheure/",
     #
     # < input data settings >
     # 'xrootd': True,
@@ -199,7 +196,7 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=50, # 50
+            n_workers=50,
             #dashboard_address=dash_local,
             threads_per_worker=1,
             memory_limit="15GB",
@@ -222,17 +219,17 @@ if __name__ == "__main__":
         # ],
         "data": [
             #'test_file_data_A',
-            # "data_A",
-            # "data_B",
-            # "data_C",
-            # "data_D",
+            "data_A",
+            "data_B",
+            "data_C",
+            "data_D",
             #"data_E",
             #"data_F",
             #"data_G",
             #"data_H",
        ],
         "signal": [
-            # "ggh_powheg",
+            "ggh_powheg",
             #"vbf_powheg",
            # "ggh_amcPS",
             #"vbf_powhegPS",
