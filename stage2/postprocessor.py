@@ -11,7 +11,7 @@ from python.io import (
 )
 from stage2.categorizer import (split_into_channels, categorize_by_score, categorize_by_eta, categorize_by_CalibCat, categorize_by_ClosureCat)
 from stage2.mva_evaluators import (
-    evaluate_pytorch_dnn,
+    # evaluate_pytorch_dnn,
     # evaluate_pytorch_dnn_pisa,
     evaluate_bdt,
     # evaluate_mva_categorizer,
@@ -164,6 +164,7 @@ def on_partition(args, parameters):
     dnn_models = parameters.get("dnn_models", {})
     bdt_models = parameters.get("bdt_models", {})
     for v in syst_variations:
+        # focus on BDT for now start -------------------------------------
         for channel, models in dnn_models.items():
             if channel not in parameters["channels"]:
                 continue
@@ -195,6 +196,8 @@ def on_partition(args, parameters):
                     channel,
                 )
                 """
+        # focus on BDT for now end -------------------------------------
+        
         #print(df)
         # evaluate XGBoost BDTs
         for channel, models in bdt_models.items():
