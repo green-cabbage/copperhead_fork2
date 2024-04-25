@@ -422,7 +422,7 @@ def Voigtian(x, tag):
     model = rt.RooVoigtian("Voigtian" + tag, "Voigtian", x, bwmZ, bwWidth, sigma)
     return model, [bwmZ, bwWidth, sigma]
 
-def VoigtianxErf(x, tag):
+def Voigtian_Erf(x, tag):
 
 
     # Define the variable and parameters
@@ -442,7 +442,8 @@ def VoigtianxErf(x, tag):
 
 
     # Combine the signal and background components
-    model = rt.RooAddPdf("VoigtianxErf", "VoigtianxErf", rt.RooArgList(voigt, erf_exp))
+    # model = rt.RooAddPdf("VoigtianxErf", "VoigtianxErf", rt.RooArgList(voigt, erf_exp))
+    model = rt.RooAddPdf("Voigtian_Erf", "Voigtian_Erf", rt.RooArgList(voigt, erf_exp))
 
     return model, [bwmZ, bwWidth, sigma]
 def Erf(x, tag):

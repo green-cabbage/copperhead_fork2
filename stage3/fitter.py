@@ -2,7 +2,7 @@ import ROOT as rt
 import pandas as pd
 from python.workflow_noDask import non_parallelize
 from stage3.fit_plots import plot
-from stage3.fit_models import chebyshev, doubleCB, doubleCB_forZ, SumTwoExpPdf, bwZ, bwGamma, bwZredux, bernstein,BWxDCB,VoigtianxErf,Erf
+from stage3.fit_models import chebyshev, doubleCB, doubleCB_forZ, SumTwoExpPdf, bwZ, bwGamma, bwZredux, bernstein,BWxDCB,Voigtian_Erf,Erf
 import pdb
 rt.RooMsgService.instance().setGlobalKillBelow(rt.RooFit.ERROR)
 #t.gSystem.Load ("../CMSSW_12_4_15/lib/el8_amd64_gcc10/libHiggsAnalysisCombinedLimit.so")
@@ -152,7 +152,7 @@ def fitter(args, parameters={}):
             "SumTwoExpPdf": SumTwoExpPdf,
             "dcb": doubleCB,
             "BWxDCB": BWxDCB,
-            "Voigtian": VoigtianxErf,
+            "Voigtian": Voigtian_Erf,
             "chebyshev": chebyshev,
         },
         requires_order=["chebyshev", "bernstein"],
@@ -260,7 +260,7 @@ def fitter(args, parameters={}):
             category=category,  # temporary
             blinded=False,
             model_names=["BWxDCB"],
-            #model_names=["VoigtianxErf"],
+            #model_names=["Voigtian_Erf"],
             model_names_multi=[],
             fix_parameters=True,
             store_multipdf=False,
