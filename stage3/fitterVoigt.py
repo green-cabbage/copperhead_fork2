@@ -2,16 +2,18 @@ import ROOT as rt
 import pandas as pd
 from python.workflow_noDask import non_parallelize
 from stage3.fit_plots import plot
-from stage3.fit_models import chebyshev, doubleCB, doubleCB_forZ, SumTwoExpPdf, bwZ, bwGamma, bwZredux, bernstein,BWxDCB,VoigtianxErf,Voigtian,Erf
+from stage3.fit_models import chebyshev, doubleCB, doubleCB_forZ, SumTwoExpPdf, bwZ, bwGamma, bwZredux, bernstein,BWxDCB,Voigtian_Erf,Voigtian,Erf
 import pdb
+import os
 rt.RooMsgService.instance().setGlobalKillBelow(rt.RooFit.ERROR)
 #t.gSystem.Load ("../CMSSW_12_4_15/lib/el8_amd64_gcc10/libHiggsAnalysisCombinedLimit.so")
 simple = False
 def mkdir(path):
     try:
-        os.mkdir(path)
-    except Exception:
-        pass
+        if not os.path.exists(path):
+            os.makedirs(path)
+    except Exception  as e:
+        print(e)
 def run_fits(parameters, df,df_all,tag):
     signal_ds = parameters.get("signals", [])
     data_ds = parameters.get("data", [])
@@ -116,7 +118,9 @@ def fitter(args, parameters={}):
     print(mode)
     blinded = fit_setup.get("blinded", False)
     save = parameters.get("save_fits", False)
-    save_path = parameters.get("save_fits_path", "fits/")
+    save_path = parameters.get("save_fits_path", "./fits/")
+    print(f"save_path: {save_path}")
+    
     channel = args["channel"]
     if (mode != 'bkg_all') or (mode != 'Z') :
         category = args["category"]
@@ -127,7 +131,11 @@ def fitter(args, parameters={}):
         save_path = save_path + f"/calib_fits/Voigtian/"
     else:
         save_path = save_path + f"/fits_{channel}_{category}/"
+    print(f"final save_path: {save_path}")
+    # if not os.path.exists(save_path):
+    #     os.makedirs(save_path)
     mkdir(save_path)
+    raise ValueError
     #print(df)
     #with channel selection
     #df = df[(df.channel_nominal == channel) & (df.category == category)]
@@ -152,7 +160,7 @@ def fitter(args, parameters={}):
             "SumTwoExpPdf": SumTwoExpPdf,
             "dcb": doubleCB,
             "BWxDCB": BWxDCB,
-            "VoigtianxErf": VoigtianxErf,
+            "VoigtianxErf": Voigtian_Erf,
             "chebyshev": chebyshev,
         },
         requires_order=["chebyshev", "bernstein"],
@@ -596,8 +604,10 @@ class Fitter(object):
             ErfXExp, params2 = Erf(self.workspace.obj("mh_ggh"), tag)
             #self.workspace.Import(Voigt)
             #self.workspace.Import(ErfXExp)
-            bkgfrac = rt.RooRealVar("bkgfrac", "fraction of background", 0.1, 0., 1.)
-            model = rt.RooAddPdf("VoigtianxErf"+tag, "VoigtianxErf"+tag, rt.RooArgList(Voigt,ErfXExp), bkgfrac)
+            # bkgfrac = rt.RooRealVar("bkgfrac", "fraction of background", 0.1, 0., 1.)
+            # model = rt.RooAddPdf("VoigtianxErf"+tag, "VoigtianxErf"+tag, rt.RooArgList(Voigt,ErfXExp), bkgfrac)
+            sigfrac = RooRealVar("sigfrac", "sig fraction", 0.9, 0., 1.)
+            model = rt.RooAddPdf("Voigtian+Erf"+tag, "Voigtian+Erf"+tag, rt.RooArgList(voigt, erf_exp), rt.RooArgList(sigfrac))
             print(model)
         elif order is None:
             model, params = self.fitmodels[model_name](self.workspace.obj("mh_ggh"), tag)
