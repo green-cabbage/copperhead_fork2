@@ -35,14 +35,15 @@ args = parser.parse_args()
 # global parameters
 parameters = {
     # < general settings >
-    "global_path": "/depot/cms/users/yun79/hmm/copperheadV1clean",
+    # "global_path": "/depot/cms/users/yun79/hmm/copperheadV1clean",
+    "global_path": "/depot/cms/hmm/vscheure/",
     "years": args.year,
     "label": args.label,
     #"channels": ["ggh_0jets","ggh_1jet","ggh_2orMoreJets","vbf"],
     #"channels": ["ggh"],
     "channels": ["ggh"],
         #"category": ["cat1","cat2","cat3","cat4","cat5"],
-    #"category": ["All"],
+    "category": ["cat15"],
     "mva_channels": ["ggh"],
     "cats_by_score": True,
     #"cats_by_score": False,
@@ -89,9 +90,9 @@ if __name__ == "__main__":
                 f"{parameters['label']}/stage2_output/{year}/"
                 f"{dataset}"
             )
-            #print(f"{parameters['global_path']}/"
-               #f"{parameters['label']}/stage1_output/{year}/"
-                #f"{dataset}/")
+            # print(f"{parameters['global_path']}/"
+            #    f"{parameters['label']}/stage1_output/{year}/"
+            #     f"{dataset}/")
             all_paths[year][dataset] = paths
             print(all_paths)
     # run postprocessing
@@ -106,7 +107,8 @@ if __name__ == "__main__":
             # read stage2 outputs
             for pat in path:
                 df = pd.read_csv(f"{pat}/{dataset}.csv")
-                df_all = pd.read_csv(f"{pat}/{dataset}_nocats.csv")
+                # df_all = pd.read_csv(f"{pat}/{dataset}_nocats.csv")
+                df_all =df
                 if args.year[0] == "combined":
                     columns_to_check = ["score_BDTperyear_2016postVFP_nominal", "score_BDTperyear_2016preVFP_nominal", "score_BDTperyear_2017_nominal", "score_BDTperyear_2018_nominal"]
                 #else:

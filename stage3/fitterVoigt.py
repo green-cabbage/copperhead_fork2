@@ -13,7 +13,8 @@ def mkdir(path):
         if not os.path.exists(path):
             os.makedirs(path)
     except Exception  as e:
-        print(e)
+        pass
+        #print(e) # print if you want to know the error
 def run_fits(parameters, df,df_all,tag):
     signal_ds = parameters.get("signals", [])
     data_ds = parameters.get("data", [])
@@ -135,7 +136,6 @@ def fitter(args, parameters={}):
     # if not os.path.exists(save_path):
     #     os.makedirs(save_path)
     mkdir(save_path)
-    raise ValueError
     #print(df)
     #with channel selection
     #df = df[(df.channel_nominal == channel) & (df.category == category)]
@@ -160,7 +160,7 @@ def fitter(args, parameters={}):
             "SumTwoExpPdf": SumTwoExpPdf,
             "dcb": doubleCB,
             "BWxDCB": BWxDCB,
-            "VoigtianxErf": Voigtian_Erf,
+            "Voigtian_Erf": Voigtian_Erf,
             "chebyshev": chebyshev,
         },
         requires_order=["chebyshev", "bernstein"],
@@ -268,7 +268,7 @@ def fitter(args, parameters={}):
             category=category,  # temporary
             blinded=False,
             #model_names=["BWxDCB"],
-            model_names=["VoigtianxErf"],
+            model_names=["Voigtian_Erf"],
             model_names_multi=[],
             fix_parameters=True,
             store_multipdf=False,
@@ -599,15 +599,15 @@ class Fitter(object):
             self.workspace.obj("mh_ggh").setMax("cache",130.5) ;
             model = rt.RooFFTConvPdf(f"{model_name}{tag}",f"{model_name}{tag}",self.workspace.obj("mh_ggh"), BW_forZ, DCB_forZ) 
             print(model)
-        elif model_name == "VoigtianxErf":
+        elif model_name == "Voigtian_Erf":
             Voigt, params1 = Voigtian(self.workspace.obj("mh_ggh"), tag)
             ErfXExp, params2 = Erf(self.workspace.obj("mh_ggh"), tag)
             #self.workspace.Import(Voigt)
             #self.workspace.Import(ErfXExp)
             # bkgfrac = rt.RooRealVar("bkgfrac", "fraction of background", 0.1, 0., 1.)
             # model = rt.RooAddPdf("VoigtianxErf"+tag, "VoigtianxErf"+tag, rt.RooArgList(Voigt,ErfXExp), bkgfrac)
-            sigfrac = RooRealVar("sigfrac", "sig fraction", 0.9, 0., 1.)
-            model = rt.RooAddPdf("Voigtian+Erf"+tag, "Voigtian+Erf"+tag, rt.RooArgList(voigt, erf_exp), rt.RooArgList(sigfrac))
+            sigfrac = rt.RooRealVar("sigfrac", "sig fraction", 0.9, 0., 1.)
+            model = rt.RooAddPdf("Voigtian_Erf"+tag, "Voigtian_Erf"+tag, rt.RooArgList(Voigt, ErfXExp), rt.RooArgList(sigfrac))
             print(model)
         elif order is None:
             model, params = self.fitmodels[model_name](self.workspace.obj("mh_ggh"), tag)
