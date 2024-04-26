@@ -97,8 +97,21 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
         #print('Hallo before plot')
         for model_key, model in models.items():
             if "Voigt" in model.GetName(): # Plot backgorund contribution separately
-                bkgfrac = ws.var("bkgfrac").getVal()
-                print(bkgfrac)
+                # old original code start -------------------------
+                # bkgfrac = ws.var("bkgfrac").getVal()
+                # print(bkgfrac)
+                # print("plotting BKG func")
+                # ws.pdf("erf_exp_ggh_All").plotOn(
+                # xframe,
+                # rt.RooFit.Range("window"),
+                # rt.RooFit.NormRange("window"),
+                # rt.RooFit.LineColor(colors[count+1]),
+                # rt.RooFit.Name("erf_exp_ggh_all"),
+                # rt.RooFit.Normalization(1.0-bkgfrac)
+                # )
+                # old original code end -------------------------
+                sigfrac = ws.var("sigfrac").getVal()
+                print(f"sigfrac: {sigfrac}")
                 print("plotting BKG func")
                 ws.pdf("erf_exp_ggh_All").plotOn(
                 xframe,
@@ -106,8 +119,10 @@ def plot(fitter, ds_name, models, blinded, category, label, title, save_path):
                 rt.RooFit.NormRange("window"),
                 rt.RooFit.LineColor(colors[count+1]),
                 rt.RooFit.Name("erf_exp_ggh_all"),
-                rt.RooFit.Normalization(1.0-bkgfrac)
+                rt.RooFit.Normalization(1.0-sigfrac)
                 )
+
+            
             #if "BWxDCB" in model.GetName(): # Calculate and Plot backgorund contribution separately -> DOES NOT WORK (as in is incorrect)
                 #expparam = ws.var("bwz_expParam_ggh_All").getVal()
                 #BWWidth =  ws.var("bwz_Width_ggh_All").getVal()

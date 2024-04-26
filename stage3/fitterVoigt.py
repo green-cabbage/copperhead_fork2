@@ -24,7 +24,7 @@ def run_fits(parameters, df,df_all,tag):
     signals = [ds for ds in all_datasets if ds in signal_ds]
     backgrounds = [ds for ds in all_datasets if ds in data_ds]
     fit_setups = []
-    if is_Z == True:
+    if is_Z == True: # ebe mass ress
         fit_setup = {"label": f"Zfit_{tag}", "mode": "Z", "year": year, "df":  df_all[df_all.dataset.isin(backgrounds)]}
         fit_setups.append(fit_setup)
         argset = {
@@ -602,11 +602,13 @@ class Fitter(object):
         elif model_name == "Voigtian_Erf":
             Voigt, params1 = Voigtian(self.workspace.obj("mh_ggh"), tag)
             ErfXExp, params2 = Erf(self.workspace.obj("mh_ggh"), tag)
+            print(f"tag: {tag}")
             #self.workspace.Import(Voigt)
             #self.workspace.Import(ErfXExp)
             # bkgfrac = rt.RooRealVar("bkgfrac", "fraction of background", 0.1, 0., 1.)
             # model = rt.RooAddPdf("VoigtianxErf"+tag, "VoigtianxErf"+tag, rt.RooArgList(Voigt,ErfXExp), bkgfrac)
-            sigfrac = rt.RooRealVar("sigfrac", "sig fraction", 0.9, 0., 1.)
+            # sigfrac = rt.RooRealVar("sigfrac", "sig fraction", 0.9, 0., 1.)
+            sigfrac = rt.RooRealVar("sigfrac", "sig fraction", 0.1, 0., 1.)
             model = rt.RooAddPdf("Voigtian_Erf"+tag, "Voigtian_Erf"+tag, rt.RooArgList(Voigt, ErfXExp), rt.RooArgList(sigfrac))
             print(model)
         elif order is None:

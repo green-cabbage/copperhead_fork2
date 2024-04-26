@@ -423,6 +423,14 @@ def Voigtian(x, tag):
     return model, [bwmZ, bwWidth, sigma]
 
 def Voigtian_Erf(x, tag):
+    """
+    This is leftover code. Valerie uses https://github.com/green-cabbage/copperhead_fork2/blob/Run3/stage3/fitterVoigt.py#L600
+    instead now, since the root workspace needs to remember voigt ErfxExp on top
+    of RooAddPdf output, but putting those two pdfs in a function causes python
+    to erase those variables once function work is done.
+
+    Potential soln: return the two pdfs, and any other necessary variables in a list so python doesn't erase them
+    """
 
 
     # Define the variable and parameters
@@ -437,35 +445,53 @@ def Voigtian_Erf(x, tag):
     bwWidth.setConstant(True)
 
     # Define the error function multiplied by an exponential for background modeling
-    erf_exp = rt.RooFormulaVar("erf_exp"+tag, "Erf * Exp"+tag, "TMath::Erf((@0 - @2) * @1) * TMath::Exp(-(@0 - @2) * @1)", rt.RooArgList(x, slope, offset))
+    ErfxExp = rt.RooFormulaVar("ErfxExp"+tag, "Erf * Exp"+tag, "TMath::Erf((@0 - @2) * @1) * TMath::Exp(-(@0 - @2) * @1)", rt.RooArgList(x, slope, offset))
 
 
 
     # Combine the signal and background components
-    # model = rt.RooAddPdf("VoigtianxErf", "VoigtianxErf", rt.RooArgList(voigt, erf_exp))
-    model = rt.RooAddPdf("Voigtian_Erf", "Voigtian_Erf", rt.RooArgList(voigt, erf_exp))
+    # model = rt.RooAddPdf("VoigtianxErf", "VoigtianxErf", rt.RooArgList(voigt, ErfxExp))
+    model = rt.RooAddPdf("Voigtian+Erf", "Voigtian+Erf", rt.RooArgList(voigt, ErfxExp))
 
     return model, [bwmZ, bwWidth, sigma]
+    
 def Erf(x, tag):
 
 
     # Define the variable and parameters
 
-    slope = rt.RooRealVar("slope"+tag, "Slope", 0, 0, 1.)
-    offset = rt.RooRealVar("offset"+tag, "Offset", 91.2, 80, 105)
-    slope2 = rt.RooRealVar("slope2"+tag, "Slope", 0, 0, 1.)
-    offset2 = rt.RooRealVar("offset2"+tag, "Offset", 91.2, 81, 105)
+    coeff = rt.RooRealVar("slope"+tag, "coeff", 0, 0, 1.)
+    center = rt.RooRealVar("offset"+tag, "center", 91.2, 80, 105)
+    coeff2 = rt.RooRealVar("slope2"+tag, "coeff", 0, 0, 1.)
+    center2 = rt.RooRealVar("offset2"+tag, "center", 91.2, 81, 105)
+
+    # lambda_var = rt.RooRealVar("lambda_var"+tag, "one", 1, 0, 1.) # set to one and freeze it
+    # lambda_var.setConstant(True)
+    
+    # print(f"Erf x: {x}")
+    # erfc_in = rt.RooFormulaVar("erfc_in", "(@2 - @0) * @1", rt.RooArgList(x, coeff, center)) 
+    # exp_pdf_in = rt.RooFormulaVar("exp_pdf_in", "-(@0 - @2) * @1", rt.RooArgList(x, coeff2, center2)) 
+    # erfc = rt.RooFit.bindFunction("erfc", rt.TMath.Erfc, erfc_in)
+    # # exp_pdf = rt.RooFit.bindPdf("exp_pdf", rt.Math.exponential_pdf, exp_pdf_in, lambda_var)
+    # exp_pdf = rt.RooFit.bindFunction("exp_pdf", rt.TMath.Exp, exp_pdf_in)
+
+    # # erfc = rt.RooFit.bindFunction("erfc", rt.TMath.Erfc, (center-x)*coeff)
+    # # exp_pdf = rt.RooFit.bindFunction("exp_pdf", rt.Math.exponential_pdf, -(x-center2)*coeff2)
+    # # erfc = rt.RooFit.bindFunction("erfc", rt.TMath.Erfc, x)
+    # # exp_pdf = rt.RooFit.bindFunction("exp_pdf", rt.Math.exponential_pdf, x)
+
+    # # Define the error function multiplied by an exponential for background modeling
+    
+    # model = rt.RooProdPdf(
+    # "erf_exp"+tag, "erf_exp"+tag, rt.RooArgList(erfc, exp_pdf)
+    # )
+
+    # model = rt.RooGenericPdf("erf_exp"+tag, "erf_exp"+tag, "TMath::Erf(TMath::Abs(@0 - @2) * @1)", rt.RooArgList(x, slope,offset))
+    model = rt.RooGenericPdf("erf_exp"+tag, "erf_exp"+tag, "TMath::Erfc((@2 - @0) * @1) * TMath::Exp(-(@0 - @4) * @3)", rt.RooArgList(x, coeff, center, coeff2, center2))
 
 
-    # Define the error function multiplied by an exponential for background modeling
-    model = rt.RooGenericPdf("erf_exp"+tag, "erf_exp"+tag, "TMath::Erfc((@2 - @0) * @1) * TMath::Exp(-(@0 - @4) * @3)", rt.RooArgList(x, slope, offset, slope2, offset2))
-
-    #model = rt.RooGenericPdf("erf_exp"+tag, "erf_exp"+tag, "TMath::Erf(TMath::Abs(@0 - @2) * @1)", rt.RooArgList(x, slope,offset))
-
-
-
-
-    return model, [slope, offset,slope2, offset2]
+    return model, [coeff, center, coeff2, center2]
+    # return model, [coeff, center,erfc_in, coeff2, center2,exp_pdf_in, erfc, exp_pdf] # return all variables so they don't get garbage collected
     
 def BWxDCB(x,tag):
 
