@@ -42,6 +42,7 @@ from config.branches import branches
 from config.cross_sections import cross_sections
 import pdb
 import correctionlib
+import os
 
 
 class DimuonProcessor(processor.ProcessorABC):
@@ -91,7 +92,7 @@ class DimuonProcessor(processor.ProcessorABC):
         self.regions = kwargs.get("regions", ["h-peak", "h-sidebands"])
         #print(variables)
         # variables to save
-        self.vars_to_save = set([v.name for v in variables])
+        self.vars_to_save = set([v.name for v in variables] + ["vbf_cut"])
 
         # Look at variation names and see if we need to enable
         # calculation of JEC or JER uncertainties
@@ -109,6 +110,7 @@ class DimuonProcessor(processor.ProcessorABC):
         self.timer = Timer("global") if do_timer else None
 
     def process(self, df):
+        print(f"os path: {os.path.abspath(__file__)}")
         # Initialize timer
         if self.timer:
             self.timer.update()
@@ -200,7 +202,7 @@ class DimuonProcessor(processor.ProcessorABC):
             
             # original lumi weight start -------------------------------
             weights.add_weight("lumi", self.lumi_weights[dataset])
-            # print(f"self.lumi_weights[dataset]: {self.lumi_weights[dataset]}")
+            print(f"self.lumi_weights[dataset]: {self.lumi_weights[dataset]}")
             # original lumi weight end ----------------------------------
 
             # # testing for smaller files-----------------------------------
@@ -218,14 +220,14 @@ class DimuonProcessor(processor.ProcessorABC):
             # deactivate pu wgt for now start ----------------------------
             
             
-            pu_wgts = pu_evaluator(
-                #self.pu_lookups,
-                self.parameters,
-                numevents,
-                np.array(df.Pileup.nTrueInt),
-                self.auto_pu,
-            )
-            weights.add_weight("pu_wgt", pu_wgts, how="all")
+            # pu_wgts = pu_evaluator(
+            #     #self.pu_lookups,
+            #     self.parameters,
+            #     numevents,
+            #     np.array(df.Pileup.nTrueInt),
+            #     self.auto_pu,
+            # )
+            # weights.add_weight("pu_wgt", pu_wgts, how="all")
             # deactivate pu wgt for now end ----------------------------
             
             if self.parameters["do_l1prefiring_wgts"]:
@@ -508,6 +510,7 @@ class DimuonProcessor(processor.ProcessorABC):
         if is_mc:
             do_nnlops = self.do_nnlops and ("ggh" in dataset)
             if do_nnlops:
+                print(f"doing nnlops !")
                 nnlopsw = nnlops_weights(df, numevents, self.parameters, dataset)
                 weights.add_weight("nnlops", nnlopsw)
             else:
@@ -653,8 +656,9 @@ class DimuonProcessor(processor.ProcessorABC):
             or ("gjj" in c[0])
         ]
         # print(f"types of weights applied: {weights.df.columns}")
-        # print(f"input maxchunks: {len(output)}")
+        print(f"input maxchunks: {len(output)}")
         output = output.loc[output.event_selection, columns_to_save]
+        print(f"output.columns: {output.columns}")
         output = output.reindex(sorted(output.columns), axis=1)
         output.columns = ["_".join(col).strip("_") for col in output.columns.values]
         output = output[output.region.isin(self.regions)]
@@ -841,6 +845,7 @@ class DimuonProcessor(processor.ProcessorABC):
 
         njets = jets.reset_index().groupby("entry")["subentry"].nunique()
         variables["njets"] = njets
+        variables.njets = variables.njets.fillna(0)
 
         # one_jet = (njets > 0)
         two_jets = njets > 1
@@ -930,6 +935,14 @@ class DimuonProcessor(processor.ProcessorABC):
         )
         variables.nBtagLoose = variables.nBtagLoose.fillna(0.0)
         variables.nBtagMedium = variables.nBtagMedium.fillna(0.0)
+        # print(f'self.parameters["btag_loose_wp"]: {self.parameters["btag_loose_wp"]}')
+        # print(f"nBtagLoose: {variables.nBtagLoose[output.event_selection].to_numpy().astype(int)}")
+        # print(f"nBtagMedium: {variables.nBtagMedium[output.event_selection].to_numpy().astype(int)}")
+        # print(f"njets: {variables.njets[output.event_selection].to_numpy().astype(int)}")
+        # print(f"jets.btagDeepFlavB: {jets.btagDeepFlavB[output.event_selection].to_numpy()}")
+        # add vbf_cut
+        variables["vbf_cut"] = vbf_cut
+        variables.vbf_cut = variables.vbf_cut.fillna(False)
 
         # --------------------------------------------------------------#
         # Fill outputs

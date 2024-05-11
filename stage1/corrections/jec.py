@@ -68,6 +68,7 @@ def jec_names_and_sources(jec_pars, year):
             tag = jec_pars["jer_tags"] if "jer" in key else jec_pars["jec_tags"]
             names[key] = [f"{tag}{s}" for s in suff]
 
+    print(f"JEC names for {year} : {names}")
     return names
 
 

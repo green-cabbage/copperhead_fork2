@@ -16,7 +16,7 @@ from python.io import (
 from config.jec_parameters import jec_parameters as jec_pars
 
 import dask
-from dask.distributed import Client
+from dask.distributed import Client, performance_report
 
 from functools import partial
 import numpy as np
@@ -172,6 +172,7 @@ def submit_job(parameters):
         chunksize=parameters["chunksize"],
         maxchunks=parameters["maxchunks"],
         xrootdtimeout=2400,
+        # xrootdtimeout=1,
     )
 
     #try:
@@ -198,18 +199,21 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=50,
+            n_workers=60, # 41
             #dashboard_address=dash_local,
             threads_per_worker=1,
-            memory_limit="15GB",
+            memory_limit="4GB",
         )
     else:
         # connect to existing Slurm cluster
         from dask_gateway import Gateway
-        gateway = Gateway()
-        # replace with actual cluster name:
-        cluster_name = args.slurm_port
-        client = gateway.connect(cluster_name).get_client()
+        # gateway = Gateway()
+        gateway = Gateway(
+            "http://dask-gateway-k8s.geddes.rcac.purdue.edu/",
+            proxy_address="traefik-dask-gateway-k8s.cms.geddes.rcac.purdue.edu:8786",
+        )
+        cluster_info = gateway.list_clusters()[0]# get the first cluster by default. There only should be one anyways
+        client = gateway.connect(cluster_info.name).get_client()
         parameters["client"] = client
         #print(cluster)
     print("Client created")
@@ -221,18 +225,18 @@ if __name__ == "__main__":
         # ],
         "data": [
             #'test_file_data_A',
-            "data_A",
-            "data_B",
-            "data_C",
-            "data_D",
+            # "data_A",
+            # "data_B",
+            # "data_C",
+            # "data_D",
             #"data_E",
             #"data_F",
             #"data_G",
             #"data_H",
        ],
         "signal": [
-            "ggh_powheg",
-            "vbf_powheg",
+            # "ggh_powheg",
+            # "vbf_powheg",
            # "ggh_amcPS",
             #"vbf_powhegPS",
             #"vbf_powheg_herwig",
@@ -243,7 +247,7 @@ if __name__ == "__main__":
             #"zh",
         ],
         "main_mc": [
-            #"dy_M-50",
+            # "dy_M-50",
             "dy_M-100To200",
             #"dy_M-50_nocut",
             #"dy_1j",
@@ -251,7 +255,7 @@ if __name__ == "__main__":
             #"dy_m105_160_amc",
             # "dy_m105_160_mg",
             #"dy_m105_160_vbf_amc",
-            "ewk_lljj_mll50_mjj120",
+            # "ewk_lljj_mll50_mjj120",
             # "ewk_lljj_mll105_160_py",
             #"ewk_lljj_mll105_160_ptj0",
             #"ewk_lljj_mll105_160_py_dipole",
@@ -259,17 +263,17 @@ if __name__ == "__main__":
             # "ewk_m50"
         ],
         "other_mc": [
-            "ttjets_dl",
-            "ttjets_sl",
+            # "ttjets_dl",
+            # "ttjets_sl",
             #"ttz",
             #"ttw",
-            "st_tw_top",
-            "st_tw_antitop",
-            "ww_2l2nu",
-            "wz_2l2q",
-            "wz_3lnu",
-            "wz_1l1nu2q",
-            "zz",
+            # "st_tw_top",
+            # "st_tw_antitop",
+            # "ww_2l2nu",
+            # "wz_2l2q",
+            # "wz_3lnu",
+            # "wz_1l1nu2q",
+            # "zz",
        ],
     }
 
@@ -296,22 +300,23 @@ if __name__ == "__main__":
                 datasets_mc.append(sample)
 
     to_process = {"MC": datasets_mc, "DATA": datasets_data}
-    for lbl, datasets in to_process.items():
-        if len(datasets) == 0:
-            print("No datasets!!")
-            continue
-        print(f"Processing {lbl}")
-
-        tick1 = time.time()
-        # load lists of ROOT files, compute lumi weights
-        parameters["samp_infos"] = load_samples(datasets, parameters)
-        timings[f"load {lbl}"] = time.time() - tick1
-        print(parameters["samp_infos"])
-        tick2 = time.time()
-        # run main processing
-        delete_existing_stage1_output(datasets, parameters)
-        out = submit_job(parameters)
-        timings[f"process {lbl}"] = time.time() - tick2
+    with performance_report(filename="dask-report.html"):
+        for lbl, datasets in to_process.items():
+            if len(datasets) == 0:
+                print("No datasets!!")
+                continue
+            print(f"Processing {lbl}")
+    
+            tick1 = time.time()
+            # load lists of ROOT files, compute lumi weights
+            parameters["samp_infos"] = load_samples(datasets, parameters)
+            timings[f"load {lbl}"] = time.time() - tick1
+            print(parameters["samp_infos"])
+            tick2 = time.time()
+            # run main processing
+            delete_existing_stage1_output(datasets, parameters)
+            out = submit_job(parameters)
+            timings[f"process {lbl}"] = time.time() - tick2
 
         #print(out)
 

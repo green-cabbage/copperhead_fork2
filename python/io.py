@@ -5,6 +5,7 @@ from dask.distributed import get_worker
 import pickle
 import glob
 import re
+import random
 
 
 
@@ -41,6 +42,26 @@ def save_stage1_output_to_parquet(output, out_dir):
     if not name:
         return
     for dataset in output.dataset.unique():
+        df = output[output.dataset == dataset]
+      
+        if df.shape[0] == 0:
+            return
+        mkdir(f"{out_dir}/{dataset}")
+        df.to_parquet(path=f"{out_dir}/{dataset}/{name}.parquet")
+
+
+def save_stage1_output_to_parquet_custom(output, out_dir):
+    """
+    This is my(Hyeon-Seo) custom stage1 output parquet save function 
+    for understanding and validating run_stage2.py
+    """
+    name = int(random.random()*10000)
+   
+    for key, task in get_worker().tasks.items():
+        if task.state == "executing":
+            name = key[-32:]
+    for dataset in output.dataset.unique():
+        print(f"dataset: {dataset}")
         df = output[output.dataset == dataset]
       
         if df.shape[0] == 0:
