@@ -150,6 +150,12 @@ def invert(rot):
 
 # https://github.com/arizzi/PisaHmm/blob/master/boost_to_CS.h
 def cs_variables_pisa(mu1, mu2):
+    mu_neg = mu1.where((mu1.charge < 0), mu2)
+    mu_pos = mu1.where((mu1.charge > 0), mu2)
+    # overwrite mu1 and mu2 in terms of mu_neg and mu_pos
+    mu1 = mu_neg 
+    mu2 = mu_pos
+    
     multiplier = mu2.charge
     mu1_px = mu1.pt * np.cos(mu1.phi)
     mu1_py = mu1.pt * np.sin(mu1.phi)
@@ -216,6 +222,77 @@ def cs_variables_pisa(mu1, mu2):
     phi_cs = np.arctan2(muminus[1], muminus[0])
     return cos_theta_cs, phi_cs
 
+# def cs_variables_pisa_test(mu1, mu2):
+#     mu_neg = mu1.where((mu1.charge < 0), mu2)
+#     mu_pos = mu1.where((mu1.charge > 0), mu2)
+#     # overwrite mu1 and mu2 in terms of mu_neg and mu_pos
+#     mu1 = mu_neg 
+#     mu2 = mu_pos
+#     multiplier = mu2.charge
+#     mu1_px = mu1.pt * np.cos(mu1.phi)
+#     mu1_py = mu1.pt * np.sin(mu1.phi)
+#     mu1_pz = mu1.pt * np.sinh(mu1.eta)
+#     mu1_e = np.sqrt(mu1_px**2 + mu1_py**2 + mu1_pz**2 + mu1.mass**2)
+#     mu2_px = mu2.pt * np.cos(mu2.phi)
+#     mu2_py = mu2.pt * np.sin(mu2.phi)
+#     mu2_pz = mu2.pt * np.sinh(mu2.eta)
+#     mu2_e = np.sqrt(mu2_px**2 + mu2_py**2 + mu2_pz**2 + mu2.mass**2)
+#     px = mu1_px + mu2_px
+#     py = mu1_py + mu2_py
+#     pz = mu1_pz + mu2_pz
+#     e = mu1_e + mu2_e
+
+#     mu1_kin = [mu1_px, mu1_py, mu1_pz, mu1_e]
+#     mu2_kin = [mu2_px, mu2_py, mu2_pz, mu2_e]
+#     pf = (
+#         np.full(len(px), 0),
+#         np.full(len(px), 0),
+#         np.full(len(px), -6500),
+#         np.full(len(px), 6500),
+#     )
+#     pw = (
+#         np.full(len(px), 0),
+#         np.full(len(px), 0),
+#         np.full(len(px), 6500),
+#         np.full(len(px), 6500),
+#     )
+#     boost_vector = [-px / e, -py / e, -pz / e]
+
+#     mu1_kin = boost(mu1_kin, boost_vector)
+#     mu2_kin = boost(mu2_kin, boost_vector)
+#     pf = boost(pf, boost_vector)
+#     pw = boost(pw, boost_vector)
+#     angle_filter = angle([px, py, pz], [pf[0], pf[1], pf[2]]) < angle(
+#         [px, py, pz], [pw[0], pw[1], pw[2]]
+#     )
+#     for i in range(4):
+#         pw[i][angle_filter] = -multiplier[angle_filter] * pw[i][angle_filter]
+#         pf[i][angle_filter] = multiplier[angle_filter] * pf[i][angle_filter]
+#         pf[i][~angle_filter] = -multiplier[~angle_filter] * pf[i][~angle_filter]
+#         pw[i][~angle_filter] = multiplier[~angle_filter] * pw[i][~angle_filter]
+
+#     pf_mag = np.sqrt(pf[0] * pf[0] + pf[1] * pf[1] + pf[2] * pf[2])
+#     pw_mag = np.sqrt(pw[0] * pw[0] + pw[1] * pw[1] + pw[2] * pw[2])
+#     for i in range(4):
+#         pf[i] = pf[i] / pf_mag
+#         pw[i] = pw[i] / pw_mag
+
+#     pbisec = [pf[0] + pw[0], pf[1] + pw[1], pf[2] + pw[2], pf[3] + pw[3]]
+#     phisecz = unit([pbisec[0], pbisec[1], pbisec[2]])
+#     phisecy = unit(cross(phisecz, unit([px, py, pz])))
+
+#     muminus = [mu2_kin[0], mu2_kin[1], mu2_kin[2]]
+#     rotation = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+#     rot_axes = rotate_axes(cross(phisecy, phisecz), phisecy, phisecz)
+#     rotation = multiply_mtx(rot_axes, rotation)
+#     rotation = invert(rotation)
+#     muminus = multiply_mtx_vec(rotation, muminus)
+#     theta_cs = np.arctan2(
+#         np.sqrt(muminus[0] * muminus[0] + muminus[1] * muminus[1]), muminus[2]
+#     )
+#     cos_theta_cs = np.cos(theta_cs)
+#     phi_cs = np.arctan2(muminus[1], muminus[0])
+#     return cos_theta_cs, phi_cs
 
 def delta_r(eta1, eta2, phi1, phi2):
     deta = abs(eta1 - eta2)
