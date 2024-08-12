@@ -5,6 +5,8 @@
 4. pick the right sample to run at run_stage1.py
 5. run something like: <python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation -mch 1 -ch 10000 &> output_test.log
 >
+6. also, uncomment and comment this portion of copperheadV2 https://github.com/green-cabbage/copperheadV2/blob/38cf28aff92bd7f82e06adf9000732d7accb91f2/copperhead_processor.py#L521-L529
+7. Also, consider turning PU weight off since that gives small discrepancies due to poisson sampling noise
 
 python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation -mch 1 -ch 10000 &> output_test.log
 
