@@ -1,0 +1,73 @@
+# first, if you want to do small sample tests, you have to :
+1. force pre processor to take in only that specific root files in question at https://github.com/green-cabbage/copperhead_fork2/blob/Run3/stage1/preprocessor.py#L171-L179
+2. uncomment this line for changing lumi weight: https://github.com/green-cabbage/copperhead_fork2/blob/Run3/stage1/processor.py#L208-L216
+3. comment out this line from taking the whole lumi of the root file https://github.com/green-cabbage/copperhead_fork2/blob/Run3/stage1/processor.py#L203-L206
+4. pick the right sample to run at run_stage1.py
+5. run something like: <python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation -mch 1 -ch 10000 &> output_test.log
+>
+
+python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation -mch 1 -ch 10000 &> output_test.log
+
+
+python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation -ch 1000000000 &> output_test.log
+
+
+python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation_bigV1_12April2024  &> output_test.log
+nohup python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation_bigV1_12April2024_w_HEMVeto  &> output_test.log
+
+
+python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation -sl dummy -ch 1000 &> output_scaleTest.log
+python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation -sl dummy &> output_scaleTest.log
+nohup python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation &> output_scaleTest.log
+
+
+python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation -sl dummy &> output_long.log
+python run_stage2.py --year 2018 --label test_validation_bigV1_12April2024_w_HEMVeto
+
+
+python run_stage2.py --year 2018 --label fromValerie
+
+
+# for running calibration
+python run_ebeDimuMassCalib.py --year 2018 --label  test_validation_bigV1_12April2024_w_HEMVeto 
+
+python run_ebeDimuMassCalib.py --year 2018 --label  no_e_cut_UL &> output.log
+
+
+# for compiling the RooDoubleCB.cxx 
+cd stage3/lib/RooDoubleCB
+root
+.L RooDoubleCB.cxx+
+.q
+
+.L is command for loading macros, and + at the end means that you want it as a library (.so)
+If the compililation fails,  try <.L RooDoubleCB.cxx++>, sometime it helps
+
+
+<root workspace.root>
+<w->Print()>
+<a2 = w->var("bwz_mZ_ggh_All")>
+
+ln -s /depot/cms/hmm/vscheure/no_e_cut_UL/stage1_output/2018/*    /depot/cms/hmm/yun79/no_e_cut_UL/stage1_output/2018/data_x
+
+
+
+nohup python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation &> output_jec.log
+
+nohup python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation &> output.log
+
+
+nohup python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation -sl dsfsdfsdfd &> output.log
+
+python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation_QglAndBtagOff &> output.log
+
+
+nohup python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation_noRochester &> output.log
+
+
+
+python -W ignore run_stage1.py --year 2018 --datasets UL --label test_validation_bigV1_18May2024_minDetaDPhiFixed -sl dummy &> output.log
+
+nohup python -W ignore run_stage1.py --year 2018 --datasets UL --label cs_varTest  &> output.log
+
+
