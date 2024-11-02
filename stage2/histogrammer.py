@@ -42,6 +42,8 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
                 bins = np.arange(102) / 50.0
         else:
             bins = np.arange(102) / 50.0
+
+        print(f"bins: {bins}")
         hist = hist.Var(bins, name=var.name)
     else:
         hist = hist.Reg(var.nbins, var.xmin, var.xmax, name=var.name, label=var.caption)

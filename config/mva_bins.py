@@ -1,5 +1,5 @@
 mva_bins = {
-    "dnn_allyears_128_64_32": {
+    "pytorch_jun27": {
         "2016": [
             0,
             0.16,

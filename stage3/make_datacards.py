@@ -110,6 +110,12 @@ def build_datacards(var_name, yield_df, parameters):
                 datacard.write("---------------\n")
                 datacard.close()
                 print(f"Saved datacard to {datacard_name}")
+
+                # debugging
+                with open(datacard_name, 'r') as file:
+                    print("printing datacard")
+                    content = file.read()  # Read the entire file content
+                    print(content)
     return
 
 

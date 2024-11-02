@@ -219,12 +219,24 @@ def delete_existing_stage2_parquet(datasets, years, parameters):
         for year in years:
             for dataset in datasets:
                 path = f"{global_path}/{label}/stage2_unbinned/{channel}_{year}/"
-                paths = [f"{path}/{dataset}.parquet"]
-                for fname in os.listdir(path):
-                    if re.fullmatch(rf"{dataset}_[0-9]+.parquet", fname):
-                        paths.append(f"{path}/{fname}")
-                for file in paths:
-                    remove(file)
+                # original start ----------------------------------------------------
+
+                # paths = [f"{path}/{dataset}.parquet"]
+                # if os.path.exists(path):
+                #     for fname in os.listdir(path):
+                #         # print(f"delete_existing_stage2_parquet fname: {fname}")
+                #         if re.fullmatch(rf"{dataset}_[0-9]+.parquet", fname):
+                #             paths.append(f"{path}/{fname}")
+                #     for file in paths:
+                #         if os.path.exists(file):
+                #             remove(file)
+                # original end ----------------------------------------------------
+                # better soln start --------------------------------------
+                paths = glob.glob(f"{path}/{dataset}*.parquet")
+                for fname in paths:
+                    if os.path.exists(fname):
+                            remove(fname)
+                # better soln end --------------------------------------
 
 
 def save_template(templates, out_name, parameters):

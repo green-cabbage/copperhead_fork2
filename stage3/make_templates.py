@@ -127,9 +127,60 @@ def make_templates(args, parameters={}):
             }
             for dataset in datasets:
                 try:
-                    hist = hist_df.loc[hist_df.dataset == dataset, "hist"].values.sum()
-                except Exception:
-                    # print(f"Could not merge histograms for {dataset}")
+                    # hist = hist_df.loc[hist_df.dataset == dataset, "hist"].values.sum()
+
+                    # my attempt start -----------------------------------------------------------
+                    vals = hist_df.loc[hist_df.dataset == dataset, "hist"].values
+                    #---------------------------------------------------------
+                    available_axes = ['region', 'channel', 'val_sumw2', 'score_vbf', 'variation'] # debugging
+                    # for axes in available_axes:
+                    #     print(f"testing axes: {axes}")
+                    #     projection = vals[slicer_value].project(var.name)#.values().sum()
+                    #     print(f"testing projection: {projection}")
+                    # print(f"make_templates vals: {vals}")
+                    # sliced_val = vals[slicer_value]
+                    # print(f"testing sliced_val: {sliced_val}")
+                    # projection = vals[slicer_value].project(var.name).sum()
+                    # print(f"testing projection: {projection}")
+                    #---------------------------------------------------------
+                    # print(f"make_templates len vals: {len(vals)}")
+                    # print(f"make_templates type(vals[0]): {type(vals[0])}")
+                    # for histogram in list(vals)[:4]:
+                    val_l = list(vals)
+                    # bad_idxs = [4, 6, 7, 8, 10, 13, 15, 16, 17, 25, 28, 34, 41, 42, 51, 53, 55, 58, 60, 73, 78, 80, 81, 82, 83, 91, 92, 99, 101, 102, 104, 121]
+                    bad_idxs = []
+                    hist_sum = val_l[0]
+                    for hist_idx in range(1, len(val_l)):
+                        histogram = val_l[hist_idx]
+                        # axes_l = [axis.label for axis in histogram.axes]
+                        # print(f"{hist_idx} axes_l: {axes_l}")   
+                        if hist_idx in bad_idxs:
+                            continue
+                        try:
+                            hist_sum = hist_sum+histogram
+                        except Exception as e:
+                            bad_idxs.append(hist_idx)
+                        # print(f"make_templates histogram: {histogram}")
+                        # print(f"make_templates histogram.axes: {histogram.axes}")
+                        # np_val = histogram.values()
+                        # print(f"make_templates histogram.values(): {np_val}")
+                        # print(f"make_templates histogram.values().shape: {np_val.shape}")
+                        
+                    # print(f"make_templates type(vals): {type(vals)}")
+                    # print(f"make_templates axes: {vals.axes}")
+                    # hist = np.sum(vals.values().flatten())
+                    if len(bad_idxs) > 0:
+                        print(f"{dataset} bad_idxs: {bad_idxs}")
+                    # hist = vals.sum()
+                    hist = hist_sum
+                    # vals = list(vals)
+                    # hist = np.array([val.values() for val in vals]).sum(axis=0)
+                    # print(f"make_templates his.shapet: {hist.shape}")
+                    # raise ValueError
+                    # my attempt end -----------------------------------------------------------
+                    
+                except Exception as e:
+                    print(f"Could not merge histograms for {dataset} due to error {e}")
                     continue
 
                 the_hist = hist[slicer_value].project(var.name).values()
