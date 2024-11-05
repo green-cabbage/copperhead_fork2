@@ -1,36 +1,79 @@
-How to get new MVA bins:
+How to get new MVA bins  start -----------------------------------------------------------------------------------------------
 
 comment out "df[score_name] = df["bin_number"]" in postprocessor line 191 (last I checkeD)
 run stage2 with only vbf sample 
-execute all the cells in GetMvaBin.ipynb
+execute all the cells in GetMvaBin.ipynb, then write those new bin edges in config/mva_bins.py
 
 uncomment "df[score_name] = df["bin_number"]" in postprocessor 
-run stage2 for all samples
+run stage2 for VBF powheg only (rest is unncessary, and you have to redo stage2 aftwards anyway)
+
+How to get new MVA bins  end -----------------------------------------------------------------------------------------------
+
+
 
 Dmitry's advice: check to all years and make sure you get good shapes -> then check the combine the mask channel
 
 
 
 
-python run_stage2.py -y  {year}  # label is defined within the python file
+
+My workflow that resulted in 1.7 observed all eras (Nov 4 2014):
+
+datasets: Data, ggH and VBF, DY, EWK, TT+ST, VV
+
+<python run_stage1.py -y {year} --label rereco_yun_Nov04 -sl dummy>
+
+new stage1 outputs mean you probably have to recalculate the bins. follow the instructions on bgetting new MVA bins above
+
+<python run_stage2.py -y  {year} > # label is defined within the python file. this part takes like 10 mins each era
+
+<python run_stage3.py -y  {year}> # label is defined within the python file. This part takes like seconds
+
+Do this for all 2018, 2017 and 2016 individually (I haven't tested running all of them all years once. I don't think that's supported)
+
+Once all years are done, go to the stage3_datacards directory, and setup a combine env:
+
+combine env setup start -----------------------------------------------------------------------------------------------
+
+cd /path/to/stage3_datacards/
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+cmssw-el7 --bind /depot:/depot
+voms-proxy-init -voms cms
+
+export SCRAM_ARCH=slc7_amd64_gcc700
+cmsrel CMSSW_10_2_13
+cd CMSSW_10_2_13/src
+cmsenv
+
+# this part needs to be done once start ------------------------------------
+git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
+cd HiggsAnalysis/CombinedLimit
+git fetch origin
+git checkout v8.2.0
+scramv1 b clean  # always make a clean build
+scramv1 b
+cd ..
+# this part needs to be done once end ------------------------------------
+
+cmsenv
+cd ../..
+
+combine env setup end -----------------------------------------------------------------------------------------------
 
 
-python run_stage3.py -y  {year} # label is defined within the python file
+Now do combine part:
+
+<combineCards.py datacard_vbf_SR_2016.txt  datacard_vbf_SB_2016.txt datacard_vbf_SR_2017.txt  datacard_vbf_SB_2017.txt datacard_vbf_SR_2018.txt datacard_vbf_SB_2018.txt   > combined_allyears.txt >
+
+<text2workspace.py combined_allyears.txt --channel-masks > text2workspace2.log >
+
+
+<combine -d combined_allyears.root -M Significance -m 125 --expectSignal=1 -n _2018_ -t -1 --rMin -2 --rMax 5 > allyears_prefitsignificance_exp.log > # this is prefit expected signficance
+
+
+<combine -d combined_allyears.root -M Significance -m 125 --X-rtd FITTER_NEWER_GIVE_UP --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0 --cminRunAllDiscreteCombinations --cminApproxPreFitTolerance=0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rtd MINIMIZER_MaxCalls=9999999 --X-rtd MINIMIZER_analytic --X-rtd FAST_VERTICAL_MORPH --cminDefaultMinimizerTolerance 0.01 --X-rtd MINIMIZER_freezeDisassociatedParams --expectSignal=1 -n _2018_ -t -1 --toysFrequentist --rMin -2 --rMax 5 > allyears_postfitsignificance_exp.log  > # this is postfit expected signficance
 
 
 
+<combine -d combined_allyears.root -M Significance -m 125 --X-rtd FITTER_NEWER_GIVE_UP --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0 --cminRunAllDiscreteCombinations --cminApproxPreFitTolerance=0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rtd MINIMIZER_MaxCalls=9999999 --X-rtd MINIMIZER_analytic --X-rtd FAST_VERTICAL_MORPH --cminDefaultMinimizerTolerance 0.01 --X-rtd MINIMIZER_freezeDisassociatedParams  -n _2018_ --toysFrequentist --rMin -2 --rMax 5 > allyears_postfitsignificance_obs.log > # this is postfit observed signficance
 
-
-combineCards.py datacard_vbf_SR_2016.txt  datacard_vbf_SB_2016.txt datacard_vbf_SR_2017.txt  datacard_vbf_SB_2017.txt datacard_vbf_SR_2018.txt datacard_vbf_SB_2018.txt   > combined_allyears.txt
-text2workspace.py combined_allyears.txt --channel-masks > text2workspace2.log
-
-
-combine -d combined_allyears.root -M Significance -m 125 --expectSignal=1 -n _2018_ -t -1 --rMin -2 --rMax 5 > allyears_prefitsignificance_exp.log
-
-
-combine -d combined_allyears.root -M Significance -m 125 --X-rtd FITTER_NEWER_GIVE_UP --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0 --cminRunAllDiscreteCombinations --cminApproxPreFitTolerance=0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rtd MINIMIZER_MaxCalls=9999999 --X-rtd MINIMIZER_analytic --X-rtd FAST_VERTICAL_MORPH --cminDefaultMinimizerTolerance 0.01 --X-rtd MINIMIZER_freezeDisassociatedParams --expectSignal=1 -n _2018_ -t -1 --toysFrequentist --rMin -2 --rMax 5 > allyears_postfitsignificance_exp.log
-
-
-combine -d combined_allyears.root -M Significance -m 125 --X-rtd FITTER_NEWER_GIVE_UP --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0 --cminRunAllDiscreteCombinations --cminApproxPreFitTolerance=0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rtd MINIMIZER_MaxCalls=9999999 --X-rtd MINIMIZER_analytic --X-rtd FAST_VERTICAL_MORPH --cminDefaultMinimizerTolerance 0.01 --X-rtd MINIMIZER_freezeDisassociatedParams  -n _2018_ --toysFrequentist --rMin -2 --rMax 5 > allyears_postfitsignificance_obs.log
-
-observed: 1.22311
