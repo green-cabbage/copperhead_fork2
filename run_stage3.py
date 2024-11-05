@@ -22,6 +22,14 @@ parser.add_argument(
     action="store",
     help="Slurm cluster port (if not specified, will create a local cluster)",
 )
+parser.add_argument(
+    "-l",
+    "--label",
+    dest="label",
+    default="test",
+    action="store",
+    help="Unique run label (to create output path)",
+)
 args = parser.parse_args()
 
 # Dask client settings
@@ -45,7 +53,8 @@ parameters = {
     # "global_path": "/work/users/yun79/copperhead_outputs/copperheadV1clean",
     # "label": "DmitryMaster_JECoff_GeofitFixed_Oct29",
     # "label": "DmitryMaster_JECoff_GeofitFixed_Nov01",
-    "label": "rereco_yun_Nov04",
+    # "label": "rereco_yun_Nov04",
+    "label": args.label,
     "channels": ["vbf"],
     "regions": ["h-peak", "h-sidebands"],
     "syst_variations": ["nominal"],

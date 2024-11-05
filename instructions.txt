@@ -25,9 +25,9 @@ datasets: Data, ggH and VBF, DY, EWK, TT+ST, VV
 
 new stage1 outputs mean you probably have to recalculate the bins. follow the instructions on bgetting new MVA bins above
 
-<python run_stage2.py -y  {year} > # label is defined within the python file. this part takes like 10 mins each era
+<python run_stage2.py -y  {year} --label rereco_yun_Nov04> # label is defined within the python file. this part takes like 10 mins each era
 
-<python run_stage3.py -y  {year}> # label is defined within the python file. This part takes like seconds
+<python run_stage3.py -y  {year} --label rereco_yun_Nov04> # label is defined within the python file. This part takes like seconds
 
 Do this for all 2018, 2017 and 2016 individually (I haven't tested running all of them all years once. I don't think that's supported)
 
