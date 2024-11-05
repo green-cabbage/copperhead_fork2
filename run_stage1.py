@@ -18,7 +18,11 @@ import dask
 from dask.distributed import Client
 
 from functools import partial
-
+import logging
+logger = logging.getLogger("distributed.utils_perf")
+logger.setLevel(logging.ERROR)
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 __all__ = ["dask"]
 
@@ -75,9 +79,8 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-node_ip = "128.211.149.133"  # hammer-c000
-# node_ip = '128.211.149.140' # hammer-c007
-dash_local = f"{node_ip}:34875"
+node_ip = "10.5.11.70"
+dash_local = f"{node_ip}:8787"
 
 
 if args.slurm_port is None:
@@ -107,14 +110,15 @@ parameters = {
     "label": args.label,
     "local_cluster": local_cluster,
     "slurm_cluster_ip": slurm_cluster_ip,
-    "global_path": "/depot/cms/hmm/copperhead/",
+    "global_path": "/depot/cms/users/yun79/hmm/copperheadV1clean",
     #
     # < input data settings >
     # 'xrootd': True,
     # 'server': 'root://xrootd.rcac.purdue.edu/', # Purdue xrootd
     # 'server': 'root://cmsxrootd.fnal.gov/', # FNAL xrootd
-    "xrootd": False,
-    "server": "/mnt/hadoop/",
+    "xrootd": True,
+    # "server": "/mnt/hadoop/",
+    "server": "root://eos.cms.rcac.purdue.edu/",
     "datasets_from": "purdue",
     "chunksize": int(args.chunksize),
     "maxchunks": mch,
@@ -131,6 +135,7 @@ parameters = {
 # submit processing jobs using coffea's DaskExecutor
 def submit_job(parameters):
     # mkdir(parameters["out_path"])
+    print("in submit job")
     out_dir = parameters["global_path"]
     mkdir(out_dir)
     out_dir += "/" + parameters["label"]
@@ -140,7 +145,8 @@ def submit_job(parameters):
     out_dir += "/" + parameters["year"]
     mkdir(out_dir)
 
-    executor_args = {"client": parameters["client"], "retries": 0}
+    executor_args = {"client": parameters["client"], "retries": 2}
+    # print(parameters["samp_infos"].fileset)
     processor_args = {
         "samp_info": parameters["samp_infos"],
         "do_timer": parameters["do_timer"],
@@ -156,6 +162,7 @@ def submit_job(parameters):
         schema=NanoAODSchema,
         chunksize=parameters["chunksize"],
         maxchunks=parameters["maxchunks"],
+        xrootdtimeout=2400,
     )
 
     try:
@@ -181,14 +188,22 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=40,
-            dashboard_address=dash_local,
+            n_workers=60, # 60
+            #dashboard_address=dash_local,
             threads_per_worker=1,
-            memory_limit="12GB",
+            memory_limit="2GB",
         )
     else:
         # connect to existing Slurm cluster
-        parameters["client"] = Client(parameters["slurm_cluster_ip"])
+        # parameters["client"] = Client(parameters["slurm_cluster_ip"])
+        from dask_gateway import Gateway
+        gateway = Gateway(
+            "http://dask-gateway-k8s.geddes.rcac.purdue.edu/",
+            proxy_address="traefik-dask-gateway-k8s.cms.geddes.rcac.purdue.edu:8786",
+        )
+        cluster_info = gateway.list_clusters()[0]# get the first cluster by default. There only should be one anyways
+        client = gateway.connect(cluster_info.name).get_client()
+        parameters["client"] = client
     print("Client created")
 
     # datasets to process (split into groups for convenience)
@@ -212,10 +227,10 @@ if __name__ == "__main__":
             "vbf_powhegPS",
             "vbf_powheg_herwig",
             "vbf_powheg_dipole",
-            "tth",
-            "wph",
-            "wmh",
-            "zh",
+            # "tth",
+            # "wph",
+            # "wmh",
+            # "zh",
         ],
         "main_mc": [
             "dy_m105_160_amc",
@@ -256,7 +271,7 @@ if __name__ == "__main__":
                 # continue
                 datasets_data.append(sample)
             else:
-                continue
+                # continue
                 # if (group != "main_mc") & (group != "signal"):
                 # if (group != "signal"):
                 # if (group != "main_mc"):

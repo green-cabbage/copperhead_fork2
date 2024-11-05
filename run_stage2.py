@@ -50,7 +50,8 @@ parameters = {
     # "global_path": "/work/users/yun79/copperhead_outputs/copperheadV1clean",
     "years": args.years,
     # "label": "DmitryMaster_JECoff_GeofitFixed_Oct29",
-    "label": "DmitryMaster_JECoff_GeofitFixed_Nov01",
+    # "label": "DmitryMaster_JECoff_GeofitFixed_Nov01",
+    "label": "rereco_yun_Nov04",
     "channels": ["vbf"],
     "regions": ["h-peak", "h-sidebands"],
     "syst_variations": ["nominal"],
@@ -65,7 +66,7 @@ parameters = {
     #
     # < settings for unbinned output>
     "tosave_unbinned": {
-        "vbf": ["dimuon_mass", "event", "wgt_nominal", "mu1_pt", "score_pytorch_test"],
+        "vbf": ["dimuon_mass", "event", "wgt_nominal", "mu1_pt", "score_pytorch_jun27", "region", "year"],
         "ggh_0jets": ["dimuon_mass", "wgt_nominal"],
         "ggh_1jet": ["dimuon_mass", "wgt_nominal"],
         "ggh_2orMoreJets": ["dimuon_mass", "wgt_nominal"],
@@ -91,8 +92,8 @@ parameters = {
 parameters["datasets"] = [
     # "data_A",
     # "data_B",
-    "data_C",
-    "data_D",
+    # "data_C",
+    # "data_D",
     # "data_E",
     # "data_F",
     # "data_G",
@@ -100,13 +101,13 @@ parameters["datasets"] = [
     # "dy_m105_160_amc",
     # "dy_m105_160_vbf_amc",
     # "ewk_lljj_mll105_160_py_dipole",
-    # # # "ewk_lljj_mll105_160_ptj0",
-    # # "ttjets_dl",
-    # # "ttjets_sl",
+    # # "ewk_lljj_mll105_160_ptj0",
+    # "ttjets_dl",
+    # "ttjets_sl",
     # # # # "ttw",
     # # # # "ttz",
-    # # "st_tw_top",
-    # # "st_tw_antitop",
+    # "st_tw_top",
+    # "st_tw_antitop",
     # # # "ww_2l2nu",
     # # # "wz_2l2q",
     # # # "wz_1l1nu2q",
@@ -117,7 +118,7 @@ parameters["datasets"] = [
     # # # "wzz",
     # # # "zzz",
     # "ggh_amcPS",
-    # "vbf_powheg_dipole",
+    "vbf_powheg_dipole",
 ]
 # using one small dataset for debugging
 # parameters["datasets"] = ["ggh_amcPS","vbf_powheg_dipole"]

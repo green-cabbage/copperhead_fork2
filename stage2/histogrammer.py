@@ -35,9 +35,11 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
     # add axis for observable variable
     if "score" in var.name:
         model_name = var.name.replace("score_", "").replace("_nominal", "")
-        if "mva_bins" in parameters.keys():
-            if model_name in parameters["mva_bins"].keys():
-                bins = parameters["mva_bins"][model_name][f"{year}"]
+        mva_bin_name = "mva_bins"
+        # mva_bin_name = "mva_bins_original"
+        if mva_bin_name in parameters.keys():
+            if model_name in parameters[mva_bin_name].keys():
+                bins = parameters[mva_bin_name][model_name][f"{year}"]
             else:
                 bins = np.arange(102) / 50.0
         else:

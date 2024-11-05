@@ -32,9 +32,9 @@ parameters.update(
 )
 
 parameters["lumimask"] = {
-    "2016": "data/lumimasks/Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt",
-    "2017": "data/lumimasks/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.txt",
-    "2018": "data/lumimasks/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt",
+    "2016": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt",
+    "2017": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.txt",
+    "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt",
 }
 
 parameters["hlt"] = {
@@ -44,44 +44,44 @@ parameters["hlt"] = {
 }
 
 parameters["roccor_file"] = {
-    "2016": "data/roch_corr/RoccoR2016.txt",
-    "2017": "data/roch_corr/RoccoR2017.txt",
-    "2018": "data/roch_corr/RoccoR2018.txt",
+    "2016": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/roch_corr/RoccoR2016.txt",
+    "2017": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/roch_corr/RoccoR2017.txt",
+    "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/roch_corr/RoccoR2018.txt",
 }
 
-parameters["nnlops_file"] = for_all_years("data/NNLOPS_reweight.root")
+parameters["nnlops_file"] = for_all_years("/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/NNLOPS_reweight.root")
 
 parameters["btag_sf_csv"] = {
-    "2016": "data/btag/DeepCSV_2016LegacySF_V1.csv",
-    "2017": "data/btag/DeepCSV_94XSF_V5_B_F.csv",
-    "2018": "data/btag/DeepCSV_102XSF_V1.csv",
+    "2016": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/btag/DeepCSV_2016LegacySF_V1.csv",
+    "2017": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/btag/DeepCSV_94XSF_V5_B_F.csv",
+    "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/btag/DeepCSV_102XSF_V1.csv",
 }
 
 parameters["pu_file_data"] = {
-    "2016": "data/pileup/PileupData_GoldenJSON_Full2016.root",
-    "2017": "data/pileup/puData2017_withVar.root",
-    "2018": "data/pileup/puData2018_withVar.root",
+    "2016": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/pileup/PileupData_GoldenJSON_Full2016.root",
+    "2017": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/pileup/puData2017_withVar.root",
+    "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/pileup/puData2018_withVar.root",
 }
 
 parameters["pu_file_mc"] = {
-    "2016": "data/pileup/pileup_profile_Summer16.root",
-    "2017": "data/pileup/mcPileup2017.root",
-    "2018": "data/pileup/mcPileup2018.root",
+    "2016": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/pileup/pileup_profile_Summer16.root",
+    "2017": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/pileup/mcPileup2017.root",
+    "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/pileup/mcPileup2018.root",
 }
 
 parameters["muSFFileList"] = {
     "2016": [
         {
             "id": (
-                "data/muon_sf/year2016/RunBCDEF_SF_ID.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2016/RunBCDEF_SF_ID.root",
                 "NUM_MediumID_DEN_genTracks_eta_pt",
             ),
             "iso": (
-                "data/muon_sf/year2016/RunBCDEF_SF_ISO.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2016/RunBCDEF_SF_ISO.root",
                 "NUM_TightRelIso_DEN_MediumID_eta_pt",
             ),
             "trig": (
-                "data/muon_sf/mu2016/EfficienciesStudies_2016_trigger_EfficienciesAndSF_RunBtoF.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/mu2016/EfficienciesStudies_2016_trigger_EfficienciesAndSF_RunBtoF.root",
                 "IsoMu24_OR_IsoTkMu24_PtEtaBins/efficienciesDATA/abseta_pt_DATA",
                 "IsoMu24_OR_IsoTkMu24_PtEtaBins/efficienciesMC/abseta_pt_MC",
             ),
@@ -89,15 +89,15 @@ parameters["muSFFileList"] = {
         },
         {
             "id": (
-                "data/muon_sf/year2016/RunGH_SF_ID.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2016/RunGH_SF_ID.root",
                 "NUM_MediumID_DEN_genTracks_eta_pt",
             ),
             "iso": (
-                "data/muon_sf/year2016/RunGH_SF_ISO.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2016/RunGH_SF_ISO.root",
                 "NUM_TightRelIso_DEN_MediumID_eta_pt",
             ),
             "trig": (
-                "data/muon_sf/mu2016/EfficienciesStudies_2016_trigger_EfficienciesAndSF_RunGtoH.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/mu2016/EfficienciesStudies_2016_trigger_EfficienciesAndSF_RunGtoH.root",
                 "IsoMu24_OR_IsoTkMu24_PtEtaBins/efficienciesDATA/abseta_pt_DATA",
                 "IsoMu24_OR_IsoTkMu24_PtEtaBins/efficienciesMC/abseta_pt_MC",
             ),
@@ -107,15 +107,15 @@ parameters["muSFFileList"] = {
     "2017": [
         {
             "id": (
-                "data/muon_sf/year2017/RunBCDEF_SF_ID.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2017/RunBCDEF_SF_ID.root",
                 "NUM_MediumID_DEN_genTracks_pt_abseta",
             ),
             "iso": (
-                "data/muon_sf/year2017/RunBCDEF_SF_ISO.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2017/RunBCDEF_SF_ISO.root",
                 "NUM_TightRelIso_DEN_MediumID_pt_abseta",
             ),
             "trig": (
-                "data/muon_sf/mu2017/EfficienciesAndSF_RunBtoF_Nov17Nov2017.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/mu2017/EfficienciesAndSF_RunBtoF_Nov17Nov2017.root",
                 "IsoMu27_PtEtaBins/efficienciesDATA/abseta_pt_DATA",
                 "IsoMu27_PtEtaBins/efficienciesMC/abseta_pt_MC",
             ),
@@ -125,15 +125,15 @@ parameters["muSFFileList"] = {
     "2018": [
         {
             "id": (
-                "data/muon_sf/year2018/RunABCD_SF_ID.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2018/RunABCD_SF_ID.root",
                 "NUM_MediumID_DEN_genTracks_pt_abseta",
             ),
             "iso": (
-                "data/muon_sf/year2018/RunABCD_SF_ISO.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2018/RunABCD_SF_ISO.root",
                 "NUM_TightRelIso_DEN_MediumID_pt_abseta",
             ),
             "trig": (
-                "data/muon_sf/mu2018/EfficienciesStudies_2018_trigger_EfficienciesAndSF_2018Data_BeforeMuonHLTUpdate.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/mu2018/EfficienciesStudies_2018_trigger_EfficienciesAndSF_2018Data_BeforeMuonHLTUpdate.root",
                 "IsoMu24_PtEtaBins/efficienciesDATA/abseta_pt_DATA",
                 "IsoMu24_PtEtaBins/efficienciesMC/abseta_pt_MC",
             ),
@@ -141,15 +141,15 @@ parameters["muSFFileList"] = {
         },
         {
             "id": (
-                "data/muon_sf/year2018/RunABCD_SF_ID.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2018/RunABCD_SF_ID.root",
                 "NUM_MediumID_DEN_genTracks_pt_abseta",
             ),
             "iso": (
-                "data/muon_sf/year2018/RunABCD_SF_ISO.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/year2018/RunABCD_SF_ISO.root",
                 "NUM_TightRelIso_DEN_MediumID_pt_abseta",
             ),
             "trig": (
-                "data/muon_sf/mu2018/EfficienciesStudies_2018_trigger_EfficienciesAndSF_2018Data_AfterMuonHLTUpdate.root",
+                "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/muon_sf/mu2018/EfficienciesStudies_2018_trigger_EfficienciesAndSF_2018Data_AfterMuonHLTUpdate.root",
                 "IsoMu24_PtEtaBins/efficienciesDATA/abseta_pt_DATA",
                 "IsoMu24_PtEtaBins/efficienciesMC/abseta_pt_MC",
             ),
@@ -158,9 +158,9 @@ parameters["muSFFileList"] = {
     ],
 }
 
-parameters["zpt_weights_file"] = for_all_years("data/zpt_weights.histo.json")
-parameters["puid_sf_file"] = for_all_years("data/PUIDMaps.root")
-parameters["res_calib_path"] = for_all_years("data/res_calib/")
+parameters["zpt_weights_file"] = for_all_years("/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/zpt_weights.histo.json")
+parameters["puid_sf_file"] = for_all_years("/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/PUIDMaps.root")
+parameters["res_calib_path"] = for_all_years("/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/res_calib/")
 
 parameters["sths_names"] = for_all_years(
     [

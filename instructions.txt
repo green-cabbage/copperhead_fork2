@@ -1,0 +1,36 @@
+How to get new MVA bins:
+
+comment out "df[score_name] = df["bin_number"]" in postprocessor line 191 (last I checkeD)
+run stage2 with only vbf sample 
+execute all the cells in GetMvaBin.ipynb
+
+uncomment "df[score_name] = df["bin_number"]" in postprocessor 
+run stage2 for all samples
+
+Dmitry's advice: check to all years and make sure you get good shapes -> then check the combine the mask channel
+
+
+
+
+python run_stage2.py -y  {year}  # label is defined within the python file
+
+
+python run_stage3.py -y  {year} # label is defined within the python file
+
+
+
+
+
+combineCards.py datacard_vbf_SR_2016.txt  datacard_vbf_SB_2016.txt datacard_vbf_SR_2017.txt  datacard_vbf_SB_2017.txt datacard_vbf_SR_2018.txt datacard_vbf_SB_2018.txt   > combined_allyears.txt
+text2workspace.py combined_allyears.txt --channel-masks > text2workspace2.log
+
+
+combine -d combined_allyears.root -M Significance -m 125 --expectSignal=1 -n _2018_ -t -1 --rMin -2 --rMax 5 > allyears_prefitsignificance_exp.log
+
+
+combine -d combined_allyears.root -M Significance -m 125 --X-rtd FITTER_NEWER_GIVE_UP --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0 --cminRunAllDiscreteCombinations --cminApproxPreFitTolerance=0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rtd MINIMIZER_MaxCalls=9999999 --X-rtd MINIMIZER_analytic --X-rtd FAST_VERTICAL_MORPH --cminDefaultMinimizerTolerance 0.01 --X-rtd MINIMIZER_freezeDisassociatedParams --expectSignal=1 -n _2018_ -t -1 --toysFrequentist --rMin -2 --rMax 5 > allyears_postfitsignificance_exp.log
+
+
+combine -d combined_allyears.root -M Significance -m 125 --X-rtd FITTER_NEWER_GIVE_UP --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0 --cminRunAllDiscreteCombinations --cminApproxPreFitTolerance=0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rtd MINIMIZER_MaxCalls=9999999 --X-rtd MINIMIZER_analytic --X-rtd FAST_VERTICAL_MORPH --cminDefaultMinimizerTolerance 0.01 --X-rtd MINIMIZER_freezeDisassociatedParams  -n _2018_ --toysFrequentist --rMin -2 --rMax 5 > allyears_postfitsignificance_obs.log
+
+observed: 1.22311

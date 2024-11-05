@@ -4,7 +4,7 @@ import glob
 import tqdm
 
 import uproot
-
+uproot.open.defaults["xrootd_handler"] = uproot.MultithreadedXRootDSource
 from config.parameters import parameters
 from config.cross_sections import cross_sections
 
@@ -19,7 +19,7 @@ def load_sample(dataset, parameters):
         "datasets_from": "purdue",
         "debug": DEBUG,
         "xrootd": xrootd,
-        "timeout": 120,
+        "timeout": 300,
     }
     samp_info = SamplesInfo(**args)
     samp_info.load(dataset, use_dask=True, client=parameters["client"])
@@ -52,7 +52,7 @@ def load_samples(datasets, parameters):
     return samp_info_total
 
 
-def read_via_xrootd(server, path, from_das=True):
+def read_via_xrootd(server, path, from_das=False):
     if from_das:
         command = f'dasgoclient --query=="file dataset={path}"'
     else:
@@ -60,12 +60,24 @@ def read_via_xrootd(server, path, from_das=True):
     proc = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
     )
+    print(f"read_via_xrootd command: {command}")
     result = proc.stdout.readlines()
     if proc.stderr.readlines():
         print("Loading error! This may help:")
         print("    voms-proxy-init --voms cms")
         print("    source /cvmfs/cms.cern.ch/cmsset_default.sh")
     result = [server + r.rstrip().decode("utf-8") for r in result]
+    # proc = subprocess.Popen(
+    #     "pwd", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+    # )
+    # pwd_result = proc.stdout.readlines()
+    # print(f"pwd_result command: {pwd_result}")
+    # proc = subprocess.Popen(
+    #     "ls data/lumimasks/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+    # )
+    # ls_result = proc.stdout.readlines()
+    # print(f"ls_result command: {ls_result}")
+    
     return result
 
 
@@ -73,8 +85,9 @@ class SamplesInfo(object):
     def __init__(self, **kwargs):
         self.year = kwargs.pop("year", "2016")
         self.xrootd = kwargs.pop("xrootd", True)
-        self.server = kwargs.pop("server", "root://xrootd.rcac.purdue.edu/")
-        self.timeout = kwargs.pop("timeout", 60)
+        # self.server = kwargs.pop("server", "root://xrootd.rcac.purdue.edu/")
+        self.server = kwargs.pop("server", "root://eos.cms.rcac.purdue.edu/")
+        self.timeout = kwargs.pop("timeout", 300)
         self.debug = kwargs.pop("debug", False)
         datasets_from = kwargs.pop("datasets_from", "purdue")
 
@@ -120,7 +133,7 @@ class SamplesInfo(object):
         self.metadata = res["metadata"]
         self.data_entries = res["data_entries"]
 
-    def load_sample(self, sample, use_dask=False, client=None):
+    def load_sample(self, sample, use_dask=True, client=None):
         if (sample not in self.paths) or (self.paths[sample] == ""):
             # print(f"Couldn't load {sample}! Skipping.")
             return {
@@ -149,7 +162,30 @@ class SamplesInfo(object):
             all_files = [all_files[0]]
 
         # print(f"Loading {sample}: {len(all_files)} files")
+        # addition start -------------------------------------------------------------------------------
+        filelist=[]
+        all_files_clean=[]
 
+
+        # testing -----------------------------------------------
+        # all_files = [
+        #     "/eos/purdue//store/group/local/hmm/FSRnano18ABC_NANOV10b/SingleMuon/RunIISummer16MiniAODv3_FSRnano18ABC_NANOV10b_un2018B-17Sep2018-v1/200408_224203/0001/nano18ABC_NANO_1228.root", # data B
+        # ]
+        #------------------------------------------------------------
+        
+        for f in all_files:
+            filename = f.split("/")[-1]
+            print(filename)
+            #print(filelist)
+            if "nano18D_NANO_4814" in filename:
+                continue 
+                # file root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRnano18ABC_NANOV10b/SingleMuon/RunIISummer16MiniAODv3_FSRnano18ABC_NANOV10b_un2018C-17Sep2018-v1/200408_224234/0000/nano18ABC_NANO_643.root seems to be corrupt 
+            if filename not in filelist:
+                filelist.append(filename)
+                all_files_clean.append(f)
+        # print(f"Removed double files: {len(all_files_clean)} files")
+        # print(f"all_files_clean: {all_files_clean}")
+        # addition end ---------------------------------------------------------------------------------
         sumGenWgts = 0
         nGenEvts = 0
 
@@ -159,9 +195,11 @@ class SamplesInfo(object):
             if not client:
                 client = get_client()
             if "data" in sample:
-                work = client.map(self.get_data, all_files, priority=100)
+                # work = client.map(self.get_data, all_files, priority=100)
+                work = client.map(self.get_data, all_files_clean, priority=100)
             else:
-                work = client.map(self.get_mc, all_files, priority=100)
+                # work = client.map(self.get_mc, all_files, priority=100)
+                work = client.map(self.get_mc, all_files_clean, priority=100)
             for w in work:
                 ret = w.result()
                 if "data" in sample:
@@ -170,7 +208,8 @@ class SamplesInfo(object):
                     sumGenWgts += ret["sumGenWgts"]
                     nGenEvts += ret["nGenEvts"]
         else:
-            for f in all_files:
+            # for f in all_files:
+            for f in all_files_clean:
                 if "data" in sample:
                     data_entries += self.get_data(f)["data_entries"]
                 else:
@@ -181,7 +220,8 @@ class SamplesInfo(object):
         metadata["sumGenWgts"] = sumGenWgts
         metadata["nGenEvts"] = nGenEvts
 
-        files = {"files": all_files, "treename": "Events"}
+        # files = {"files": all_files, "treename": "Events"}
+        files = {"files": all_files_clean, "treename": "Events"}
         return {
             "sample": sample,
             "metadata": metadata,

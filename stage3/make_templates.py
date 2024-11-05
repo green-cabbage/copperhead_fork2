@@ -268,6 +268,7 @@ def make_templates(args, parameters={}):
         mkdir(out_dir)
 
         out_fn = f"{out_dir}/{channel}_{region}_{year}.root"
+        print(f"out_fn: {out_fn}")
         save_template(templates, out_fn, parameters)
 
     yield_df = pd.DataFrame(yield_rows)

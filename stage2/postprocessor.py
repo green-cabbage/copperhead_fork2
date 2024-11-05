@@ -112,6 +112,10 @@ def on_partition(args, parameters):
     if "dy" in dataset:
         df.jet1_has_matched_gen_nominal.fillna(False, inplace=True)
         df.jet2_has_matched_gen_nominal.fillna(False, inplace=True)
+        nan_val = -999.0 # sometimes nan values are already replaced with  -999.0
+        df.jet1_has_matched_gen_nominal.replace(nan_val, False, inplace=True)
+        df.jet2_has_matched_gen_nominal.replace(nan_val, False, inplace=True)
+
         df["two_matched_jets"] = (
             df.jet1_has_matched_gen_nominal & df.jet2_has_matched_gen_nominal
         )
@@ -178,12 +182,13 @@ def on_partition(args, parameters):
             score_name = f"score_{model_name}_nominal"
             if score_name in df.columns:
                 mva_bins = parameters["mva_bins_original"][model_name][str(year)]
+                print(f"mva_bins: {mva_bins}")
                 for i in range(len(mva_bins) - 1):
                     lo = mva_bins[i]
                     hi = mva_bins[i + 1]
                     cut = (df[score_name] > lo) & (df[score_name] <= hi)
                     df.loc[cut, "bin_number"] = i
-                df[score_name] = df["bin_number"]
+                # df[score_name] = df["bin_number"]
                 parameters["mva_bins"].update(
                     {
                         model_name: {
