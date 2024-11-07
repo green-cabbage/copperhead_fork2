@@ -67,7 +67,9 @@ class DimuonProcessor(processor.ProcessorABC):
             self.btag_systs = self.parameters["btag_systs"]
         else:
             self.btag_systs = []
-
+        print(f"self.btag_systs: {self.btag_systs}")
+        print(f"self.parameters: {self.parameters}")
+        
         # prepare lookup tables for all kinds of corrections
         self.prepare_lookups()
 
@@ -87,7 +89,10 @@ class DimuonProcessor(processor.ProcessorABC):
                 self.do_jecunc = True
             if ptvar in jec_pars["jer_variations"]:
                 self.do_jerunc = True
-
+        
+        print(f"self.do_jecunc: {self.do_jecunc}")
+        print(f"self.do_jerunc: {self.do_jerunc}")
+        
         # enable timer for debugging
         do_timer = kwargs.get("do_timer", False)
         self.timer = Timer("global") if do_timer else None
@@ -203,7 +208,7 @@ class DimuonProcessor(processor.ProcessorABC):
             # GeoFit correction
             if self.do_geofit and ("dxybs" in df.Muon.fields):
                 apply_geofit(df, self.year, ~has_fsr)
-                df["Muon", "pt"] = df.Muon.pt_fsr
+                df["Muon", "pt"] = df.Muon.pt_gf
 
             if self.timer:
                 self.timer.add_checkpoint("Muon corrections")
@@ -336,10 +341,10 @@ class DimuonProcessor(processor.ProcessorABC):
 
         self.do_jec = False
 
-        # We only need to reapply JEC for 2018 data
-        # (unless new versions of JEC are released)
-        if ("data" in dataset) and ("2018" in self.year):
-            self.do_jec = True
+        # # We only need to reapply JEC for 2018 data
+        # # (unless new versions of JEC are released)
+        # if ("data" in dataset) and ("2018" in self.year):
+        #     self.do_jec = True
 
         jets = apply_jec(
             df,
@@ -440,11 +445,14 @@ class DimuonProcessor(processor.ProcessorABC):
         output.columns = pd.MultiIndex.from_product(
             [output.columns, [""]], names=["Variable", "Variation"]
         )
+        
 
         if self.timer:
             self.timer.add_checkpoint("Jet preparation & event weights")
 
+        print(f"self.pt_variations: {self.pt_variations}")
         for v_name in self.pt_variations:
+            
             output_updated = self.jet_loop(
                 v_name,
                 is_mc,
@@ -459,6 +467,10 @@ class DimuonProcessor(processor.ProcessorABC):
                 numevents,
                 output,
             )
+            # debugging
+            if "jer" in v_name:
+                print(f"output_updated when jer: {output_updated}")
+            
             if output_updated is not None:
                 output = output_updated
 
@@ -476,6 +488,11 @@ class DimuonProcessor(processor.ProcessorABC):
             "region",
         ] = "h-sidebands"
         output.loc[((mass > 115.03) & (mass < 135.03)), "region"] = "h-peak"
+        # output.loc[
+        #     ((mass > 110) & (mass < 115.0)) | ((mass > 135.0) & (mass < 150)),
+        #     "region",
+        # ] = "h-sidebands"
+        # output.loc[((mass >= 115.0) & (mass <= 135.0)), "region"] = "h-peak"
         output["dataset"] = dataset
         output["year"] = int(self.year)
 
@@ -502,6 +519,10 @@ class DimuonProcessor(processor.ProcessorABC):
         output.columns = ["_".join(col).strip("_") for col in output.columns.values]
         output = output[output.region.isin(self.regions)]
 
+        # print(f"output.columns: {output.columns}")
+        # output.to_csv("test.csv")
+        # raise ValueError
+        
         to_return = None
         if self.apply_to_output is None:
             to_return = output
@@ -513,6 +534,7 @@ class DimuonProcessor(processor.ProcessorABC):
             self.timer.add_checkpoint("Saving outputs")
             self.timer.summary()
 
+        
         return to_return
 
     def jet_loop(
@@ -531,6 +553,7 @@ class DimuonProcessor(processor.ProcessorABC):
         output,
     ):
         # weights = copy.deepcopy(weights)
+        # print(f"jet_loop jets.fields: {jets.fields}")
 
         if not is_mc and variation != "nominal":
             return

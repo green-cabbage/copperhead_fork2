@@ -16,14 +16,16 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
 
     # prepare list of systematic variations
     wgt_variations = [w for w in df.columns if ("wgt_" in w)]
+    # print(f"make histograms wgt_variations: {wgt_variations}")
     syst_variations = parameters.get("syst_variations", ["nominal"])
+    # print(f"make histograms syst_variations: {syst_variations}")
     variations = []
     for w in wgt_variations:
         for v in syst_variations:
             variation = get_variation(w, v)
             if variation:
                 variations.append(variation)
-
+    # print(f"make histograms variations: {variations}")
     # prepare multidimensional histogram
     # add axes for (1) mass region, (2) channel, (3) value or sumw2
     hist = (

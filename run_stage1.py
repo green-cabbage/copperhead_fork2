@@ -72,7 +72,7 @@ parser.add_argument(
     "-jec",
     "--jec",
     dest="jec_unc",
-    default=False,
+    default=False, # True
     action="store_true",
     help="Enable JEC/JER uncertainties",
 )
@@ -126,7 +126,7 @@ parameters = {
     # < processing settings >
     "regions": ["h-sidebands", "h-peak"],  # , "z-peak"]
     "pt_variations": pt_variations,
-    "do_btag_syst": False,
+    "do_btag_syst": False, # True
     "save_output": True,
     "do_timer": False,
 }
@@ -188,10 +188,10 @@ if __name__ == "__main__":
         # create local cluster
         parameters["client"] = Client(
             processes=True,
-            n_workers=60, # 60
+            n_workers=40, # 60
             #dashboard_address=dash_local,
             threads_per_worker=1,
-            memory_limit="2GB",
+            memory_limit="5GB",
         )
     else:
         # connect to existing Slurm cluster
@@ -213,46 +213,47 @@ if __name__ == "__main__":
         # ],
         "data": [
             # 'test_file_data_A',
-            "data_A",
-            "data_B",
-            "data_C",
-            "data_D",
-            "data_E",
-            "data_F",
-            "data_G",
-            "data_H",
+            # "data_A",
+            # "data_B",
+            # "data_C",
+            # "data_D",
+            # "data_E",
+            # "data_F",
+            # "data_G",
+            # "data_H",
         ],
         "signal": [
             "ggh_amcPS",
-            "vbf_powhegPS",
-            "vbf_powheg_herwig",
+            # "ggh_powhegPS",
+            # "vbf_powhegPS",
+            # "vbf_powheg_herwig",
             "vbf_powheg_dipole",
-            # "tth",
-            # "wph",
-            # "wmh",
-            # "zh",
+            # # "tth",
+            # # "wph",
+            # # "wmh",
+            # # "zh",
         ],
         "main_mc": [
-            "dy_m105_160_amc",
-            # "dy_m105_160_mg",
-            "dy_m105_160_vbf_amc",
-            # "ewk_lljj_mll105_160_py",
-            "ewk_lljj_mll105_160_ptj0",
-            "ewk_lljj_mll105_160_py_dipole",
-            "ttjets_dl",
-            # "ewk_m50"
+            # "dy_m105_160_amc",
+            # # "dy_m105_160_mg",
+            # "dy_m105_160_vbf_amc",
+            # # "ewk_lljj_mll105_160_py",
+            # "ewk_lljj_mll105_160_ptj0",
+            # # "ewk_lljj_mll105_160_py_dipole",
+            # # "ewk_m50"
         ],
         "other_mc": [
-            "ttjets_sl",
-            "ttz",
-            "ttw",
-            "st_tw_top",
-            "st_tw_antitop",
-            "ww_2l2nu",
-            "wz_2l2q",
-            "wz_3lnu",
-            "wz_1l1nu2q",
-            "zz",
+            # "ttjets_dl",
+            # "ttjets_sl",
+            # "ttz",
+            # "ttw",
+            # "st_tw_top",
+            # "st_tw_antitop",
+            # "ww_2l2nu",
+            # "wz_2l2q",
+            # "wz_3lnu",
+            # "wz_1l1nu2q",
+            # "zz",
         ],
     }
 

@@ -53,7 +53,7 @@ def delete_existing_stage1_output(datasets, parameters):
 
 
 def load_dataframe(client, parameters, inputs=[], dataset=None):
-    ncpus = parameters.get("ncpus", 1)
+    ncpus = parameters.get("ncpus", 40)
     custom_npartitions_dict = parameters.get("custom_npartitions", {})
     custom_npartitions = 0
     if dataset in custom_npartitions_dict.keys():
