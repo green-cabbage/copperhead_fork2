@@ -8,6 +8,8 @@ from python.io import save_stage2_output_hists
 
 
 def make_histograms(df, var_name, year, dataset, regions, channels, npart, parameters):
+    debug = False
+    print("start making hists!")
     # try to get binning from config
     if var_name in parameters["variables_lookup"].keys():
         var = parameters["variables_lookup"][var_name]
@@ -33,7 +35,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         .StrCat(channels, name="channel")
         .StrCat(["value", "sumw2"], name="val_sumw2")
     )
-
+    test_df = pd.DataFrame()
     # add axis for observable variable
     if "score" in var.name:
         model_name = var.name.replace("score_", "").replace("_nominal", "")
@@ -69,9 +71,11 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         dict(zip(loop_args.keys(), values))
         for values in itertools.product(*loop_args.values())
     ]
-    hist_info_rows = []
+    if debug:
+        hist_info_rows = []
     total_yield = 0
     for loop_arg in loop_args:
+        # print(f"loop_arg: {loop_arg}")
         region = loop_arg["region"]
         channel = loop_arg["channel"]
         w = loop_arg["w"]
@@ -96,6 +100,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         data = df.loc[slicer, var_name]
         weight = df.loc[slicer, w]
 
+        # to_fill = {var.name: data, "region": region, "channel": channel} # original
         to_fill = {var.name: data, "region": region, "channel": channel}
 
         to_fill_value = to_fill.copy()
@@ -123,7 +128,8 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         if "return_hist" in parameters:
             if parameters["return_hist"]:
                 hist_info_row["hist"] = hist
-        hist_info_rows.append(hist_info_row)
+        if debug:
+            hist_info_rows.append(hist_info_row)
 
     if total_yield == 0:
         return None
@@ -135,7 +141,11 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         save_stage2_output_hists(hist, var.name, dataset, year, parameters, npart)
 
     # return info for debugging
-    hist_info_rows = pd.DataFrame(hist_info_rows)
+    if debug:
+        hist_info_rows = pd.DataFrame(hist_info_rows)
+    else:
+        hist_info_rows = pd.DataFrame()
+    print("done making hists!")
     return hist_info_rows
 
 
