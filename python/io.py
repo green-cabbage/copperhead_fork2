@@ -53,7 +53,9 @@ def delete_existing_stage1_output(datasets, parameters):
 
 
 def load_dataframe(client, parameters, inputs=[], dataset=None):
-    ncpus = parameters.get("ncpus", 40)
+    # ncpus = parameters.get("ncpus", 40)
+    ncpus = 1000#120 # temporary overwrite bc idk what 
+    print(f"ncpus: {ncpus}")
     custom_npartitions_dict = parameters.get("custom_npartitions", {})
     custom_npartitions = 0
     if dataset in custom_npartitions_dict.keys():
@@ -73,6 +75,7 @@ def load_dataframe(client, parameters, inputs=[], dataset=None):
             df = dd.concat([d for d in df_future if d.shape[1] > 0])
         except Exception:
             return None
+        print(f"df.npartitions: {df.npartitions}")
         if custom_npartitions > 0:
             df = df.repartition(npartitions=custom_npartitions)
         elif df.npartitions > 2 * ncpus:
@@ -143,15 +146,23 @@ def delete_existing_stage2_hists(datasets, years, parameters):
         for var_name in var_names:
             for dataset in datasets:
                 path = f"{global_path}/{label}/stage2_histograms/{var_name}/{year}/"
-                try:
-                    paths = [f"{path}/{dataset}.pickle"]
-                    for fname in os.listdir(path):
-                        if re.fullmatch(rf"{dataset}_[0-9]+.pickle", fname):
-                            paths.append(f"{path}/{fname}")
-                    for file in paths:
-                        remove(file)
-                except Exception:
-                    pass
+                # original start ----------------------------------------------------
+                # try:
+                #     paths = [f"{path}/{dataset}.pickle"]
+                #     for fname in os.listdir(path):
+                #         if re.fullmatch(rf"{dataset}_[0-9]+.pickle", fname):
+                #             paths.append(f"{path}/{fname}")
+                #     for file in paths:
+                #         remove(file)
+                # except Exception:
+                #     pass
+                # original end ----------------------------------------------------
+                # better soln start --------------------------------------
+                paths = glob.glob(f"{path}/{dataset}*.pickle")
+                for fname in paths:
+                    if os.path.exists(fname):
+                            remove(fname)
+                # better soln end --------------------------------------
 
 
 def load_stage2_output_hists(argset, parameters):
