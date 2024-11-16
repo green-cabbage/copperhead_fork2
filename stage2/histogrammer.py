@@ -8,7 +8,7 @@ from python.io import save_stage2_output_hists
 
 
 def make_histograms(df, var_name, year, dataset, regions, channels, npart, parameters):
-    debug = False
+    debug = True
     print("start making hists!")
     # try to get binning from config
     if var_name in parameters["variables_lookup"].keys():
@@ -35,7 +35,6 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         .StrCat(channels, name="channel")
         .StrCat(["value", "sumw2"], name="val_sumw2")
     )
-    test_df = pd.DataFrame()
     # add axis for observable variable
     if "score" in var.name:
         model_name = var.name.replace("score_", "").replace("_nominal", "")
@@ -58,7 +57,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
     hist = hist.StrCat(variations, name="variation")
 
     # specify container type
-    hist = hist.Double()
+    hist = hist.Double() # original
 
     # loop over configurations and fill the histogram
     loop_args = {
@@ -100,19 +99,28 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         data = df.loc[slicer, var_name]
         weight = df.loc[slicer, w]
 
-        # to_fill = {var.name: data, "region": region, "channel": channel} # original
         to_fill = {var.name: data, "region": region, "channel": channel}
+        # print(f"histogrammer data: {data}")
 
-        to_fill_value = to_fill.copy()
+        to_fill_value = to_fill.copy() # not a deepcopy, so it's fine
         to_fill_value["val_sumw2"] = "value"
         to_fill_value["variation"] = variation
         hist.fill(**to_fill_value, weight=weight)
 
-        to_fill_sumw2 = to_fill.copy()
+        to_fill_sumw2 = to_fill.copy() # not a deepcopy, so it's fine
         to_fill_sumw2["val_sumw2"] = "sumw2"
         to_fill_sumw2["variation"] = variation
         hist.fill(**to_fill_sumw2, weight=weight * weight)
 
+        if weight.sum() == 0:
+            continue
+        total_yield += weight.sum()
+        # print(f"weight sum: {weight.sum()}")
+        
+        # del to_fill
+        # del to_fill_value
+        # del to_fill_sumw2
+        # remove to possibly save memory ------------------------------
         hist_info_row = {
             "year": year,
             "var_name": var.name,
@@ -122,20 +130,21 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
             "channel": channel,
             "yield": weight.sum(),
         }
-        if weight.sum() == 0:
-            continue
-        total_yield += weight.sum()
+        
         if "return_hist" in parameters:
             if parameters["return_hist"]:
                 hist_info_row["hist"] = hist
         if debug:
-            hist_info_rows.append(hist_info_row)
+                hist_info_rows.append(hist_info_row)
+        # remove to possibly save memory ------------------------------
+        
 
     if total_yield == 0:
         return None
-
+    print(f"total_yield: {total_yield}")
     # save histogram for this partition to disk
     # (partitions will be joined in stage3)
+        
     save_hists = parameters.get("save_hists", False)
     if save_hists:
         save_stage2_output_hists(hist, var.name, dataset, year, parameters, npart)
@@ -146,7 +155,9 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
     else:
         hist_info_rows = pd.DataFrame()
     print("done making hists!")
+    print(f"histogrammer hist_info_rows: {hist_info_rows}")
     return hist_info_rows
+    # return None
 
 
 def get_variation(wgt_variation, sys_variation):
