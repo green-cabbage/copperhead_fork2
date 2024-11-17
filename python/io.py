@@ -7,6 +7,19 @@ import glob
 import re
 import uproot3
 
+import random
+import string
+from datetime import datetime
+
+def generate_unique_string(length):
+    # Get current time as a formatted string
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    # Generate a random part
+    characters = string.ascii_letters + string.digits
+    random_part = ''.join(random.choice(characters) for _ in range(length))
+    # Combine timestamp and random part
+    return f"{timestamp}_{random_part}"
+
 
 def mkdir(path):
     try:
@@ -55,6 +68,7 @@ def delete_existing_stage1_output(datasets, parameters):
 def load_dataframe(client, parameters, inputs=[], dataset=None):
     # ncpus = parameters.get("ncpus", 40)
     ncpus = 1000#120 # temporary overwrite bc idk what 
+    # ncpus = 150
     print(f"ncpus: {ncpus}")
     custom_npartitions_dict = parameters.get("custom_npartitions", {})
     custom_npartitions = 0
@@ -129,7 +143,7 @@ def save_stage2_output_hists(hist, var_name, dataset, year, parameters, npart=No
     if npart is None:
         path = f"{out_dir}/{dataset}.pickle"
     else:
-        path = f"{out_dir}/{dataset}_{npart}.pickle"
+        path = f"{out_dir}/{dataset}_{npart}_{generate_unique_string(10)}.pickle"
     with open(path, "wb") as handle:
         pickle.dump(hist, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -158,10 +172,13 @@ def delete_existing_stage2_hists(datasets, years, parameters):
                 #     pass
                 # original end ----------------------------------------------------
                 # better soln start --------------------------------------
+                # print(f"delete_existing_stage2_hists dataset: {dataset}")
                 paths = glob.glob(f"{path}/{dataset}*.pickle")
+                # print(f"delete_existing_stage2_hists paths: {paths}")
                 for fname in paths:
                     if os.path.exists(fname):
                             remove(fname)
+                # raise ValueError
                 # better soln end --------------------------------------
 
 
@@ -176,10 +193,12 @@ def load_stage2_output_hists(argset, parameters):
         return
 
     path = f"{global_path}/{label}/stage2_histograms/{var_name}/{year}/"
-    paths = [f"{path}/{dataset}.pickle"]
-    for fname in os.listdir(path):
-        if re.fullmatch(rf"{dataset}_[0-9]+.pickle", fname):
-            paths.append(f"{path}/{fname}")
+    # paths = [f"{path}/{dataset}.pickle"]
+    # for fname in os.listdir(path):
+    #     if re.fullmatch(rf"{dataset}_[0-9]+.pickle", fname):
+    #         paths.append(f"{path}/{fname}")
+    paths = glob.glob(f"{path}/{dataset}_*.pickle")
+    # print(f"load_stage2_output_hists paths: {paths}")
 
     hist_df = pd.DataFrame()
     for path in paths:
@@ -196,6 +215,7 @@ def load_stage2_output_hists(argset, parameters):
                 hist_df.reset_index(drop=True, inplace=True)
         except Exception:
             pass
+    # print(f"load_stage2_output_hists hist_df: {hist_df}")
     return hist_df
 
 

@@ -1,7 +1,7 @@
 from coffea.jetmet_tools import CorrectedJetsFactory, JECStack
 from coffea.lookup_tools import extractor
 from config.jec_parameters import jec_parameters
-
+import copy
 
 def apply_jec(
     df,
@@ -15,6 +15,18 @@ def apply_jec(
     jec_factories,
     jec_factories_data,
 ):
+    # print(f"jets.pt b4 apply_jec: {jets.pt }")
+    # print(f"jets.mass b4 apply_jec: {jets.mass }")
+    # print(f"jets.eta b4 apply_jec: {jets.eta }")
+    # print(f"jets.phi b4 apply_jec: {jets.phi }")
+    # print(f"do_jec: {do_jec}")    
+    revert_jet_kinematics = (not do_jec) and (do_jecunc or do_jerunc)
+    print(f"revert_jet_kinematics: {revert_jet_kinematics}")    
+    if revert_jet_kinematics: # save current jet pt and masses to overwite the jec that happens regardless of do_jec ==True when either  do_jecunc and do_jerunc True
+        pt_orig = copy.deepcopy(jets.pt) # NOTE: if jets.pt_orig and jets.mass_orig get overwritten duirng junc/jer factory build() method, so save on a seperate variable
+        mass_orig = copy.deepcopy(jets.mass)
+        
+    
     cache = df.caches[0]
 
     # Correct jets (w/o uncertainties)
@@ -32,12 +44,27 @@ def apply_jec(
     if is_mc and do_jecunc:
         jets = jec_factories["junc"].build(jets, lazy_cache=cache)
 
+    # print(f"jets.pt after junc: {jets.pt }")
+    # print(f"jets.mass after junc: {jets.mass }")
+    # print(f"jets.eta after junc: {jets.eta }")
+    # print(f"jets.phi after junc: {jets.phi }")
+
+    
     # Compute JER uncertainties
     if is_mc and do_jerunc:
         jets = jec_factories["jer"].build(jets, lazy_cache=cache)
 
+    # reverting the jec that happens regardless of do_jec ==True when do_jecunc is True
+    if revert_jet_kinematics: 
+        jets["pt"] = pt_orig
+        jets["mass"] = mass_orig
+    
     # TODO: JER nuisances
 
+    # print(f"jets.pt after apply_jec: {jets.pt }")
+    # print(f"jets.mass after apply_jec: {jets.mass }")
+    # print(f"jets.eta after apply_jec: {jets.eta }")
+    # print(f"jets.phi after apply_jec: {jets.phi }")
     return jets
 
 

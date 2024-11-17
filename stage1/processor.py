@@ -37,7 +37,7 @@ from config.parameters import parameters
 from config.jec_parameters import jec_parameters
 from config.variables import variables
 from config.branches import branches
-
+import copy
 
 class DimuonProcessor(processor.ProcessorABC):
     def __init__(self, **kwargs):
@@ -82,11 +82,15 @@ class DimuonProcessor(processor.ProcessorABC):
         # Look at variation names and see if we need to enable
         # calculation of JEC or JER uncertainties
         jec_pars = {k: v[self.year] for k, v in jec_parameters.items()}
+        print(f"self.pt_variations: {self.pt_variations}")
+        print(f"jec_pars: {jec_pars}")
         self.do_jecunc = False
         self.do_jerunc = False
         for ptvar in self.pt_variations:
+            print(f"ptvar: {ptvar}")
             if ptvar in jec_pars["jec_variations"]:
                 self.do_jecunc = True
+                print("condition met!")
             if ptvar in jec_pars["jer_variations"]:
                 self.do_jerunc = True
         
@@ -276,7 +280,10 @@ class DimuonProcessor(processor.ProcessorABC):
             good_pv = ak.to_pandas(df.PV).npvsGood > 0
 
             # Define baseline event selection
-            output["two_muons"] = nmuons == 2
+            output["two_muons"] = (nmuons == 2)
+            output["two_muons"].fillna(False, inplace=True)
+            two_muons = output["two_muons"]
+            # print(f'output["two_muons"]: {output["two_muons"]}')
             output["event_selection"] = (
                 mask
                 & (hlt > 0)
@@ -286,6 +293,7 @@ class DimuonProcessor(processor.ProcessorABC):
                 & electron_veto
                 & good_pv
             )
+            # print(f'output["event_selection"]: {output["event_selection"]}')
 
             # --------------------------------------------------------#
             # Select two leading-pT muons
@@ -371,15 +379,16 @@ class DimuonProcessor(processor.ProcessorABC):
             else:
                 weights.add_weight("nnlops", how="dummy")
             # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
-            # do_zpt = ('dy' in dataset)
-            #
-            # if do_zpt:
-            #     zpt_weight = np.ones(numevents, dtype=float)
-            #     zpt_weight[two_muons] =\
-            #         self.evaluator[self.zpt_path](
-            #             output['dimuon_pt'][two_muons]
-            #         ).flatten()
-            #     weights.add_weight('zpt_wgt', zpt_weight)
+            do_zpt = ('dy' in dataset)
+            # print(f"output['dimuon_pt']: {len(output['dimuon_pt'])}")
+            # print(f"two_muons: {len(two_muons)}")
+            if do_zpt:
+                zpt_weight = np.ones(numevents, dtype=float)
+                zpt_weight[two_muons] =\
+                    self.evaluator[self.zpt_path](
+                        output['dimuon_pt'][two_muons].values
+                    ).flatten() # dmitry's original
+                weights.add_weight('zpt_wgt', zpt_weight)
             # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
             do_musf = True
             if do_musf:
@@ -496,6 +505,22 @@ class DimuonProcessor(processor.ProcessorABC):
         output["dataset"] = dataset
         output["year"] = int(self.year)
 
+
+        # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
+        # do_zpt = ('dy' in dataset)
+        # print(f"output['dimuon_pt']: {len(output['dimuon_pt'])}")
+        # print(f"two_muons: {len(two_muons)}")
+        # if do_zpt:
+        #     zpt_weight = np.ones(numevents, dtype=float)
+        #     # zpt_weight[two_muons] =\
+        #     #     self.evaluator[self.zpt_path](
+        #     #         output['dimuon_pt'][two_muons]
+        #     #     ).flatten() # dmitry's original
+        #     zpt_weight =  self.evaluator[self.zpt_path](output['dimuon_pt'].values, output['njets']["nominal"].values).flatten() # valeries's implementation
+        #     weights.add_weight('zpt_wgt', zpt_weight)
+        # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
+        
+
         for wgt in weights.df.columns:
             skip_saving = (
                 ("nominal" not in wgt) and ("up" not in wgt) and ("down" not in wgt)
@@ -552,7 +577,7 @@ class DimuonProcessor(processor.ProcessorABC):
         numevents,
         output,
     ):
-        # weights = copy.deepcopy(weights)
+        weights = copy.deepcopy(weights)
         # print(f"jet_loop jets.fields: {jets.fields}")
 
         if not is_mc and variation != "nominal":
@@ -627,12 +652,18 @@ class DimuonProcessor(processor.ProcessorABC):
                 jets["pt"] = jets["pt_jec"]
                 jets["mass"] = jets["mass_jec"]
 
-            # We use JER corrections only for systematics, so we shouldn't
-            # update the kinematics. Use original values,
-            # unless JEC were applied.
-            if is_mc and self.do_jerunc and not self.do_jec:
-                jets["pt"] = jets["pt_orig"]
-                jets["mass"] = jets["mass_orig"]
+            # NOTE start ---------------------------------------------------------------------
+            # NOTE: overwriting to pt_orig and mass_orig doesn't work if both do_jecunc and do_jerunc are True, since jec_factories build jec and jer individually saves its own pt_orig and mass_orig
+            # # We use JER corrections only for systematics, so we shouldn't
+            # # update the kinematics. Use original values,
+            # # unless JEC were applied.
+            # if is_mc and self.do_jerunc and not self.do_jec:
+            #     jets["pt"] = jets["pt_orig"]
+            #     jets["mass"] = jets["mass_orig"]
+            # NOTE  end ---------------------------------------------------------------------
+            
+            # print(f"jets.pt jet loop: {jets.pt }")
+            # print(f"jets.mass jet loop: {jets.mass }")
 
         # ------------------------------------------------------------#
         # Apply jetID and PUID
