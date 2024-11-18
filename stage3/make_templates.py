@@ -25,11 +25,13 @@ shape_only = [
 
 
 def to_templates(client, parameters, hist_df=None):
+    # datasets = list(parameters["datasets"]) # original
+    datasets = list(parameters["datasets"]) + ["ewk_lljj_mll105_160_py_dipole", "vbf_powheg_herwig"] # manually add partonShower
     if hist_df is None:
         argset_load = {
             "year": parameters["years"],
             "var_name": parameters["templates_vars"],
-            "dataset": parameters["datasets"],
+            "dataset": datasets,
         }
         hist_rows = parallelize(
             load_stage2_output_hists, argset_load, client, parameters
@@ -61,6 +63,7 @@ def make_templates(args, parameters={}):
     hist_df = args["hist_df"].loc[
         (args["hist_df"].var_name == var_name) & (args["hist_df"].year == year)
     ]
+    print(f"hist_df: {hist_df}")
 
     if var_name in parameters["variables_lookup"].keys():
         var = parameters["variables_lookup"][var_name]
@@ -74,7 +77,9 @@ def make_templates(args, parameters={}):
     templates = []
 
     groups = list(set(parameters["grouping"].values()))
-
+    print(f"groups: {groups}")
+    print(f"hist_df.dataset.unique(): {hist_df.dataset.unique()}")
+    
     for group in groups:
         datasets = []
         for d in hist_df.dataset.unique():
@@ -87,6 +92,8 @@ def make_templates(args, parameters={}):
         if len(datasets) == 0:
             continue
 
+        print(f"datasets: {datasets}")
+
         # make a list of systematics;
         # avoid situation where different datasets have incompatible systematics
         wgt_variations = []
@@ -98,12 +105,35 @@ def make_templates(args, parameters={}):
                     .values[i]
                     .axes["variation"]
                 )
+                print(f"new_wgt_vars: {new_wgt_vars}")
                 if len(wgt_variations) == 0:
                     wgt_variations = new_wgt_vars
                 else:
                     wgt_variations = list(set(wgt_variations) & set(new_wgt_vars))
 
+        # manually add parton shower variations start -------------------------------
+        add_VBF_PartonShower = False
+        add_EWK_PartonShower = False
+        for wgt_variation in wgt_variations:
+            if "VBF" ==group:
+                add_VBF_PartonShower = True
+                break
+            elif "EWK" ==group:
+                add_EWK_PartonShower = True
+                break
+        if add_VBF_PartonShower:
+            wgt_variations += ["VBF_SignalPartonShowerUp", "VBF_SignalPartonShowerDown"]
+        if add_EWK_PartonShower:
+            wgt_variations += ["EWK_EWKPartonShowerUp", "EWK_EWKPartonShowerDown"]
+
+        print(f"add_VBF_PartonShower: {add_VBF_PartonShower}")
+        print(f"add_EWK_PartonShower: {add_EWK_PartonShower}")
+        # manually add parton shower variations end -------------------------------
+        print(f"wgt_variations: {wgt_variations}")
         for variation in wgt_variations:
+            print(f"variation: {variation}")
+            print(f"channel: {channel}")
+            
             group_hist = []
             group_sumw2 = []
 
@@ -119,6 +149,89 @@ def make_templates(args, parameters={}):
                 "variation": variation,
                 "val_sumw2": "value",
             }
+            
+
+            #Parton Shower case start -----------------------------
+            if ("PartonShower" in variation):
+                slicer_sumw2 = { # slicer_sumw2 needs to be overwritten
+                    "region": region,
+                    "channel": channel,
+                    "variation": "nominal",
+                    "val_sumw2": "sumw2",
+                }
+                if ("VBF" in variation):
+                    baseline_dataset = "vbf_powheg_dipole"
+                    variation_dataset = "vbf_powheg_herwig"
+                elif ("EWK" in variation):
+                    baseline_dataset = "ewk_lljj_mll105_160_ptj0"
+                    variation_dataset = "ewk_lljj_mll105_160_py_dipole"
+                else:
+                    print("no parton shower exists for this sample!")
+                    raise ValueError
+                # vals_baseline = hist_df.loc[hist_df.dataset == baseline_dataset, "hist"].values 
+                hist_baseline = hist_df.loc[hist_df.dataset == baseline_dataset, "hist"].values.sum()
+                
+                the_hist_nominal_baseline = hist_baseline[slicer_nominal].project(var.name).values()
+                the_sumw2_baseline = hist_baseline[slicer_sumw2].project(var.name).values()
+                # print(f"{group} the_hist_nominal_baseline: {the_hist_nominal_baseline}")
+                # print(f"{group} the_sumw2_baseline: {the_sumw2_baseline}")
+
+                # vals_variation = hist_df.loc[hist_df.dataset == variation_dataset, "hist"].values 
+                hist_variation = hist_df.loc[hist_df.dataset == variation_dataset, "hist"].values.sum()
+
+                the_hist_nominal_variation = hist_variation[slicer_nominal].project(var.name).values()
+                the_sumw2_variation = hist_variation[slicer_sumw2].project(var.name).values()
+                # print(f"{group} the_hist_nominal_variation: {the_hist_nominal_variation}")
+                # print(f"{group} the_sumw2_variation: {the_sumw2_variation}")
+                # print(f"{group} the_hist_nominal_variation: {type(the_hist_nominal_variation)}")
+                # print(f"{group} the_sumw2_variation: {type(the_sumw2_variation)}")
+                
+
+                edges = hist_baseline[slicer_nominal].project(var.name).axes[0].edges
+                edges = np.array(edges)
+                print(f"edges: {edges}")
+                centers = (edges[:-1] + edges[1:]) / 2.0
+                name = variation
+
+                if "Up" in variation:
+                    group_hist = the_hist_nominal_baseline - (the_hist_nominal_baseline -  the_hist_nominal_variation)
+                elif "Down" in variation:
+                    group_hist = the_hist_nominal_baseline + (the_hist_nominal_baseline -  the_hist_nominal_variation)
+                else:
+                    print("unknown variation in parton shower")
+                    raise ValueError
+
+                # print(f"group_hist: {group_hist}")
+                # group_sumw2 = the_sumw2_variation*0
+                group_sumw2 = 2*the_sumw2_baseline + the_sumw2_variation
+                
+
+                # print(f"variation name: {name}")
+                th1 = from_numpy([group_hist, edges])
+                th1._fName = name
+                th1._fSumw2 = np.array(np.append([0], group_sumw2)) # -> np.array([0, group_sumw2])
+                th1._fTsumw2 = np.array(group_sumw2).sum()
+                th1._fTsumwx2 = np.array(group_sumw2 * centers).sum() #-> this is w2*x distibution
+                templates.append(th1)
+
+                variation_fixed = variation.replace("VBF_", "").replace("EWK_", "")
+
+                # print(f"variation_fixed: {variation_fixed}")
+                yield_row = {
+                        "var_name": var_name,
+                        "group": group,
+                        "region": region,
+                        "channel": channel,
+                        "year": year,
+                        "variation": variation_fixed,
+                        "yield": group_hist.sum(),
+                }
+                # print(f"yield_rows: {yield_rows}")
+                yield_rows.append(yield_row)
+                continue # done parton shower, skip the rest of the loop
+            # Parton Shower case end -----------------------------
+            # do the normal for loop if not PartonShower
+            
             slicer_sumw2 = {
                 "region": region,
                 "channel": channel,
@@ -160,6 +273,7 @@ def make_templates(args, parameters={}):
                             hist_sum = hist_sum+histogram
                         except Exception as e:
                             bad_idxs.append(hist_idx)
+                            # print(f"bad idx {hist_idx} with error {e}")
                         # print(f"make_templates histogram: {histogram}")
                         # print(f"make_templates histogram.axes: {histogram.axes}")
                         # np_val = histogram.values()
@@ -183,6 +297,7 @@ def make_templates(args, parameters={}):
                     print(f"Could not merge histograms for {dataset} due to error {e}")
                     continue
 
+
                 the_hist = hist[slicer_value].project(var.name).values()
                 the_hist_nominal = hist[slicer_nominal].project(var.name).values()
                 the_sumw2 = hist[slicer_sumw2].project(var.name).values()
@@ -195,6 +310,14 @@ def make_templates(args, parameters={}):
                     the_hist = the_hist * scale
                     the_sumw2 = the_sumw2 * scale
 
+                # temporary overwrite for TT+ST group ----------------
+                # if group=="TT+ST":
+                #     scale=1.081915477
+                #     the_hist = the_hist * scale
+                #     the_sumw2 = the_sumw2 * scale
+                # -------------------------------------
+
+                
                 if (the_hist.sum() < 0) or (the_sumw2.sum() < 0):
                     continue
 
@@ -225,6 +348,7 @@ def make_templates(args, parameters={}):
                 variation_core = variation.replace("wgt_", "")
                 variation_core = variation_core.replace("_up", "")
                 variation_core = variation_core.replace("_down", "")
+                print(f"variation_core: {variation_core}")
                 suffix = ""
                 if variation_core in decorrelation_scheme.keys():
                     if group in decorrelation_scheme[variation_core]:
@@ -237,12 +361,16 @@ def make_templates(args, parameters={}):
                 variation_fixed = variation_fixed.replace("_up", f"{suffix}Up")
                 variation_fixed = variation_fixed.replace("_down", f"{suffix}Down")
                 name = f"{group}_{variation_fixed}"
+                # 
 
+            print(f"variation name: {name}")
+            print(f"var_name: {var_name}")
+            print(f"variation_fixed: {variation_fixed}")
             th1 = from_numpy([group_hist, edges])
             th1._fName = name
-            th1._fSumw2 = np.array(np.append([0], group_sumw2))
+            th1._fSumw2 = np.array(np.append([0], group_sumw2)) # -> np.array([0, group_sumw2])
             th1._fTsumw2 = np.array(group_sumw2).sum()
-            th1._fTsumwx2 = np.array(group_sumw2 * centers).sum()
+            th1._fTsumwx2 = np.array(group_sumw2 * centers).sum() #-> this is w2*x distibution
             templates.append(th1)
 
             yield_rows.append(

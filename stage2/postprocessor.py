@@ -24,68 +24,47 @@ pd.options.mode.chained_assignment = None
 
 
 def process_partitions(client, parameters, df):
-    print(f"start process_partitions ")
+    # for now ignoring some systematics
+    ignore_columns = []
+    ignore_columns += [c for c in df.columns if "pdf_" in c]
+    print(f"ignore_columns: {ignore_columns}")
 
-    # comment this out bc it's causing slowdown -------------------------------------------
-    # # for now ignoring some systematics
-    # ignore_columns = []
-    # ignore_columns += [c for c in df.columns if "pdf_" in c]
-    # df = df[[c for c in df.columns if c not in ignore_columns]]
-    # print(f"process_partitions ignore_columns: {ignore_columns}")
-    # ------------------------------------------------------------------------------------
-    
-    
-    
-    
+    df = df[[c for c in df.columns if c not in ignore_columns]]
 
     for key in ["channels", "regions", "syst_variations", "hist_vars", "datasets"]:
         if key in parameters:
             parameters[key] = list(set(parameters[key]))
 
-    # years = df.year.unique() # causing slowdown
-    # datasets = df.dataset.unique() # causing slowdown
-    years = parameters["years"]
-    datasets = parameters["datasets"]
-    print(f"process_partitions years: {years}")
-    print(f"process_partitions datasets: {datasets}")
+    
+    years = df.year.unique()
+    datasets = df.dataset.unique()
     # delete previously generated outputs to prevent partial overwrite
     delete_existing_stage2_hists(datasets, years, parameters)
     delete_existing_stage2_parquet(datasets, years, parameters)
 
-    print(f"done deleting ")
+    
     # prepare parameters for parallelization
     argset = {
-        # "year": years,
-        # "dataset": datasets,
-        "year":  df.year.unique(),
-        "dataset": df.dataset.unique(),
+        "year": years,
+        "dataset": datasets,
     }
     if isinstance(df, pd.DataFrame):
         argset["df"] = [df]
     elif isinstance(df, dd.DataFrame):
-        print("breaking down df paritions start")
         argset["df"] = [(i, df.partitions[i]) for i in range(df.npartitions)]
-        print("breaking down df paritions end")
-        print(f"process_partitions len(argset['df']): {len(argset['df'])}")
 
     # perform categorization, evaluate mva models, fill histograms
-    print(f"process_partitions start parallelization!")
-    # hist_info_dfs = parallelize(on_partition, argset, client, parameters)
-    print(f"argset.keys(): {argset.keys()}")
-    parallelize(on_partition, argset, client, parameters)
-    
-    # hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True) # return info for debugging or:
-    hist_info_df_full =  pd.DataFrame() # return empty df to save memory
+    hist_info_dfs = parallelize(on_partition, argset, client, parameters)
+
+    # return info for debugging
+    hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True)
     return hist_info_df_full
 
 
 def on_partition(args, parameters):
     year = args["year"]
     dataset = args["dataset"]
-    print(f"on_partition year: {year}")
-    print(f"on_partition dataset: {dataset}")
     df = args["df"]
-    print(f"on_partition len(df): {len(df)}")
     if "mva_bins" not in parameters:
         parameters["mva_bins"] = {}
 
@@ -98,8 +77,6 @@ def on_partition(args, parameters):
     # convert from Dask DF to Pandas DF
     if isinstance(df, dd.DataFrame):
         df = df.compute()
-        print(f"on_partition year after compute: {year}")
-        print(f"on_partition dataset after compute: {dataset}")
 
     # preprocess
     wgts = [c for c in df.columns if "wgt" in c]
@@ -108,7 +85,6 @@ def on_partition(args, parameters):
 
     df = df[(df.dataset == dataset) & (df.year == year)]
 
-    # print(f"on_partition df: {df}")
     # VBF filter
     if "dy_m105_160_amc" in dataset:
         df = df[df.gjj_mass <= 350]
@@ -129,6 +105,7 @@ def on_partition(args, parameters):
 
     # < categorization into channels (ggH, VBF, etc.) >
     # split_into_channels(df, v="nominal", vbf_mva_cutoff=vbf_mva_cutoff)
+    # split_into_channels(df, v="nominal")
     syst_variations = parameters.get("syst_variations", ["nominal"])
     is_data = "data" in dataset
     if is_data:
@@ -136,12 +113,13 @@ def on_partition(args, parameters):
     
     for variation in syst_variations:
         split_into_channels(df, v=variation)
+
     
     regions = [r for r in parameters["regions"] if r in df.region.unique()]
     channels = [
         c for c in parameters["channels"] if c in df["channel_nominal"].unique()
     ]
-    # df.to_csv("stage2_test.csv")
+
     # split DY by genjet multiplicity
     if "dy" in dataset:
         df.jet1_has_matched_gen_nominal.fillna(False, inplace=True)
@@ -161,7 +139,7 @@ def on_partition(args, parameters):
         ] = f"{dataset}_2j"
 
     # < evaluate here MVA scores after categorization, if needed >
-    # syst_variations = parameters.get("syst_variations", ["nominal"])
+    syst_variations = parameters.get("syst_variations", ["nominal"])
     dnn_models = parameters.get("dnn_models", {})
     bdt_models = parameters.get("bdt_models", {})
     for v in syst_variations:
@@ -222,7 +200,7 @@ def on_partition(args, parameters):
                     hi = mva_bins[i + 1]
                     cut = (df[score_name] > lo) & (df[score_name] <= hi)
                     df.loc[cut, "bin_number"] = i
-                # df[score_name] = df["bin_number"]
+                df[score_name] = df["bin_number"]
                 parameters["mva_bins"].update(
                     {
                         model_name: {
@@ -237,10 +215,14 @@ def on_partition(args, parameters):
     # not parallelizing for now - nested parallelism leads to a lock
     hist_info_rows = []
     for var_name in parameters["hist_vars"]:
-        print(f"var_name: {var_name}")
-        if "dy" in dataset: # divide into jet multiplicity
+        hist_info_row = make_histograms(
+            df, var_name, year, dataset, regions, channels, npart, parameters
+        )
+        if hist_info_row is not None:
+            hist_info_rows.append(hist_info_row)
+        if "dy" in dataset:
             for suff in ["01j", "2j"]:
-                make_histograms(
+                hist_info_row = make_histograms(
                     df,
                     var_name,
                     year,
@@ -250,41 +232,20 @@ def on_partition(args, parameters):
                     npart,
                     parameters,
                 )
-                # hist_info_row = make_histograms(
-                #     df,
-                #     var_name,
-                #     year,
-                #     f"{dataset}_{suff}",
-                #     regions,
-                #     channels,
-                #     npart,
-                #     parameters,
-                # )
-                # if hist_info_row is not None:
-                    # hist_info_rows.append(hist_info_row)
-        else:
-            hist_info_row = make_histograms(
-                df, var_name, year, dataset, regions, channels, npart, parameters
-            )
-            # if hist_info_row is not None:
-                # hist_info_rows.append(hist_info_row)
-        
+                if hist_info_row is not None:
+                    hist_info_rows.append(hist_info_row)
 
-    print(f"on_partition hist_info_rows: {hist_info_rows}")
-    # if len(hist_info_rows) == 0:
-    #     return pd.DataFrame()
+    if len(hist_info_rows) == 0:
+        return pd.DataFrame()
 
-    # comment out to possibly save memory --------------------------------------
     hist_info_df = pd.concat(hist_info_rows).reset_index(drop=True)
 
     # < save desired columns as unbinned data (e.g. dimuon_mass for fits) >
     do_save_unbinned = parameters.get("save_unbinned", False)
     if do_save_unbinned:
         save_unbinned(df, dataset, year, npart, channels, parameters)
-    # comment out to possibly save memory --------------------------------------
 
     # < return some info for diagnostics & tests >
-    hist_info_df = None # or return empty df to save memory
     return hist_info_df
 
 
