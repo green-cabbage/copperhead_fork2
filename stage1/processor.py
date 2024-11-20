@@ -67,8 +67,8 @@ class DimuonProcessor(processor.ProcessorABC):
             self.btag_systs = self.parameters["btag_systs"]
         else:
             self.btag_systs = []
-        print(f"self.btag_systs: {self.btag_systs}")
-        print(f"self.parameters: {self.parameters}")
+        # print(f"self.btag_systs: {self.btag_systs}")
+        # print(f"self.parameters: {self.parameters}")
         
         # prepare lookup tables for all kinds of corrections
         self.prepare_lookups()
@@ -133,6 +133,7 @@ class DimuonProcessor(processor.ProcessorABC):
             mask = np.ones(numevents, dtype=bool)
             genweight = df.genWeight
             weights.add_weight("genwgt", genweight)
+            # print(f"genweight: {genweight[output.event_selection]}")
             weights.add_weight("lumi", self.lumi_weights[dataset])
 
             pu_wgts = pu_evaluator(
@@ -142,7 +143,9 @@ class DimuonProcessor(processor.ProcessorABC):
                 np.array(df.Pileup.nTrueInt),
                 self.auto_pu,
             )
-            weights.add_weight("pu_wgt", pu_wgts, how="all")
+            # 
+            # print(f"pu_wgts: {pu_wgts}")
+            # weights.add_weight("pu_wgt", pu_wgts, how="all")
 
             if self.parameters["do_l1prefiring_wgts"]:
                 if "L1PreFiringWeight" in df.fields:
@@ -293,6 +296,7 @@ class DimuonProcessor(processor.ProcessorABC):
                 & electron_veto
                 & good_pv
             )
+            print(f"pu_wgts['nom']: {pu_wgts['nom'][output.event_selection]}")
             # print(f'output["event_selection"]: {output["event_selection"]}')
 
             # --------------------------------------------------------#
@@ -375,6 +379,7 @@ class DimuonProcessor(processor.ProcessorABC):
             do_nnlops = self.do_nnlops and ("ggh" in dataset)
             if do_nnlops:
                 nnlopsw = nnlops_weights(df, numevents, self.parameters, dataset)
+                print(f"nnlopsw: {nnlopsw[output.event_selection]}")
                 weights.add_weight("nnlops", nnlopsw)
             else:
                 weights.add_weight("nnlops", how="dummy")
@@ -390,18 +395,18 @@ class DimuonProcessor(processor.ProcessorABC):
                     ).flatten() # dmitry's original
                 weights.add_weight('zpt_wgt', zpt_weight)
             # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
-            do_musf = True
-            if do_musf:
-                muID, muIso, muTrig = musf_evaluator(
-                    self.musf_lookup, self.year, numevents, mu1, mu2
-                )
-                weights.add_weight("muID", muID, how="all")
-                weights.add_weight("muIso", muIso, how="all")
-                weights.add_weight("muTrig", muTrig, how="all")
-            else:
-                weights.add_weight("muID", how="dummy_all")
-                weights.add_weight("muIso", how="dummy_all")
-                weights.add_weight("muTrig", how="dummy_all")
+            # do_musf = True
+            # if do_musf:
+            #     muID, muIso, muTrig = musf_evaluator(
+            #         self.musf_lookup, self.year, numevents, mu1, mu2
+            #     )
+            #     weights.add_weight("muID", muID, how="all")
+            #     weights.add_weight("muIso", muIso, how="all")
+            #     weights.add_weight("muTrig", muTrig, how="all")
+            # else:
+            #     weights.add_weight("muID", how="dummy_all")
+            #     weights.add_weight("muIso", how="dummy_all")
+            #     weights.add_weight("muTrig", how="dummy_all")
             # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
             do_lhe = (
                 ("LHEScaleWeight" in df.fields)
@@ -430,7 +435,7 @@ class DimuonProcessor(processor.ProcessorABC):
                 self.powheg_xsec_lookup,
                 weights,
             )
-            # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
+            #--- --- --- --- --- --- --- --- --- --- --- --- --- --- #
             do_pdf = (
                 self.do_pdf
                 and ("nominal" in self.pt_variations)
@@ -519,7 +524,7 @@ class DimuonProcessor(processor.ProcessorABC):
         #     zpt_weight =  self.evaluator[self.zpt_path](output['dimuon_pt'].values, output['njets']["nominal"].values).flatten() # valeries's implementation
         #     weights.add_weight('zpt_wgt', zpt_weight)
         # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
-        
+        print(f"weights.df.columns: {weights.df.columns}")
 
         for wgt in weights.df.columns:
             skip_saving = (
@@ -759,11 +764,11 @@ class DimuonProcessor(processor.ProcessorABC):
             btag_wgt, btag_syst = btag_weights(
                 self, self.btag_lookup, self.btag_systs, jets, weights, bjet_sel_mask
             )
-            weights.add_weight("btag_wgt", btag_wgt)
+            # weights.add_weight("btag_wgt", btag_wgt)
 
             # --- Btag weights variations --- #
-            for name, bs in btag_syst.items():
-                weights.add_weight(f"btag_wgt_{name}", bs, how="only_vars")
+            # for name, bs in btag_syst.items():
+                # weights.add_weight(f"btag_wgt_{name}", bs, how="only_vars")
 
         # Separate from ttH and VH phase space
         variables["nBtagLoose"] = (
@@ -793,6 +798,11 @@ class DimuonProcessor(processor.ProcessorABC):
         # --------------------------------------------------------------#
 
         variables.update({"wgt_nominal": weights.get_weight("nominal")})
+
+        # debugging
+        weights_nominal = weights.get_weight("nominal")
+        print(f"variation {variation} weights_nominal: {weights_nominal[output.event_selection]}")
+        print(f"len output.event_selection: {np.sum(output.event_selection)}")
 
         # All variables are affected by jet pT because of jet selections:
         # a jet may or may not be selected depending on pT variation.
