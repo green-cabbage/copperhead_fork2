@@ -13,6 +13,7 @@ from uproot3_methods.classes.TH1 import from_numpy
 decorrelation_scheme = {
     "LHERen": ["DY", "EWK", "ggH", "TT+ST"],
     "LHEFac": ["DY", "EWK", "ggH", "TT+ST"],
+    "pdf_2rms": ["DY", "VBF", "ggH"],
 }
 shape_only = [
     "wgt_LHERen_up",
@@ -21,8 +22,8 @@ shape_only = [
     "wgt_LHEFac_down",
     "wgt_qgl_up",
     "wgt_qgl_down",
-    # "wgt_pdf_2rms_up",
-    # "wgt_pdf_2rms_down",
+    "wgt_pdf_2rms_up",
+    "wgt_pdf_2rms_down",
 ]
 
 
@@ -391,7 +392,11 @@ def make_templates(args, parameters={}):
                         group_LHE = "DY"
                         print(f"group_LHE after: {group_LHE}")
                     if group_LHE in decorrelation_scheme[variation_core]:
-                        suffix = group_LHE
+                        if variation_core == "pdf_2rms" :
+                            suffix = group_LHE+str(year)
+                            print(f"pdf_2rms suffix: {suffix}")
+                        else:
+                            suffix = group_LHE
                     else:
                         continue
 
