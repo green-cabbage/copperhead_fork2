@@ -21,6 +21,8 @@ shape_only = [
     "wgt_LHEFac_down",
     "wgt_qgl_up",
     "wgt_qgl_down",
+    # "wgt_pdf_2rms_up",
+    # "wgt_pdf_2rms_down",
 ]
 
 
@@ -77,8 +79,8 @@ def make_templates(args, parameters={}):
     templates = []
 
     groups = list(set(parameters["grouping"].values()))
-    print(f"groups: {groups}")
-    print(f"hist_df.dataset.unique(): {hist_df.dataset.unique()}")
+    # print(f"groups: {groups}")
+    # print(f"hist_df.dataset.unique(): {hist_df.dataset.unique()}")
     
     for group in groups:
         datasets = []
@@ -105,7 +107,7 @@ def make_templates(args, parameters={}):
                     .values[i]
                     .axes["variation"]
                 )
-                print(f"new_wgt_vars: {new_wgt_vars}")
+                # print(f"new_wgt_vars: {new_wgt_vars}")
                 if len(wgt_variations) == 0:
                     wgt_variations = new_wgt_vars
                 else:
@@ -126,13 +128,13 @@ def make_templates(args, parameters={}):
         if add_EWK_PartonShower:
             wgt_variations += ["EWK_EWKPartonShowerUp", "EWK_EWKPartonShowerDown"]
 
-        print(f"add_VBF_PartonShower: {add_VBF_PartonShower}")
-        print(f"add_EWK_PartonShower: {add_EWK_PartonShower}")
+        # print(f"add_VBF_PartonShower: {add_VBF_PartonShower}")
+        # print(f"add_EWK_PartonShower: {add_EWK_PartonShower}")
         # manually add parton shower variations end -------------------------------
-        print(f"wgt_variations: {wgt_variations}")
+        # print(f"wgt_variations: {wgt_variations}")
         for variation in wgt_variations:
-            print(f"variation: {variation}")
-            print(f"channel: {channel}")
+            # print(f"variation: {variation}")
+            # print(f"channel: {channel}")
             
             group_hist = []
             group_sumw2 = []
@@ -315,6 +317,38 @@ def make_templates(args, parameters={}):
                 #     scale=1.081915477
                 #     the_hist = the_hist * scale
                 #     the_sumw2 = the_sumw2 * scale
+                # if group=="Data":
+                #     # print("data is present!")
+                #     scale=3975.000/3939
+                #     the_hist = the_hist * scale
+                #     the_sumw2 = the_sumw2 * scale
+                # # elif group=="DYJ01":
+                # #     scale=1389.6971467649/2525.096684
+                # #     the_hist = the_hist * scale
+                # #     the_sumw2 = the_sumw2 * scale
+                # # elif group=="DYJ2":
+                # #     scale=2265.5777773395/1104.819084
+                # #     the_hist = the_hist * scale
+                # #     the_sumw2 = the_sumw2 * scale
+                # elif group=="ggH":
+                #     scale=9.240/9.599384
+                #     the_hist = the_hist * scale
+                #     the_sumw2 = the_sumw2 * scale
+                # elif group=="VBF":
+                #     scale=11.784/11.936208 
+                #     the_hist = the_hist * scale
+                #     the_sumw2 = the_sumw2 * scale
+                # elif group=="EWK":
+                #     scale=125.749/126.96623
+                #     the_hist = the_hist * scale
+                #     the_sumw2 = the_sumw2 * scale
+                # elif group=="VV":
+                #     scale=78.102/80.901781
+                #     the_hist = the_hist * scale
+                #     the_sumw2 = the_sumw2 * scale
+
+                
+
                 # -------------------------------------
 
                 
@@ -348,11 +382,16 @@ def make_templates(args, parameters={}):
                 variation_core = variation.replace("wgt_", "")
                 variation_core = variation_core.replace("_up", "")
                 variation_core = variation_core.replace("_down", "")
-                print(f"variation_core: {variation_core}")
+                # print(f"variation_core: {variation_core}")
                 suffix = ""
                 if variation_core in decorrelation_scheme.keys():
-                    if group in decorrelation_scheme[variation_core]:
-                        suffix = group
+                    group_LHE = group
+                    print(f"group_LHE: {group_LHE}")
+                    if group_LHE == "DYJ2" or group_LHE == "DYJ01" :
+                        group_LHE = "DY"
+                        print(f"group_LHE after: {group_LHE}")
+                    if group_LHE in decorrelation_scheme[variation_core]:
+                        suffix = group_LHE
                     else:
                         continue
 
@@ -363,9 +402,9 @@ def make_templates(args, parameters={}):
                 name = f"{group}_{variation_fixed}"
                 # 
 
-            print(f"variation name: {name}")
-            print(f"var_name: {var_name}")
-            print(f"variation_fixed: {variation_fixed}")
+            # print(f"variation name: {name}")
+            # print(f"var_name: {var_name}")
+            # print(f"variation_fixed: {variation_fixed}")
             th1 = from_numpy([group_hist, edges])
             th1._fName = name
             th1._fSumw2 = np.array(np.append([0], group_sumw2)) # -> np.array([0, group_sumw2])
