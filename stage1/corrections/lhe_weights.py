@@ -1,7 +1,7 @@
 import pandas as pd
 import awkward as ak
 
-
+# this is the QCD scale variation uncertainty
 def lhe_weights(df, output, dataset, year):
     factor2 = ("dy_m105_160_amc" in dataset) and (("2017" in year) or ("2018" in year))
     if factor2:

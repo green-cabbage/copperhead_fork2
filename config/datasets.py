@@ -107,6 +107,7 @@ datasets = {
         "dy_m105_160_vbf_amc": "/store/mc/RunIIAutumn18NanoAODv6/DYJetsToLL_M-105To160_VBFFilter_TuneCP5_PSweights_13TeV-amcatnloFXFX-pythia8/",
         "dy_m105_160_mg": "/store/mc/RunIIAutumn18NanoAODv6/DYJetsToLL_M-105To160_TuneCP5_PSweights_13TeV-madgraphMLM-pythia8/",
         "dy_m105_160_vbf_mg": "/store/mc/RunIIAutumn18NanoAODv6/DYJetsToLL_M-105To160_VBFFilter_TuneCP5_PSweights_13TeV-madgraphMLM-pythia8/",
+        "dy_m100_200_UL": "/store/mc/RunIISummer20UL18NanoAODv9/DYJetsToLL_M-100to200_TuneCP5_13TeV-amcatnloFXFX-pythia8/",
         "ttjets_dl": "/store/mc/RunIIAutumn18NanoAODv6/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/",
         "ttjets_sl": "/store/mc/RunIIAutumn18NanoAODv6/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/",
         "ttw": "/store/mc/RunIIAutumn18NanoAODv6/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8/",

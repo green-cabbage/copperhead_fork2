@@ -26,7 +26,7 @@ pd.options.mode.chained_assignment = None
 def process_partitions(client, parameters, df):
     # for now ignoring some systematics
     ignore_columns = []
-    ignore_columns += [c for c in df.columns if "pdf_" in c]
+    # ignore_columns += [c for c in df.columns if "pdf_" in c]
     print(f"ignore_columns: {ignore_columns}")
 
     df = df[[c for c in df.columns if c not in ignore_columns]]

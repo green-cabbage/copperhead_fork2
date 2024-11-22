@@ -66,9 +66,9 @@ def delete_existing_stage1_output(datasets, parameters):
 
 
 def load_dataframe(client, parameters, inputs=[], dataset=None):
-    # ncpus = parameters.get("ncpus", 40)
-    ncpus = 1000#120 # temporary overwrite bc idk what 
-    # ncpus = 150
+    ncpus = parameters.get("ncpus", 40)
+    # ncpus = 1000#120 # temporary overwrite bc idk what 
+    # ncpus = 30
     print(f"ncpus: {ncpus}")
     custom_npartitions_dict = parameters.get("custom_npartitions", {})
     custom_npartitions = 0

@@ -3,6 +3,7 @@ from functools import partial
 
 
 def parallelize(func, argset, client, parameters={}, seq=False):
+# def parallelize(func, argset, client, parameters={}, seq=True):
     """
     `func`: the function to be executed in parallel.
     `argset`: a dictionary that contains a list of possible values for each of the `func` arguments.
@@ -31,7 +32,10 @@ def parallelize(func, argset, client, parameters={}, seq=False):
     else:
         # run in parallel
         map_futures = client.scatter(argset)
+        # print(f"map_futures: {map_futures}")
         futures = client.map(partial(func, parameters=parameters), map_futures)
+        # results = client.submit(futures)
+        # results = []
         results = client.gather(futures)
 
     return results

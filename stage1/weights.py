@@ -78,6 +78,8 @@ class Weights(object):
         else:
             return np.array([])
 
+    # def getAllNominalWgts(self)
+
     def effect_on_normalization(self, mask=np.array([])):
         if len(mask) == 0:
             mask = np.ones(self.df.shape[0], dtype=int)

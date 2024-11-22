@@ -51,7 +51,7 @@ use_local_cluster = args.slurm_port is None
 node_ip = "128.211.149.133"
 
 if use_local_cluster:
-    ncpus_local = 2
+    ncpus_local = 30 #2
     slurm_cluster_ip = ""
     dashboard_address = f"{node_ip}:34875"
 else:
@@ -63,8 +63,8 @@ else:
 parameters = {
     # < general settings >
     "slurm_cluster_ip": slurm_cluster_ip,
-    # "global_path": "/depot/cms/users/yun79/hmm/copperheadV1clean/",
-    "global_path": "/work/users/yun79/copperhead_outputs/copperheadV1clean",
+    "global_path": "/depot/cms/users/yun79/hmm/copperheadV1clean/",
+    # "global_path": "/work/users/yun79/copperhead_outputs/copperheadV1clean",
     "years": args.years,
     # "label": "DmitryMaster_JECoff_GeofitFixed_Oct29",
     # "label": "DmitryMaster_JECoff_GeofitFixed_Nov01",
@@ -73,10 +73,11 @@ parameters = {
     "channels": ["vbf"],
     "regions": ["h-peak", "h-sidebands"],
     # "syst_variations": ["nominal"],
+    "syst_variations": ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2018_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2018_down"],
     # "syst_variations": ["nominal", "Absolute2016_up", "Absolute2016_down","Absolute_up",],
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2016_up', 'Absolute2016_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12016_up', 'BBEC12016_down', 'EC2_up', 'EC2_down', 'EC22016_up', 'EC22016_down', 'HF_up', 'HF_down', 'HF2016_up', 'HF2016_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2016_up', 'RelativeSample2016_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # taken from printing "self.pt_variations" in stage1/processor.py
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down'],
-     "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2016_up', 'Absolute2016_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12016_up', 'BBEC12016_down', 'EC2_up', 'EC2_down', 'EC22016_up', 'EC22016_down', 'HF_up', 'HF_down', 'HF2016_up', 'HF2016_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2016_up', 'RelativeSample2016_down', 'FlavorQCD_up', 'FlavorQCD_down',], # taken from printing "self.pt_variations" in stage1/processor.py
+     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2016_up', 'Absolute2016_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12016_up', 'BBEC12016_down', 'EC2_up', 'EC2_down', 'EC22016_up', 'EC22016_down', 'HF_up', 'HF_down', 'HF2016_up', 'HF2016_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2016_up', 'RelativeSample2016_down', 'FlavorQCD_up', 'FlavorQCD_down',], # taken from printing "self.pt_variations" in stage1/processor.py
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2017_up', 'Absolute2017_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12017_up', 'BBEC12017_down', 'EC2_up', 'EC2_down', 'EC22017_up', 'EC22017_down', 'HF_up', 'HF_down', 'HF2017_up', 'HF2017_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2017_up', 'RelativeSample2017_down', 'FlavorQCD_up', 'FlavorQCD_down', ], # taken from printing "self.pt_variations" in stage1/processor.py
     
     # "custom_npartitions": {
@@ -84,7 +85,8 @@ parameters = {
     # },
     #
     # < settings for histograms >
-    "hist_vars": ["dimuon_mass"],
+    # "hist_vars": ["dimuon_mass"],
+    "hist_vars": [],
     "variables_lookup": variables_lookup,
     "save_hists": True,
     #
@@ -123,29 +125,29 @@ parameters["datasets"] = [
     # "data_G",
     # "data_H",
     "dy_m105_160_amc",
-    # "dy_m105_160_vbf_amc",
-    # "ewk_lljj_mll105_160_py_dipole",
-    # "ewk_lljj_mll105_160_ptj0",
-    # "ttjets_dl",
-    # "ttjets_sl",
-    # "ttw",
-    # "ttz",
-    # "st_tw_top",
-    # "st_tw_antitop",
-    # "ww_2l2nu",
-    # "wz_2l2q",
-    # "wz_1l1nu2q",
-    # "wz_3lnu",
-    # "zz",
+    "dy_m105_160_vbf_amc",
+    "ewk_lljj_mll105_160_py_dipole",
+    "ewk_lljj_mll105_160_ptj0",
+    "ttjets_dl",
+    "ttjets_sl",
+    "ttw",
+    "ttz",
+    "st_tw_top",
+    "st_tw_antitop",
+    "ww_2l2nu",
+    "wz_2l2q",
+    "wz_1l1nu2q",
+    "wz_3lnu",
+    "zz",
     # # # # "www",
     # # # # "wwz",
     # # # # "wzz",
     # # # # "zzz",
-    # "ggh_amcPS",
+    "ggh_amcPS",
     # # "ggh_powhegPS",
-    # "vbf_powheg_dipole",
+    "vbf_powheg_dipole",
     # # "vbf_powhegPS",
-    # # "vbf_powheg_herwig",
+    "vbf_powheg_herwig",
 ]
 # using one small dataset for debugging
 # parameters["datasets"] = ["ggh_amcPS","vbf_powheg_dipole"]
@@ -167,10 +169,10 @@ if __name__ == "__main__":
     #     )
         client =  Client(
             processes=True,
-            n_workers=15, # 60 ncpus_local
+            n_workers=ncpus_local, # 15 ncpus_local
             #dashboard_address=dash_local,
             threads_per_worker=2,#1
-            memory_limit="8GB",
+            memory_limit="12GB",
         )
     else:
     #     print(
@@ -202,7 +204,7 @@ if __name__ == "__main__":
         all_paths[year] = {}
         for dataset in parameters["datasets"]:
             load_path = f"{parameters['global_path']}/" +f"{parameters['label']}/stage1_output/{year}/"+ f"{dataset}/*.parquet"
-            # print(f"load_path {load_path}")
+            print(f"load_path {load_path}")
             paths = glob.glob(
                 load_path
             )

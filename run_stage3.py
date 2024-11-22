@@ -57,9 +57,11 @@ parameters = {
     "label": args.label,
     "channels": ["vbf"],
     "regions": ["h-peak", "h-sidebands"],
-    "syst_variations": ["nominal"],
+    # "syst_variations": ["nominal"],
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2017_up', 'Absolute2017_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12017_up', 'BBEC12017_down', 'EC2_up', 'EC2_down', 'EC22017_up', 'EC22017_down', 'HF_up', 'HF_down', 'HF2017_up', 'HF2017_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2017_up', 'RelativeSample2017_down', 'FlavorQCD_up', 'FlavorQCD_down', ], # taken from printing "self.pt_variations" in stage1/processor.py
-    #
+    # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2016_up', 'Absolute2016_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12016_up', 'BBEC12016_down', 'EC2_up', 'EC2_down', 'EC22016_up', 'EC22016_down', 'HF_up', 'HF_down', 'HF2016_up', 'HF2016_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2016_up', 'RelativeSample2016_down', 'FlavorQCD_up', 'FlavorQCD_down',],
+    "syst_variations": ["nominal", "Absolute", "RelativeBal", "FlavorQCD", "RelativeSample2018"],
+    # "syst_variations": ["nominal", "Absolute", "RelativeBal", "FlavorQCD", ],
     # < plotting settings >
     "plot_vars": [],  # "dimuon_mass"],
     "variables_lookup": variables_lookup,
@@ -80,39 +82,39 @@ parameters = {
 
 
 parameters["grouping"] = {
-    # "data_A": "Data",
-    # "data_B": "Data",
-    # "data_C": "Data",
-    # "data_D": "Data",
-    # "data_E": "Data",
-    # "data_F": "Data",
-    # "data_G": "Data",
-    # "data_H": "Data",
-    # # # "dy_m105_160_amc": "DY",
-    # # # "dy_m105_160_vbf_amc": "DY",
-    # "dy_m105_160_amc_01j": "DYJ01", # bad
-    # "dy_m105_160_vbf_amc_01j": "DYJ01", # good
-    # "dy_m105_160_amc_2j": "DYJ2",
-    # "dy_m105_160_vbf_amc_2j": "DYJ2",
+    "data_A": "Data",
+    "data_B": "Data",
+    "data_C": "Data",
+    "data_D": "Data",
+    # # "data_E": "Data",
+    # # "data_F": "Data",
+    # # "data_G": "Data",
+    # # "data_H": "Data",
+    # # # # # "dy_m105_160_amc": "DY",
+    # # # # # "dy_m105_160_vbf_amc": "DY",
+    "dy_m105_160_amc_01j": "DYJ01",
+    "dy_m105_160_vbf_amc_01j": "DYJ01", 
+    "dy_m105_160_amc_2j": "DYJ2",
+    "dy_m105_160_vbf_amc_2j": "DYJ2",
     # # "ewk_lljj_mll105_160_py_dipole": "EWK",
-    # "ewk_lljj_mll105_160_ptj0": "EWK",
-    # "ttjets_dl": "TT+ST",
-    # "ttjets_sl": "TT+ST",
-    # "ttw": "TT+ST",
-    # "ttz": "TT+ST",
-    # "st_tw_top": "TT+ST",
-    # "st_tw_antitop": "TT+ST",
-    # "ww_2l2nu": "VV",
-    # "wz_2l2q": "VV",
-    # "wz_1l1nu2q": "VV",
-    # "wz_3lnu": "VV",
+    "ewk_lljj_mll105_160_ptj0": "EWK",
+    "ttjets_dl": "TT+ST",
+    "ttjets_sl": "TT+ST",
+    "ttw": "TT+ST",
+    "ttz": "TT+ST",
+    "st_tw_top": "TT+ST",
+    "st_tw_antitop": "TT+ST",
+    "ww_2l2nu": "VV",
+    "wz_2l2q": "VV",
+    "wz_1l1nu2q": "VV", # bad for 2016
+    "wz_3lnu": "VV",
     # "zz": "VV",
-    # # # "www": "VVV",
-    # # # "wwz": "VVV",
-    # # # "wzz": "VVV",
-    # # # "zzz": "VVV",
+    # # # # # "www": "VVV",
+    # # # # # "wwz": "VVV",
+    # # # # # "wzz": "VVV",
+    # # # # # "zzz": "VVV",
     "ggh_amcPS": "ggH",
-    # "ggh_powhegPS": "ggH",
+    # # "ggh_powhegPS": "ggH",
     "vbf_powheg_dipole": "VBF",
 }
 
@@ -180,6 +182,7 @@ if __name__ == "__main__":
     # save templates to ROOT files
     yield_df = to_templates(client, parameters)
     print(f'run stage3 yield_df: {yield_df}')
+    # yield_df.to_csv("test.csv")
     # groups = [g for g in yield_df.group.unique() if g != "Data"]
     # print(f'parameters["templates_vars"]: {parameters["templates_vars"]}')
     

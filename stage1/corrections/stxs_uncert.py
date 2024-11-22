@@ -2,6 +2,9 @@ import awkward as ak
 import numpy as np
 from coffea.lookup_tools import dense_lookup
 
+# values taken from https://gitlab.cern.ch/LHCHIGGSXS/LHCHXSWG2/STXS/VBF-Uncertainties/-/blob/master/qq2Hqq_uncert_scheme.cpp?ref_type=heads
+# NOTE: the comments and structure match, but the latest values (2020) are slightly different from what's saved here
+
 # STXS   TOT,  PTH200,  Mjj60 , Mjj120 , Mjj350 ,
 # Mjj700, Mjj1000, Mjj1500,  25, JET01
 stxs_acc = {

@@ -162,6 +162,7 @@ class SamplesInfo(object):
             all_files = [all_files[0]]
 
         # print(f"Loading {sample}: {len(all_files)} files")
+        print(f"all_files: {all_files}")
         # addition start -------------------------------------------------------------------------------
         filelist=[]
         all_files_clean=[]
@@ -169,23 +170,27 @@ class SamplesInfo(object):
 
         # testing -----------------------------------------------
         # all_files = [
-        #     "/eos/purdue//store/group/local/hmm/FSRnano18ABC_NANOV10b/SingleMuon/RunIISummer16MiniAODv3_FSRnano18ABC_NANOV10b_un2018B-17Sep2018-v1/200408_224203/0001/nano18ABC_NANO_1228.root", # data B
+        # #     "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdMc2017_NANOV8h_06May2020/VBFHToMuMu_M-125_TuneCP5_13TeV-powheg-pythia_dipole/RunIISummer16MiniAODv3_FSRmyNanoProdMc2017_NANOV8h_7a39ab0ed099ff55ceb9/200414_114321/0000/myNanoProdMc2017_NANO_1.root",
+        # "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRnano18MC_NANOV10b/GluGluHToMuMu_M-125_TuneCP5_PSweights_13TeV_powheg_pythia8/RunIISummer16MiniAODv3_FSRnano18MC_NANOV10b_ealistic_v15_ext1-v1/200408_225210/0000/nano18MC_NANO_9.root"
         # ]
         #------------------------------------------------------------
         
         for f in all_files:
             filename = f.split("/")[-1]
-            print(filename)
+            # print(f"filename: {filename}")
             #print(filelist)
             if "nano18D_NANO_4814" in filename:
                 continue 
                 # file root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRnano18ABC_NANOV10b/SingleMuon/RunIISummer16MiniAODv3_FSRnano18ABC_NANOV10b_un2018C-17Sep2018-v1/200408_224234/0000/nano18ABC_NANO_643.root seems to be corrupt 
             if filename not in filelist:
                 filelist.append(filename)
+            if f not in all_files_clean:
                 all_files_clean.append(f)
         # print(f"Removed double files: {len(all_files_clean)} files")
         # print(f"all_files_clean: {all_files_clean}")
         # addition end ---------------------------------------------------------------------------------
+
+        print(f"Loading {sample}: {len(all_files_clean)} files")
         sumGenWgts = 0
         nGenEvts = 0
 
@@ -219,6 +224,9 @@ class SamplesInfo(object):
 
         metadata["sumGenWgts"] = sumGenWgts
         metadata["nGenEvts"] = nGenEvts
+        print(f"sumGenWgts: {sumGenWgts}")
+        print(f"nGenEvts: {nGenEvts}")
+        print(f"data_entries: {data_entries}")
 
         # files = {"files": all_files, "treename": "Events"}
         files = {"files": all_files_clean, "treename": "Events"}
@@ -253,7 +261,9 @@ class SamplesInfo(object):
             if len(self.metadata) == 0:
                 return 0
             N = self.metadata["sumGenWgts"]
+            print(f"sumGenWgts: {N}")
             numevents = self.metadata["nGenEvts"]
+            print(f"numevents: {numevents}")
             if isinstance(cross_sections[self.sample], dict):
                 xsec = cross_sections[self.sample][self.year]
             else:

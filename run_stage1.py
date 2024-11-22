@@ -56,7 +56,7 @@ parser.add_argument(
     "-ch",
     "--chunksize",
     dest="chunksize",
-    default=100000,
+    default=100000, #100000
     action="store",
     help="Approximate chunk size",
 )
@@ -72,7 +72,7 @@ parser.add_argument(
     "-jec",
     "--jec",
     dest="jec_unc",
-    default=False, # True
+    default=True, # True
     action="store_true",
     help="Enable JEC/JER uncertainties",
 )
@@ -101,6 +101,9 @@ if args.jec_unc:
         + jec_pars["jec_variations"][args.year]
         + jec_pars["jer_variations"][args.year]
     )
+    # print(f"pt_variations: {pt_variations}")
+    pt_variations =  [
+        "nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2018_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2018_down"] # temporary override, just add the most impactful variations
 else:
     pt_variations = ["nominal"]
 
@@ -111,6 +114,7 @@ parameters = {
     "local_cluster": local_cluster,
     "slurm_cluster_ip": slurm_cluster_ip,
     "global_path": "/depot/cms/users/yun79/hmm/copperheadV1clean",
+    # "global_path": "/work/users/yun79/copperhead_outputs/copperheadV1clean",
     #
     # < input data settings >
     # 'xrootd': True,
@@ -126,7 +130,7 @@ parameters = {
     # < processing settings >
     "regions": ["h-sidebands", "h-peak"],  # , "z-peak"]
     "pt_variations": pt_variations,
-    "do_btag_syst": False, # True
+    "do_btag_syst": True, # True
     "save_output": True,
     "do_timer": False,
 }
@@ -144,6 +148,7 @@ def submit_job(parameters):
     mkdir(out_dir)
     out_dir += "/" + parameters["year"]
     mkdir(out_dir)
+    print(f"full output dir: {out_dir}")
 
     executor_args = {"client": parameters["client"], "retries": 2}
     # print(parameters["samp_infos"].fileset)
@@ -223,24 +228,22 @@ if __name__ == "__main__":
             # "data_H",
         ],
         "signal": [
-            "ggh_amcPS",
+            # "ggh_amcPS",
             # "ggh_powhegPS",
-            # "vbf_powhegPS",
+            # # # # # "vbf_powhegPS",
             # "vbf_powheg_herwig",
-            "vbf_powheg_dipole",
-            # # "tth",
-            # # "wph",
-            # # "wmh",
-            # # "zh",
+            # "vbf_powheg_dipole",
+            # # # "tth",
+            # # # "wph",
+            # # # "wmh",
+            # # # "zh",
         ],
         "main_mc": [
             # "dy_m105_160_amc",
-            # # "dy_m105_160_mg",
             # "dy_m105_160_vbf_amc",
-            # # "ewk_lljj_mll105_160_py",
             # "ewk_lljj_mll105_160_ptj0",
-            # # "ewk_lljj_mll105_160_py_dipole",
-            # # "ewk_m50"
+            # "ewk_lljj_mll105_160_py_dipole",
+            # "dy_m100_200_UL",
         ],
         "other_mc": [
             # "ttjets_dl",
@@ -252,7 +255,7 @@ if __name__ == "__main__":
             # "ww_2l2nu",
             # "wz_2l2q",
             # "wz_3lnu",
-            # "wz_1l1nu2q",
+            "wz_1l1nu2q",
             # "zz",
         ],
     }
