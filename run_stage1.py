@@ -102,8 +102,8 @@ if args.jec_unc:
         + jec_pars["jer_variations"][args.year]
     )
     # print(f"pt_variations: {pt_variations}")
-    pt_variations =  [
-        "nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2018_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2018_down"] # temporary override, just add the most impactful variations
+    # pt_variations =  ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2018_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2018_down"] # temporary override, just add the most impactful variations
+    pt_variations =  ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2016_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2016_down"]
 else:
     pt_variations = ["nominal"]
 
@@ -218,10 +218,10 @@ if __name__ == "__main__":
         # ],
         "data": [
             # 'test_file_data_A',
-            # "data_A",
-            # "data_B",
+            "data_A",
+            "data_B",
             # "data_C",
-            # "data_D",
+            "data_D",
             # "data_E",
             # "data_F",
             # "data_G",
@@ -230,7 +230,7 @@ if __name__ == "__main__":
         "signal": [
             # "ggh_amcPS",
             # "ggh_powhegPS",
-            # # # # # "vbf_powhegPS",
+            # # # "vbf_powhegPS",
             # "vbf_powheg_herwig",
             # "vbf_powheg_dipole",
             # # # "tth",
@@ -243,7 +243,7 @@ if __name__ == "__main__":
             # "dy_m105_160_vbf_amc",
             # "ewk_lljj_mll105_160_ptj0",
             # "ewk_lljj_mll105_160_py_dipole",
-            # "dy_m100_200_UL",
+            # # "dy_m100_200_UL",
         ],
         "other_mc": [
             # "ttjets_dl",
@@ -255,7 +255,7 @@ if __name__ == "__main__":
             # "ww_2l2nu",
             # "wz_2l2q",
             # "wz_3lnu",
-            "wz_1l1nu2q",
+            # "wz_1l1nu2q",
             # "zz",
         ],
     }

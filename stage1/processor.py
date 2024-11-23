@@ -349,10 +349,10 @@ class DimuonProcessor(processor.ProcessorABC):
 
         self.do_jec = False
 
-        # # We only need to reapply JEC for 2018 data
-        # # (unless new versions of JEC are released)
-        # if ("data" in dataset) and ("2018" in self.year):
-        #     self.do_jec = True
+        # We only need to reapply JEC for 2018 data
+        # (unless new versions of JEC are released)
+        if ("data" in dataset) and ("2018" in self.year):
+            self.do_jec = True
 
         jets = apply_jec(
             df,
@@ -460,7 +460,9 @@ class DimuonProcessor(processor.ProcessorABC):
             self.timer.add_checkpoint("Jet preparation & event weights")
 
         print(f"self.pt_variations: {self.pt_variations}")
-        for v_name in self.pt_variations:
+        pt_variations = self.pt_variations if is_mc else ["nominal"] #if data, there's no variations
+        print(f"pt_variations: {pt_variations}")
+        for v_name in pt_variations:
             
             output_updated, weights = self.jet_loop(
                 v_name,
@@ -679,7 +681,7 @@ class DimuonProcessor(processor.ProcessorABC):
         pass_jet_puid = jet_puid(jets, self.parameters, self.year)
 
         # Jet PUID scale factors
-        # if is_mc and False:  # disable for now
+        # if is_mc and variation == "nominal":  # disable for now
         #     puid_weight = puid_weights(
         #         self.evaluator, self.year, jets, pt_name,
         #         jet_puid_opt, jet_puid, numevents
