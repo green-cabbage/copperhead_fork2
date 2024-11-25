@@ -26,7 +26,7 @@ from stage1.corrections.pdf_variations import add_pdf_variations
 from stage1.corrections.qgl_weights import qgl_weights
 from stage1.corrections.btag_weights import btag_weights
 
-# from stage1.corrections.puid_weights import puid_weights
+from stage1.corrections.puid_weights import puid_weights
 
 from stage1.muons import fill_muons
 from stage1.jets import prepare_jets, fill_jets, fill_softjets
@@ -58,7 +58,7 @@ class DimuonProcessor(processor.ProcessorABC):
         # enable corrections
         self.do_roccor = True
         self.do_fsr = True
-        self.do_geofit = True
+        self.do_geofit = True # True
         self.auto_pu = True
         self.do_nnlops = True
         self.do_pdf = True
@@ -347,12 +347,15 @@ class DimuonProcessor(processor.ProcessorABC):
         prepare_jets(df, is_mc)
         jets = df.Jet
 
+        # self.do_jec = True
         self.do_jec = False
 
-        # We only need to reapply JEC for 2018 data
-        # (unless new versions of JEC are released)
+        # # We only need to reapply JEC for 2018 data
+        # # (unless new versions of JEC are released)
         if ("data" in dataset) and ("2018" in self.year):
             self.do_jec = True
+
+        print(f"self.do_jec: {self.do_jec}")
 
         jets = apply_jec(
             df,
@@ -534,6 +537,8 @@ class DimuonProcessor(processor.ProcessorABC):
             output[f"wgt_{wgt}"] = weights.get_weight(wgt)
 
         #debugging 
+        # for wgt_name in weights.wgts.columns:
+            # output[f"separate_wgt_{wgt_name}"] = weights.wgts[wgt_name].values
         # wgt_nominal = weights.get_weight("nominal")
         # print(f"wgt_nominal: {wgt_nominal[output.event_selection]}")
         
@@ -681,12 +686,18 @@ class DimuonProcessor(processor.ProcessorABC):
         pass_jet_puid = jet_puid(jets, self.parameters, self.year)
 
         # Jet PUID scale factors
-        # if is_mc and variation == "nominal":  # disable for now
-        #     puid_weight = puid_weights(
-        #         self.evaluator, self.year, jets, pt_name,
-        #         jet_puid_opt, jet_puid, numevents
-        #     )
-        #     weights.add_weight('puid_wgt', puid_weight)
+        if is_mc and variation == "nominal":  # disable for now
+            jet_puid_opt = self.parameters["jet_puid"]
+            pt_name = "pt"
+            # puid_weight = puid_weights(
+            #     self.evaluator, self.year, jets, pt_name,
+            #     jet_puid_opt, jet_puid, numevents
+            # )
+            puid_weight = puid_weights(
+                self.evaluator, self.year, jets, pt_name,
+                jet_puid_opt, pass_jet_puid, numevents
+            )
+            weights.add_weight('puid_wgt', puid_weight)
 
         # ------------------------------------------------------------#
         # Select jets

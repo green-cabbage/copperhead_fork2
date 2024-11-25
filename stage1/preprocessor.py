@@ -162,7 +162,7 @@ class SamplesInfo(object):
             all_files = [all_files[0]]
 
         # print(f"Loading {sample}: {len(all_files)} files")
-        print(f"all_files: {all_files}")
+        # print(f"all_files: {all_files}")
         # addition start -------------------------------------------------------------------------------
         filelist=[]
         all_files_clean=[]
@@ -174,6 +174,47 @@ class SamplesInfo(object):
         # "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRnano18MC_NANOV10b/GluGluHToMuMu_M-125_TuneCP5_PSweights_13TeV_powheg_pythia8/RunIISummer16MiniAODv3_FSRnano18MC_NANOV10b_ealistic_v15_ext1-v1/200408_225210/0000/nano18MC_NANO_9.root"
         # ]
         #------------------------------------------------------------
+        bad_files = [
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018ABC_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018ABC_NANOV8a_Run2018A-17Sep2018-v2/200113_205609/0000/myNanoProdData2018ABC_NANO_90.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018ABC_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018ABC_NANOV8a_Run2018A-17Sep2018-v2/200113_205609/0000/myNanoProdData2018ABC_NANO_969.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018ABC_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018ABC_NANOV8a_Run2018A-17Sep2018-v2/200113_205609/0001/myNanoProdData2018ABC_NANO_1203.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018ABC_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018ABC_NANOV8a_Run2018A-17Sep2018-v2/200113_205609/0001/myNanoProdData2018ABC_NANO_1260.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018ABC_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018ABC_NANOV8a_Run2018A-17Sep2018-v2/200113_205609/0001/myNanoProdData2018ABC_NANO_1333.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018ABC_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018ABC_NANOV8a_Run2018A-17Sep2018-v2/200113_205609/0001/myNanoProdData2018ABC_NANO_1603.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018ABC_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018ABC_NANOV8a_Run2018A-17Sep2018-v2/200113_205609/0001/myNanoProdData2018ABC_NANO_1605.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018ABC_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018ABC_NANOV8a_Run2018B-17Sep2018-v1/200113_205643/0000/myNanoProdData2018ABC_NANO_731.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_61.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_620.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_715.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_731.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_739.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_749.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_766.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_778.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_79.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_799.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_803.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_810.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_843.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_96.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0000/myNanoProdData2018D_NANO_977.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1071.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1126.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1161.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1239.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1269.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1296.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1309.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1318.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1329.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1419.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1574.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1819.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0001/myNanoProdData2018D_NANO_1838.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0002/myNanoProdData2018D_NANO_2114.root",
+            "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018D_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018D_NANOV8a_Run2018D-22Jan2019-v2/200113_205900/0003/myNanoProdData2018D_NANO_3026.root",
+        ] # obtained from /work/users/yun79/valerie/fork/copperheadV2/quick_tests/quick_bad_fil_collector.ipynb
+
         
         for f in all_files:
             filename = f.split("/")[-1]
@@ -181,7 +222,10 @@ class SamplesInfo(object):
             #print(filelist)
             if "nano18D_NANO_4814" in filename:
                 continue 
-                # file root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRnano18ABC_NANOV10b/SingleMuon/RunIISummer16MiniAODv3_FSRnano18ABC_NANOV10b_un2018C-17Sep2018-v1/200408_224234/0000/nano18ABC_NANO_643.root seems to be corrupt 
+            if f in bad_files:
+                print(f"bad file: {f}")
+                continue 
+            #     # file root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRnano18ABC_NANOV10b/SingleMuon/RunIISummer16MiniAODv3_FSRnano18ABC_NANOV10b_un2018C-17Sep2018-v1/200408_224234/0000/nano18ABC_NANO_643.root seems to be corrupt 
             if filename not in filelist:
                 filelist.append(filename)
             if f not in all_files_clean:
@@ -189,8 +233,11 @@ class SamplesInfo(object):
         # print(f"Removed double files: {len(all_files_clean)} files")
         # print(f"all_files_clean: {all_files_clean}")
         # addition end ---------------------------------------------------------------------------------
-
-        print(f"Loading {sample}: {len(all_files_clean)} files")
+        # print(f"check if all_files length is same! : {len(all_files) == len(all_files_clean)}")
+        print(f"Loading {sample} all_files: {len(all_files)} files")
+        print(f"Loading {sample} all_files_clean: {len(all_files_clean)} files")
+        # raise ValueError
+        # print(f"Loading {sample}: {len(all_files_clean)} files")
         sumGenWgts = 0
         nGenEvts = 0
 
@@ -227,6 +274,7 @@ class SamplesInfo(object):
         print(f"sumGenWgts: {sumGenWgts}")
         print(f"nGenEvts: {nGenEvts}")
         print(f"data_entries: {data_entries}")
+        # print(f"all_files_clean: {all_files_clean}")
 
         # files = {"files": all_files, "treename": "Events"}
         files = {"files": all_files_clean, "treename": "Events"}

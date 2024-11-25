@@ -102,8 +102,9 @@ if args.jec_unc:
         + jec_pars["jer_variations"][args.year]
     )
     # print(f"pt_variations: {pt_variations}")
+    # pt_variations = ["nominal"]
     # pt_variations =  ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2018_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2018_down"] # temporary override, just add the most impactful variations
-    pt_variations =  ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2016_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2016_down"]
+    # pt_variations =  ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2016_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2016_down"]
 else:
     pt_variations = ["nominal"]
 
@@ -220,7 +221,7 @@ if __name__ == "__main__":
             # 'test_file_data_A',
             "data_A",
             "data_B",
-            # "data_C",
+            "data_C",
             "data_D",
             # "data_E",
             # "data_F",
