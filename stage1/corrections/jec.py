@@ -147,8 +147,12 @@ def get_name_map(stack):
 def jec_factories(year):
     jec_pars = {k: v[year] for k, v in jec_parameters.items()}
 
+    print(f"jec_pars: {jec_pars}")
+
     weight_sets = jec_weight_sets(jec_pars, year)
     names = jec_names_and_sources(jec_pars, year)
+    print(f"weight_sets: {weight_sets}")
+    print(f"names: {names}")
 
     jec_factories = {}
     jec_factories_data = {}

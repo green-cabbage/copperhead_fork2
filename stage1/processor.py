@@ -82,6 +82,15 @@ class DimuonProcessor(processor.ProcessorABC):
         # Look at variation names and see if we need to enable
         # calculation of JEC or JER uncertainties
         jec_pars = {k: v[self.year] for k, v in jec_parameters.items()}
+
+        # temp overwrite -------------------------------------------
+        # pt_variations_copy = []
+        # for pt_var in self.pt_variations:
+        #     if "jer" not in pt_var:
+        #         pt_variations_copy.append(pt_var)
+        # self.pt_variations = pt_variations_copy
+        # temp overwrite -------------------------------------------
+                    
         print(f"self.pt_variations: {self.pt_variations}")
         print(f"jec_pars: {jec_pars}")
         self.do_jecunc = False
@@ -93,7 +102,7 @@ class DimuonProcessor(processor.ProcessorABC):
                 # print("condition met!")
             if ptvar in jec_pars["jer_variations"]:
                 self.do_jerunc = True
-        
+
         print(f"self.do_jecunc: {self.do_jecunc}")
         print(f"self.do_jerunc: {self.do_jerunc}")
         
@@ -464,9 +473,9 @@ class DimuonProcessor(processor.ProcessorABC):
 
         print(f"self.pt_variations: {self.pt_variations}")
         pt_variations = self.pt_variations if is_mc else ["nominal"] #if data, there's no variations
-        print(f"pt_variations: {pt_variations}")
+        # print(f"pt_variations: {pt_variations}")
         for v_name in pt_variations:
-            
+            print(f"v_name: {v_name}")
             output_updated, weights = self.jet_loop(
                 v_name,
                 is_mc,
@@ -482,8 +491,8 @@ class DimuonProcessor(processor.ProcessorABC):
                 output,
             )
             # debugging
-            if "jer" in v_name:
-                print(f"output_updated when jer: {output_updated}")
+            # if "jer" in v_name:
+            #     print(f"output_updated when jer: {output_updated}")
             
             if output_updated is not None:
                 output = output_updated
@@ -636,20 +645,55 @@ class DimuonProcessor(processor.ProcessorABC):
             .sum()
             .astype(bool)
         )
+        # print(f"jets['JER'].fields: {jets['JER'].fields}")
+        # ak.to_parquet(jets, "test.parquet")
+        # print(f"jets['JER']['up']: {jets['JER']['up']}")
+        # print(f"jets['JES_FlavorQCD'].fields: {jets['JES_FlavorQCD'].fields}")
+        
 
         # Select particular JEC variation
-        if "_up" in variation:
-            unc_name = "JES_" + variation.replace("_up", "")
-            if unc_name not in jets.fields:
-                return
-            jets = jets[unc_name]["up"][jet_columns]
-        elif "_down" in variation:
-            unc_name = "JES_" + variation.replace("_down", "")
-            if unc_name not in jets.fields:
-                return
-            jets = jets[unc_name]["down"][jet_columns]
-        else:
-            jets = jets[jet_columns]
+        if "jer" in variation: # https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution#JER_Scaling_factors_and_Uncertai
+            print("doing JER unc!")
+            jer_mask_dict ={
+                "jer1" : abs(jets.eta) < 1.93,
+                "jer2" : (abs(jets.eta) > 1.93) & (abs(jets.eta) < 2.5),
+                "jer3" : (abs(jets.eta) > 2.5) & (abs(jets.eta) < 3.0) & (jets.pt < 50),
+                "jer4" : (abs(jets.eta) > 2.5) & (abs(jets.eta) < 3.0) & (jets.pt > 50),
+                "jer5" : (abs(jets.eta) > 3.0) & (abs(jets.eta) < 5.0) & (jets.pt < 50),
+                "jer6" : (abs(jets.eta) > 3.0) & (abs(jets.eta) < 5.0) & (jets.pt > 50),
+            }
+            jets_nominal = jets[jet_columns]
+            print(f"JER variation: {variation}")
+            if "_up" in variation:
+                unc_name = variation.replace("_up", "")
+                print(f"unc_name: {unc_name}")
+                jets_jer_up = jets['JER']['up'][jet_columns]
+                jer_mask = jer_mask_dict[unc_name]
+                jets = ak.where(jer_mask, jets_jer_up, jets_nominal)
+            elif "_down" in variation:
+                unc_name = variation.replace("_down", "")
+                print(f"unc_name: {unc_name}")
+                jets_jer_down = jets['JER']['down'][jet_columns]
+                jer_mask = jer_mask_dict[unc_name]
+                jets = ak.where(jer_mask, jets_jer_down, jets_nominal)
+
+
+        
+        else: # if jec uncertainty
+            if "_up" in variation:
+                print("doing JEC unc!")
+                unc_name = "JES_" + variation.replace("_up", "")
+                if unc_name not in jets.fields:
+                    return
+                jets = jets[unc_name]["up"][jet_columns]
+            elif "_down" in variation:
+                print("doing JEC unc!")
+                unc_name = "JES_" + variation.replace("_down", "")
+                if unc_name not in jets.fields:
+                    return
+                jets = jets[unc_name]["down"][jet_columns]
+            else:
+                jets = jets[jet_columns]
 
         # --- conversion from awkward to pandas --- #
         jets = ak.to_pandas(jets)
@@ -685,19 +729,19 @@ class DimuonProcessor(processor.ProcessorABC):
         pass_jet_id = jet_id(jets, self.parameters, self.year)
         pass_jet_puid = jet_puid(jets, self.parameters, self.year)
 
-        # Jet PUID scale factors
-        if is_mc and variation == "nominal":  # disable for now
-            jet_puid_opt = self.parameters["jet_puid"]
-            pt_name = "pt"
-            # puid_weight = puid_weights(
-            #     self.evaluator, self.year, jets, pt_name,
-            #     jet_puid_opt, jet_puid, numevents
-            # )
-            puid_weight = puid_weights(
-                self.evaluator, self.year, jets, pt_name,
-                jet_puid_opt, pass_jet_puid, numevents
-            )
-            weights.add_weight('puid_wgt', puid_weight)
+        # # Jet PUID scale factors
+        # if is_mc and variation == "nominal":  # disable for now
+        #     jet_puid_opt = self.parameters["jet_puid"]
+        #     pt_name = "pt"
+        #     # puid_weight = puid_weights(
+        #     #     self.evaluator, self.year, jets, pt_name,
+        #     #     jet_puid_opt, jet_puid, numevents
+        #     # )
+        #     puid_weight = puid_weights(
+        #         self.evaluator, self.year, jets, pt_name,
+        #         jet_puid_opt, pass_jet_puid, numevents
+        #     )
+        #     weights.add_weight('puid_wgt', puid_weight)
 
         # ------------------------------------------------------------#
         # Select jets
