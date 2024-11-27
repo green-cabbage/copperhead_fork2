@@ -69,12 +69,17 @@ def load_dataframe(client, parameters, inputs=[], dataset=None):
     ncpus = parameters.get("ncpus", 40)
     # ncpus = 1000#120 # temporary overwrite bc idk what 
     # ncpus = 30
-    print(f"ncpus: {ncpus}")
+    # ncpus = 500
+    
     custom_npartitions_dict = parameters.get("custom_npartitions", {})
     custom_npartitions = 0
     if dataset in custom_npartitions_dict.keys():
         custom_npartitions = custom_npartitions_dict[dataset]
 
+    if (custom_npartitions > 0):
+        ncpus = custom_npartitions
+    print(f"ncpus: {ncpus}")
+    
     if isinstance(inputs, list):
         # Load dataframes
         if client:
@@ -90,11 +95,13 @@ def load_dataframe(client, parameters, inputs=[], dataset=None):
         except Exception:
             return None
         print(f"df.npartitions: {df.npartitions}")
-        if custom_npartitions > 0:
-            df = df.repartition(npartitions=custom_npartitions)
+        # if custom_npartitions > 0:
+        #     df = df.repartition(npartitions=custom_npartitions)
+        if (custom_npartitions > 0) and (df.npartitions > 2 * custom_npartitions):
+            df = df.repartition(npartitions=2*custom_npartitions)
         elif df.npartitions > 2 * ncpus:
             df = df.repartition(npartitions=2 * ncpus)
-
+        print(f"df.npartitions after repartition: {df.npartitions}")
     elif isinstance(inputs, pd.DataFrame):
         df = dd.from_pandas(inputs, npartitions=ncpus)
 

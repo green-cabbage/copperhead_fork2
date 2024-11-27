@@ -103,6 +103,7 @@ if args.jec_unc:
     )
     # print(f"pt_variations: {pt_variations}")
     # pt_variations = ["nominal"]
+    # pt_variations = ["nominal", 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down']
     # pt_variations =  ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2018_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2018_down"] # temporary override, just add the most impactful variations
     # pt_variations =  ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2016_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2016_down"]
 else:
@@ -219,10 +220,10 @@ if __name__ == "__main__":
         # ],
         "data": [
             # 'test_file_data_A',
-            "data_A",
-            "data_B",
-            "data_C",
-            "data_D",
+            # "data_A",
+            # "data_B",
+            # "data_C",
+            # "data_D",
             # "data_E",
             # "data_F",
             # "data_G",
@@ -231,13 +232,13 @@ if __name__ == "__main__":
         "signal": [
             # "ggh_amcPS",
             # "ggh_powhegPS",
-            # # # "vbf_powhegPS",
+            # # # # # "vbf_powhegPS",
             # "vbf_powheg_herwig",
             # "vbf_powheg_dipole",
-            # # # "tth",
-            # # # "wph",
-            # # # "wmh",
-            # # # "zh",
+            # # # # # "tth",
+            # # # # # "wph",
+            # # # # # "wmh",
+            # # # # # "zh",
         ],
         "main_mc": [
             # "dy_m105_160_amc",
@@ -247,8 +248,8 @@ if __name__ == "__main__":
             # # "dy_m100_200_UL",
         ],
         "other_mc": [
-            # "ttjets_dl",
-            # "ttjets_sl",
+            "ttjets_dl",
+            "ttjets_sl",
             # "ttz",
             # "ttw",
             # "st_tw_top",

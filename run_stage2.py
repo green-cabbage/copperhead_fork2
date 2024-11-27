@@ -51,7 +51,7 @@ use_local_cluster = args.slurm_port is None
 node_ip = "128.211.149.133"
 
 if use_local_cluster:
-    ncpus_local = 15 #30 #2
+    ncpus_local = 30 #15 #30 #2
     slurm_cluster_ip = ""
     dashboard_address = f"{node_ip}:34875"
 else:
@@ -87,6 +87,7 @@ parameters = {
         # "vbf_powheg_dipole": 1,
         "dy_m105_160_amc" : 519,
         "dy_m105_160_vbf_amc" : 295,
+        "ttjets_dl" : 500,
     },
     #
     # < settings for histograms >
@@ -131,10 +132,10 @@ parameters["datasets"] = [
     # "data_H",
     # "dy_m105_160_amc",
     # "dy_m105_160_vbf_amc",
-    "ewk_lljj_mll105_160_py_dipole",
-    "ewk_lljj_mll105_160_ptj0",
+    # "ewk_lljj_mll105_160_py_dipole",
+    # "ewk_lljj_mll105_160_ptj0",
     # "ttjets_dl",
-    # "ttjets_sl",
+    "ttjets_sl",
     # "ttw",
     # "ttz",
     # "st_tw_top",
@@ -151,7 +152,7 @@ parameters["datasets"] = [
     "ggh_amcPS",
     "ggh_powhegPS",
     "vbf_powheg_dipole",
-    # "vbf_powhegPS",
+    # # "vbf_powhegPS",
     "vbf_powheg_herwig",
 ]
 # using one small dataset for debugging

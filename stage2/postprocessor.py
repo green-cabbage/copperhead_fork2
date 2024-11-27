@@ -62,6 +62,7 @@ def process_partitions(client, parameters, df):
 
 
 def on_partition(args, parameters):
+    print("partion starting!")
     year = args["year"]
     dataset = args["dataset"]
     df = args["df"]
@@ -86,11 +87,12 @@ def on_partition(args, parameters):
     df = df[(df.dataset == dataset) & (df.year == year)]
 
     # VBF filter
+    print("start vbf filter cut")
     if "dy_m105_160_amc" in dataset:
         df = df[df.gjj_mass <= 350]
     if "dy_m105_160_vbf_amc" in dataset:
         df = df[df.gjj_mass > 350]
-
+    print("vbf filter cut done!")
     # if dataset in ["vbf_powheg_dipole", "ggh_amcPS"]:
     #    # improve mass resolution manually
     #    improvement = 0
@@ -110,8 +112,10 @@ def on_partition(args, parameters):
     is_data = "data" in dataset
     if is_data:
         syst_variations = ["nominal"] # data only has nominal variations
+
     
     for variation in syst_variations:
+        print(f"start split_into_channels {variation}")
         split_into_channels(df, v=variation)
 
     
@@ -120,8 +124,10 @@ def on_partition(args, parameters):
         c for c in parameters["channels"] if c in df["channel_nominal"].unique()
     ]
 
+    
     # split DY by genjet multiplicity
     if "dy" in dataset:
+        print(" splitting DY by genjet multiplicity")
         df.jet1_has_matched_gen_nominal.fillna(False, inplace=True)
         df.jet2_has_matched_gen_nominal.fillna(False, inplace=True)
         nan_val = -999.0 # sometimes nan values are already replaced with  -999.0
@@ -138,6 +144,11 @@ def on_partition(args, parameters):
             (df.channel_nominal == "vbf") & (df.two_matched_jets), "dataset"
         ] = f"{dataset}_2j"
 
+        # adding temp test start -----------------------------------------
+        # print("filter DY to 2J")
+        # df = df[df["dataset"] ==f"{dataset}_2j"]
+        # adding temp test end -----------------------------------------
+    
     # < evaluate here MVA scores after categorization, if needed >
     syst_variations = parameters.get("syst_variations", ["nominal"])
     dnn_models = parameters.get("dnn_models", {})
@@ -194,7 +205,7 @@ def on_partition(args, parameters):
             score_name = f"score_{model_name}_nominal"
             if score_name in df.columns:
                 mva_bins = parameters["mva_bins_original"][model_name][str(year)]
-                print(f"mva_bins: {mva_bins}")
+                # print(f"mva_bins: {mva_bins}")
                 for i in range(len(mva_bins) - 1):
                     lo = mva_bins[i]
                     hi = mva_bins[i + 1]
@@ -215,13 +226,31 @@ def on_partition(args, parameters):
     # not parallelizing for now - nested parallelism leads to a lock
     hist_info_rows = []
     for var_name in parameters["hist_vars"]:
-        hist_info_row = make_histograms(
-            df, var_name, year, dataset, regions, channels, npart, parameters
-        )
-        if hist_info_row is not None:
-            hist_info_rows.append(hist_info_row)
+        # hist_info_row = make_histograms(
+        #     df, var_name, year, dataset, regions, channels, npart, parameters
+        # )
+        # if hist_info_row is not None:
+        #     hist_info_rows.append(hist_info_row)
+        # if "dy" in dataset:
+        #     # for suff in ["01j", "2j"]:
+        #     for suff in ["2j"]:
+        #         hist_info_row = make_histograms(
+        #             df,
+        #             var_name,
+        #             year,
+        #             f"{dataset}_{suff}",
+        #             regions,
+        #             channels,
+        #             npart,
+        #             parameters,
+        #         )
+        #         if hist_info_row is not None:
+        #             hist_info_rows.append(hist_info_row)
+        
+        # my new change start -----------------------------------------
         if "dy" in dataset:
             for suff in ["01j", "2j"]:
+            # for suff in ["2j"]:
                 hist_info_row = make_histograms(
                     df,
                     var_name,
@@ -234,7 +263,14 @@ def on_partition(args, parameters):
                 )
                 if hist_info_row is not None:
                     hist_info_rows.append(hist_info_row)
-
+        else:
+            hist_info_row = make_histograms(
+                df, var_name, year, dataset, regions, channels, npart, parameters
+            )
+            if hist_info_row is not None:
+                hist_info_rows.append(hist_info_row)
+        # my new change end -----------------------------------------
+    
     if len(hist_info_rows) == 0:
         return pd.DataFrame()
 

@@ -58,7 +58,7 @@ class DimuonProcessor(processor.ProcessorABC):
         # enable corrections
         self.do_roccor = True
         self.do_fsr = True
-        self.do_geofit = True # True
+        self.do_geofit = True 
         self.auto_pu = True
         self.do_nnlops = True
         self.do_pdf = True
@@ -730,18 +730,18 @@ class DimuonProcessor(processor.ProcessorABC):
         pass_jet_puid = jet_puid(jets, self.parameters, self.year)
 
         # # Jet PUID scale factors
-        # if is_mc and variation == "nominal":  # disable for now
-        #     jet_puid_opt = self.parameters["jet_puid"]
-        #     pt_name = "pt"
-        #     # puid_weight = puid_weights(
-        #     #     self.evaluator, self.year, jets, pt_name,
-        #     #     jet_puid_opt, jet_puid, numevents
-        #     # )
-        #     puid_weight = puid_weights(
-        #         self.evaluator, self.year, jets, pt_name,
-        #         jet_puid_opt, pass_jet_puid, numevents
-        #     )
-        #     weights.add_weight('puid_wgt', puid_weight)
+        if is_mc and variation == "nominal":  # disable for now
+            jet_puid_opt = self.parameters["jet_puid"]
+            pt_name = "pt"
+            # puid_weight = puid_weights(
+            #     self.evaluator, self.year, jets, pt_name,
+            #     jet_puid_opt, jet_puid, numevents
+            # )
+            puid_weight = puid_weights(
+                self.evaluator, self.year, jets, pt_name,
+                jet_puid_opt, pass_jet_puid, numevents
+            )
+            weights.add_weight('puid_wgt', puid_weight)
 
         # ------------------------------------------------------------#
         # Select jets
