@@ -16,27 +16,15 @@ def prepare_jets(df, is_mc):
             ak.fill_none(df.Jet.matched_gen.pt, 0), np.float32
         )
         df["Jet", "has_matched_gen"] = df.Jet.genJetIdx >= 0
-        # # implement old matched gen method as done in https://github.com/kondratyevd/hmumu-coffea/blob/bdaab44e7bf2a7b822c8d7266bb0773601b74030/python/dimuon_processor.py#L474-L495
-        # # gjj = df.Jet.cross(df.GenJet, nested=True)
-        # # gjj = df.Jet.cross(df.GenJet)
+
+         # commented out for now -------------------------------------
+        # # implement old matched gen method based on in https://github.com/kondratyevd/hmumu-coffea/blob/bdaab44e7bf2a7b822c8d7266bb0773601b74030/python/dimuon_processor.py#L474-L495
         # gjj = ak.cartesian({"jet": df.Jet, "gjet": df.GenJet}, axis=1, nested=True)
-        # # _, _, dr_gl = delta_r(
-        # #     gl_pair["jet"].eta,
-        # #     gl_pair["lepton"].eta,
-        # #     gl_pair["jet"].phi,
-        # #     gl_pair["lepton"].phi,
-        # # )
-        # print(f"prepare_jets gjj: {gjj}")
-        # # print(f"prepare_jets gjj.i0: {gjj.i0}")
-        # # print(f"prepare_jets gjj.i1: {gjj.i1}")
-        # # _,_,deltar_gjj = delta_r(gjj.i0.eta, gjj.i1.eta, gjj.i0.phi, gjj.i1.phi)
         # _,_,deltar_gjj = delta_r(gjj["jet"].eta, gjj["gjet"].eta, gjj["jet"].phi, gjj["gjet"].phi)
-        # # matched_jets = gjj[(deltar_gjj==deltar_gjj.min())&(deltar_gjj<0.4)].i1
-        # matched_jets = gjj[(deltar_gjj==deltar_gjj.min())&(deltar_gjj<0.4)]["gjet"]
-        # print(f"prepare_jets matched_jets: {matched_jets}")
-        # matched_jets_flat = matched_jets.flatten()[matched_jets.flatten().counts>0,0]
-        # matched_jets_new = awkward.JaggedArray.fromcounts((matched_jets.flatten().counts>0).astype(int), matched_jets_flat)
-        # df["Jet",'matched_genjet'] = awkward.JaggedArray.fromcounts(matched_jets.counts,matched_jets_new)
+        # mask = deltar_gjj == ak.min(deltar_gjj, axis=2)
+        # matched_jets = gjj[mask&(deltar_gjj<0.4)]["gjet"]
+        # matched_jets_flat = ak.flatten(matched_jets, axis=-1)
+        # commented out for now -------------------------------------
     else:
         df["Jet", "has_matched_gen"] = False
 
