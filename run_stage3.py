@@ -61,8 +61,8 @@ parameters = {
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2017_up', 'Absolute2017_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12017_up', 'BBEC12017_down', 'EC2_up', 'EC2_down', 'EC22017_up', 'EC22017_down', 'HF_up', 'HF_down', 'HF2017_up', 'HF2017_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2017_up', 'RelativeSample2017_down', 'FlavorQCD_up', 'FlavorQCD_down', ], # taken from printing "self.pt_variations" in stage1/processor.py
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2016_up', 'Absolute2016_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12016_up', 'BBEC12016_down', 'EC2_up', 'EC2_down', 'EC22016_up', 'EC22016_down', 'HF_up', 'HF_down', 'HF2016_up', 'HF2016_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2016_up', 'RelativeSample2016_down', 'FlavorQCD_up', 'FlavorQCD_down',],
     # "syst_variations": ["nominal", "Absolute", "RelativeBal", "FlavorQCD", "RelativeSample2018"],
-    "syst_variations": ['nominal', 'Absolute', 'Absolute2018', 'BBEC1', 'BBEC12018', 'EC2', 'EC22018', 'HF', 'HF2018', 'RelativeBal', 'RelativeSample2018', 'FlavorQCD', ],
-    # "syst_variations": ['nominal', 'Absolute', 'Absolute2018', 'BBEC1', 'BBEC12018', 'EC2', 'EC22018', 'HF', 'HF2018', 'RelativeBal', 'RelativeSample2018', 'FlavorQCD', 'jer1', 'jer2', 'jer3', 'jer4', 'jer5', 'jer6', ],
+    # "syst_variations": ['nominal', 'Absolute', 'Absolute2018', 'BBEC1', 'BBEC12018', 'EC2', 'EC22018', 'HF', 'HF2018', 'RelativeBal', 'RelativeSample2018', 'FlavorQCD', ],
+    "syst_variations": ['nominal', 'Absolute', 'Absolute2018', 'BBEC1', 'BBEC12018', 'EC2', 'EC22018', 'HF', 'HF2018', 'RelativeBal', 'RelativeSample2018', 'FlavorQCD', 'jer1', 'jer2', 'jer3', 'jer4', 'jer5', 'jer6', ],
     # < plotting settings >
     "plot_vars": [],  # "dimuon_mass"],
     "variables_lookup": variables_lookup,
@@ -87,12 +87,12 @@ parameters["grouping"] = {
     "data_B": "Data",
     "data_C": "Data",
     "data_D": "Data",
-    # # # # "data_E": "Data",
-    # # # # "data_F": "Data",
-    # # # # "data_G": "Data",
-    # # # # "data_H": "Data",
-    # # # # # # # "dy_m105_160_amc": "DY",
-    # # # # # # # "dy_m105_160_vbf_amc": "DY",
+    # "data_E": "Data",
+    # "data_F": "Data",
+    # "data_G": "Data",
+    # "data_H": "Data",
+    # # # # "dy_m105_160_amc": "DY",
+    # # # # "dy_m105_160_vbf_amc": "DY",
     "dy_m105_160_amc_01j": "DYJ01",
     "dy_m105_160_vbf_amc_01j": "DYJ01", 
     "dy_m105_160_amc_2j": "DYJ2",
@@ -114,9 +114,9 @@ parameters["grouping"] = {
     # # # # # "wwz": "VVV",
     # # # # # "wzz": "VVV",
     # # # # # "zzz": "VVV",
-    "ggh_amcPS": "ggH",
+    "ggh_amcPS": "ggH_hmm",
     # # "ggh_powhegPS": "ggH",
-    "vbf_powheg_dipole": "VBF",
+    "vbf_powheg_dipole": "qqH_hmm",
 }
 
 

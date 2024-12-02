@@ -11,9 +11,9 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 from uproot3_methods.classes.TH1 import from_numpy
 
 decorrelation_scheme = {
-    "LHERen": ["DY", "EWK", "ggH", "TT+ST"],
-    "LHEFac": ["DY", "EWK", "ggH", "TT+ST"],
-    "pdf_2rms": ["DY", "VBF", "ggH"],
+    "LHERen": ["DY", "EWK", "ggH_hmm", "TT+ST"],
+    "LHEFac": ["DY", "EWK", "ggH_hmm", "TT+ST"],
+    "pdf_2rms": ["DY", "qqH_hmm", "ggH_hmm"],
 }
 shape_only = [
     "wgt_LHERen_up",
@@ -114,18 +114,19 @@ def make_templates(args, parameters={}):
                 else:
                     wgt_variations = list(set(wgt_variations) & set(new_wgt_vars))
 
+        # print(f"wgt_variations: {wgt_variations}")
         # manually add parton shower variations start -------------------------------
         add_VBF_PartonShower = False
         add_EWK_PartonShower = False
         for wgt_variation in wgt_variations:
-            if "VBF" ==group:
+            if "qqH_hmm" ==group:
                 add_VBF_PartonShower = True
                 break
             elif "EWK" ==group:
                 add_EWK_PartonShower = True
                 break
         if add_VBF_PartonShower:
-            wgt_variations += ["VBF_SignalPartonShowerUp", "VBF_SignalPartonShowerDown"]
+            wgt_variations += ["qqH_hmm_SignalPartonShowerUp", "qqH_hmm_SignalPartonShowerDown"]
         if add_EWK_PartonShower:
             wgt_variations += ["EWK_EWKPartonShowerUp", "EWK_EWKPartonShowerDown"]
 
@@ -162,7 +163,7 @@ def make_templates(args, parameters={}):
                     "variation": "nominal",
                     "val_sumw2": "sumw2",
                 }
-                if ("VBF" in variation):
+                if ("qqH_hmm" in variation):
                     baseline_dataset = "vbf_powheg_dipole"
                     variation_dataset = "vbf_powheg_herwig"
                 elif ("EWK" in variation):
@@ -217,7 +218,8 @@ def make_templates(args, parameters={}):
                 th1._fTsumwx2 = np.array(group_sumw2 * centers).sum() #-> this is w2*x distibution
                 templates.append(th1)
 
-                variation_fixed = variation.replace("VBF_", "").replace("EWK_", "")
+                # variation_fixed = variation.replace("VBF_", "").replace("EWK_", "")
+                variation_fixed = variation.replace("qqH_hmm_", "").replace("EWK_", "")
 
                 # print(f"variation_fixed: {variation_fixed}")
                 yield_row = {
@@ -378,12 +380,18 @@ def make_templates(args, parameters={}):
                 name = group
 
             if variation == "nominal":
+                # variation_core = variation.replace("wgt_", "")
+                # variation_core = variation_core.replace("_up", "")
+                # variation_core = variation_core.replace("_down", "")
+                # print(f"variation_core: {variation_core}")
+                
+                # else:
                 variation_fixed = variation
             else:
                 variation_core = variation.replace("wgt_", "")
                 variation_core = variation_core.replace("_up", "")
                 variation_core = variation_core.replace("_down", "")
-                # print(f"variation_core: {variation_core}")
+                print(f"variation_core: {variation_core}")
                 suffix = ""
                 if variation_core in decorrelation_scheme.keys():
                     group_LHE = group
@@ -393,19 +401,29 @@ def make_templates(args, parameters={}):
                         print(f"group_LHE after: {group_LHE}")
                     if group_LHE in decorrelation_scheme[variation_core]:
                         if variation_core == "pdf_2rms" :
-                            suffix = group_LHE+str(year)
-                            print(f"pdf_2rms suffix: {suffix}")
+                            suffix = "_"+group_LHE+str(year)
+                            # print(f"pdf_2rms suffix: {suffix}")
                         else:
                             suffix = group_LHE
+                        print(f"suffix: {suffix}")
                     else:
                         continue
-
+                elif variation_core in ["muID", "muIso", "muTrig"]:
+                    suffix = str(year)
+                elif variation_core in ["pu", "l1prefiring"]:
+                    suffix = "_wgt"+str(year)
+                elif variation_core in ["qgl"]:
+                    suffix = "_wgt"
+                        
+                
+                    
                 # TODO: decorrelate LHE, QGL, PDF uncertainties
-                variation_fixed = variation.replace("wgt_", "")
+                variation_fixed = variation.replace("wgt_", "")               
                 variation_fixed = variation_fixed.replace("_up", f"{suffix}Up")
                 variation_fixed = variation_fixed.replace("_down", f"{suffix}Down")
-                name = f"{group}_{variation_fixed}"
-                # 
+                group_name = group
+                name = f"{group_name}_{variation_fixed}"
+                print(f"name: {name}")
 
             # print(f"variation name: {name}")
             # print(f"var_name: {var_name}")

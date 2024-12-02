@@ -6,7 +6,8 @@ rename_regions = {
     "h-sidebands": "SB",
     "z-peak": "Z",
 }
-signal_groups = ["VBF", "ggH"]
+# signal_groups = ["VBF", "ggH"]
+signal_groups = ["qqH_hmm", "ggH_hmm"]
 rate_syst_lookup = {
     "2016": {
         # "XsecAndNorm2016DYJ2": {"DY_2J": 1.1291},
@@ -35,31 +36,34 @@ rate_syst_lookup = {
 }
 lumi_syst = {
     "2016": {
-        "uncor2016": 2.2,
-        "xyfac": 0.9,
-        "len": 0.0,
-        "bb": 0.4,
-        "beta": 0.5,
-        "calib": 0.0,
-        "ghost": 0.4,
+        # "uncor2016": 2.2,
+        # "xyfac": 0.9,
+        # "len": 0.0,
+        # "bb": 0.4,
+        # "beta": 0.5,
+        # "calib": 0.0,
+        # "ghost": 0.4,
+        "lumi2016": 1.2,
     },
     "2017": {
-        "uncor2017": 2.0,
-        "xyfac": 0.8,
-        "len": 0.3,
-        "bb": 0.4,
-        "beta": 0.5,
-        "calib": 0.3,
-        "ghost": 0.1,
+        # "uncor2017": 2.0,
+        # "xyfac": 0.8,
+        # "len": 0.3,
+        # "bb": 0.4,
+        # "beta": 0.5,
+        # "calib": 0.3,
+        # "ghost": 0.1,
+        "lumi2017": 2.3,
     },
     "2018": {
-        "uncor2018": 1.5,
-        "xyfac": 2.0,
-        "len": 0.2,
-        "bb": 0.0,
-        "beta": 0.0,
-        "calib": 0.2,
-        "ghost": 0.0,
+        # "uncor2018": 1.5,
+        # "xyfac": 2.0,
+        # "len": 0.2,
+        # "bb": 0.0,
+        # "beta": 0.0,
+        # "calib": 0.2,
+        # "ghost": 0.0,
+        "lumi2018": 2.5,
     },
 }
 
@@ -128,12 +132,12 @@ def build_datacards(var_name, yield_df, parameters):
                 # nuisnace edit start ----------------------------
                 datacard.write(
                 "nuisance edit rename"
-                " (DYJ2|DYJ01|ggH|TT+ST|VV) * "
-                "qgl  QGLweightPY \n"
+                " (DYJ2|DYJ01|ggH_hmm|TT+ST|VV) * "
+                "qgl_wgt  QGLweightPY \n"
                 )
-                datacard.write("nuisance edit rename EWK * qgl" " QGLweightHER \n")
+                datacard.write("nuisance edit rename EWK * qgl_wgt" " QGLweightHER \n")
                 datacard.write(
-                "nuisance edit rename VBF * qgl" " QGLweightPYDIPOLE \n"
+                "nuisance edit rename qqH_hmm * qgl_wgt" " QGLweightPYDIPOLE \n"
                 )
                 datacard.write("---------------\n")
                 # nuisnace edit end ----------------------------
@@ -223,7 +227,7 @@ def print_mc(yield_df, var_name, region, channel, year, bin_name):
                 #     nuisance_name = v_name
                 # adding nuisance name to match the official workspace -------
                 nuisance_name = v_name
-                print(f"nuisance_name: {nuisance_name}")
+                # print(f"nuisance_name: {nuisance_name}")
                 nuisance_lines[v_name] = "{:<20} {:<9}".format(nuisance_name, "shape")
             if v_name not in nuisances[group]:
                 nuisances[group].append(v_name)
