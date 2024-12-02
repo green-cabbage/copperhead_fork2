@@ -63,6 +63,17 @@ lumi_syst = {
     },
 }
 
+nuisance_titles = {
+    "muID" : "muIDYEAR",
+    "muIso" : "muIsoYEAR",
+    "muTrig" : "muTrigYEAR",
+    "pu" : "pu_wgtYEAR",
+    "qgl" : "qgl_wgt",
+}
+
+def editNuisance_names(nuisance, nuisance_titles, year):
+    nuisance_name = nuisance_titles[nuisance].replace("YEAR", str(year))
+    return nuisance_name
 
 def build_datacards(var_name, yield_df, parameters):
     channels = parameters["channels"]
@@ -114,6 +125,18 @@ def build_datacards(var_name, yield_df, parameters):
                 )
                 datacard.write(f"{bin_name} autoMCStats 0 1 1\n")
                 datacard.write("---------------\n")
+                # nuisnace edit start ----------------------------
+                datacard.write(
+                "nuisance edit rename"
+                " (DYJ2|DYJ01|ggH|TT+ST|VV) * "
+                "qgl  QGLweightPY \n"
+                )
+                datacard.write("nuisance edit rename EWK * qgl" " QGLweightHER \n")
+                datacard.write(
+                "nuisance edit rename VBF * qgl" " QGLweightPYDIPOLE \n"
+                )
+                datacard.write("---------------\n")
+                # nuisnace edit end ----------------------------
                 datacard.close()
                 print(f"Saved datacard to {datacard_name}")
 
@@ -192,7 +215,16 @@ def print_mc(yield_df, var_name, region, channel, year, bin_name):
             v_name = v.replace("Up", "").replace("Down", "")
             if v_name not in all_nuisances:
                 all_nuisances.append(v_name)
-                nuisance_lines[v_name] = "{:<20} {:<9}".format(v_name, "shape")
+
+                # adding nuisance name to match the official workspace -------
+                # if v_name in nuisance_titles.keys():
+                #     nuisance_name= editNuisance_names(v_name, nuisance_titles, year)
+                # else:
+                #     nuisance_name = v_name
+                # adding nuisance name to match the official workspace -------
+                nuisance_name = v_name
+                print(f"nuisance_name: {nuisance_name}")
+                nuisance_lines[v_name] = "{:<20} {:<9}".format(nuisance_name, "shape")
             if v_name not in nuisances[group]:
                 nuisances[group].append(v_name)
 
