@@ -11,9 +11,9 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 from uproot3_methods.classes.TH1 import from_numpy
 
 decorrelation_scheme = {
-    "LHERen": ["DY", "EWK", "ggH_hmm", "TT+ST"],
-    "LHEFac": ["DY", "EWK", "ggH_hmm", "TT+ST"],
-    "pdf_2rms": ["DY", "qqH_hmm", "ggH_hmm"],
+    "LHERen": ["DY", "EWK", "ggH", "TT+ST"],
+    "LHEFac": ["DY", "EWK", "ggH", "TT+ST"],
+    "pdf_2rms": ["DY", "VBF", "ggH"], # ["DY", "qqH_hmm", "ggH_hmm"],
 }
 shape_only = [
     "wgt_LHERen_up",
@@ -398,14 +398,17 @@ def make_templates(args, parameters={}):
                     print(f"group_LHE: {group_LHE}")
                     if group_LHE == "DYJ2" or group_LHE == "DYJ01" :
                         group_LHE = "DY"
-                        print(f"group_LHE after: {group_LHE}")
+                    elif "qqH" in group_LHE :
+                        group_LHE = "VBF"
+                    elif "ggH" in group_LHE :
+                        group_LHE = "ggH"
+                    print(f"group_LHE after: {group_LHE}")
                     if group_LHE in decorrelation_scheme[variation_core]:
                         if variation_core == "pdf_2rms" :
                             suffix = "_"+group_LHE+str(year)
-                            # print(f"pdf_2rms suffix: {suffix}")
+                            print(f"pdf_2rms suffix: {suffix}")
                         else:
-                            suffix = group_LHE
-                        print(f"suffix: {suffix}")
+                            suffix = "_"+group_LHE
                     else:
                         continue
                 elif variation_core in ["muID", "muIso", "muTrig"]:
