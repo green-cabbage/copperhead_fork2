@@ -10,7 +10,8 @@ from python.io import (
 )
 from stage2.categorizer import split_into_channels
 from stage2.mva_evaluators import (
-    evaluate_pytorch_dnn,
+    evaluate_pytorch_dnn, 
+# evaluate_tf_dnn,
     # evaluate_pytorch_dnn_pisa,
     evaluate_bdt,
     # evaluate_mva_categorizer,
@@ -78,7 +79,7 @@ def on_partition(args, parameters):
     # convert from Dask DF to Pandas DF
     if isinstance(df, dd.DataFrame):
         df = df.compute()
-
+    
     # preprocess
     wgts = [c for c in df.columns if "wgt" in c]
     df.loc[:, wgts] = df.loc[:, wgts].fillna(0)
@@ -86,6 +87,19 @@ def on_partition(args, parameters):
 
     df = df[(df.dataset == dataset) & (df.year == year)]
 
+
+    # debugging
+    # slicer = (
+    #     # (df[f"channel_nominal"] == "vbf")
+    #     df[f"jj_mass_nominal"] > 0 
+    # )
+    # is_nans = df["wgt_btag_wgt_cferr1_up"] == -999.0
+    # cols2print = ["jj_mass_nominal", "wgt_btag_wgt_cferr1_up", "jet1_pt_nominal", "jet2_pt_nominal", "event"]
+    # df_test = df.loc[slicer].loc[is_nans]
+    # df_test = df_test[cols2print]
+    # df_test.to_csv("test.csv")
+    # raise ValueError
+    
     # VBF filter
     print("start vbf filter cut")
     if "dy_m105_160_amc" in dataset:
@@ -117,6 +131,9 @@ def on_partition(args, parameters):
     for variation in syst_variations:
         print(f"start split_into_channels {variation}")
         split_into_channels(df, v=variation)
+
+    #
+    
 
     
     regions = [r for r in parameters["regions"] if r in df.region.unique()]
@@ -153,12 +170,17 @@ def on_partition(args, parameters):
     syst_variations = parameters.get("syst_variations", ["nominal"])
     dnn_models = parameters.get("dnn_models", {})
     bdt_models = parameters.get("bdt_models", {})
+
+    # df.to_csv("b4DNN.csv")
+    # raise ValueError
+    
     for v in syst_variations:
         for channel, models in dnn_models.items():
             if channel not in parameters["channels"]:
                 continue
             for model in models:
                 score_name = f"score_{model}_{v}"
+                print(f"score_name for DNN: {score_name}")
                 df.loc[
                     df[f"channel_{v}"] == channel, score_name
                 ] = evaluate_pytorch_dnn(
@@ -169,6 +191,17 @@ def on_partition(args, parameters):
                     score_name,
                     channel,
                 )
+                # df.loc[
+                #     df[f"channel_{v}"] == channel, score_name
+                # ] = evaluate_tf_dnn(
+                #     df[df[f"channel_{v}"] == channel],
+                #     v,
+                #     model,
+                #     parameters,
+                #     score_name,
+                #     channel,
+                # )
+                
                 """
                 df.loc[
                     df[f"channel_{v}"] == channel, score_name
@@ -191,26 +224,42 @@ def on_partition(args, parameters):
                 df.loc[df[f"channel_{v}"] == channel, score_name] = evaluate_bdt(
                     df[df[f"channel_{v}"] == channel], v, model, parameters, score_name
                 )
-
+    # cols2print = ["score_pytorch_jun27_Absolute_up", "score_pytorch_jun27_nominal"]
+    # df_test = df[cols2print]
+    # df_test.to_csv("test.csv")
+    # raise ValueError
+    
     # < add secondary categorization / binning here >
     # ...
-
+    print(f"dnn_models: {dnn_models}")
     # temporary implementation: move from mva score to mva bin number
     for channel, models in chain(dnn_models.items(), bdt_models.items()):
         if channel not in parameters["channels"]:
             continue
         for model_name in models:
-            if model_name not in parameters["mva_bins_original"]:
+            mva_bin_model_name = "pytorch_jun27"
+            if mva_bin_model_name not in parameters["mva_bins_original"]:
                 continue
+            # for variation in syst_variations:
             score_name = f"score_{model_name}_nominal"
+            # score_name = f"score_{model_name}_{variation}"
+            print(f"score_name: {score_name}")
+            # print(f"df.columns: {df.columns}")
+            
             if score_name in df.columns:
-                mva_bins = parameters["mva_bins_original"][model_name][str(year)]
+                
+                mva_bins = parameters["mva_bins_original"][mva_bin_model_name][str(year)]
+                print(f"mva_bins: {mva_bins}")
                 # print(f"mva_bins: {mva_bins}")
+                print(f'{score_name} df: {df[score_name]}')
+                # print(f'{score_name} df max: {np.max(df[score_name])}')
                 for i in range(len(mva_bins) - 1):
                     lo = mva_bins[i]
                     hi = mva_bins[i + 1]
                     cut = (df[score_name] > lo) & (df[score_name] <= hi)
                     df.loc[cut, "bin_number"] = i
+                if "nominal" not in score_name:
+                    print(f'{score_name} bin_number: {df["bin_number"]}')
                 df[score_name] = df["bin_number"]
                 parameters["mva_bins"].update(
                     {

@@ -55,6 +55,7 @@ parameters["btag_sf_csv"] = {
     "2016": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/btag/DeepCSV_2016LegacySF_V1.csv",
     "2017": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/btag/DeepCSV_94XSF_V5_B_F.csv",
     "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/btag/DeepCSV_102XSF_V1.csv",
+    # "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/btag/DeepJet_102XSF_WP_V1.csv",
 }
 
 parameters["pu_file_data"] = {

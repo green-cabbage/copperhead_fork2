@@ -75,7 +75,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         hist_info_rows = []
     total_yield = 0
     for loop_arg in loop_args:
-        # print(f"loop_arg: {loop_arg}")
+        print(f"loop_arg: {loop_arg}")
         region = loop_arg["region"]
         channel = loop_arg["channel"]
         w = loop_arg["w"]
@@ -99,8 +99,21 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
         )
         data = df.loc[slicer, var_name]
         weight = df.loc[slicer, w]
+        print(f"to fill {w} {v} sum weight: {np.sum(weight)}")
 
         # to_fill = {var.name: data, "region": region, "channel": channel} # original
+        # variation = loop_arg["v"]
+        # if "cferr" in w:
+        #     print(f"to fill {w} {v} values: {data}")
+        #     print(f"to fill {w} {v} weight: {weight}")
+        #     is_zero =  weight == 0
+        #     print(f"to fill {w} {v} weight is any zero: {np.any(is_zero)}")
+        #     # cols2print = ["channel_nominal", "jj_mass_nominal", ] + wgt_variations
+        #     # df_test = df.loc[slicer].loc[is_zero]
+        #     # df_test = df_test[cols2print]
+        #     # df_test.to_csv("test.csv")
+        #     # raise ValueError
+        
         to_fill = {var.name: data, "region": region, "channel": channel}
 
         to_fill_value = to_fill.copy()
@@ -130,7 +143,8 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
                 hist_info_row["hist"] = hist
         if debug:
             hist_info_rows.append(hist_info_row)
-
+            
+    # raise ValueError
     if total_yield == 0:
         return None
 
