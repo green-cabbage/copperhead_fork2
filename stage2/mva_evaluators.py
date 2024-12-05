@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 import torch
 from stage2.mva_models import Net, NetPisaRun2, NetPisaRun2Combination, MvaCategorizer
-
+# import tensorflow as tf
 
 training_features = [
     "dimuon_mass",
@@ -137,6 +137,64 @@ def evaluate_mva_categorizer(df, model_name, score_name, parameters):
 
     return df[score_name]
 
+# def evaluate_tf_dnn(df, variation, model, parameters, score_name, channel):
+#     features = prepare_features(df, parameters, variation, add_year=True)
+
+#     try:
+#         df = df.compute()
+#     except Exception:
+#         pass
+
+#     if df.shape[0] == 0:
+#         return None
+
+#     df.loc[:, score_name] = 0
+
+#     nfolds = 4
+#     for i in range(nfolds):
+#         # train_folds = [(i + f) % nfolds for f in [0, 1]]
+#         # val_folds = [(i + f) % nfolds for f in [2]]
+#         eval_folds = [(i + f) % nfolds for f in [3]]
+
+#         eval_filter = df.event.mod(nfolds).isin(eval_folds)
+
+#         scalers_path = (
+#             # f"{parameters['models_path']}/{channel}/scalers/scalers_{model}_{i}.npy"
+#             # f"{parameters['models_path']}/{model}/scalers_{model}_{i}.npy"
+#             f"/depot/cms/hmm/trained_models/dnn_allyears_128_64_32/scalers_allyears_jul7_{i}.npy"
+#         )
+#         scalers = np.load(scalers_path)
+#         df_i = df.loc[eval_filter, :]
+#         if df_i.shape[0] == 0:
+#             continue
+#         df_i.loc[df_i.region != "h-peak", "dimuon_mass"] = 125.0
+#         df_i[features] = df_i[features].fillna(-99).astype(float)
+#         df_i = (df_i[features] - scalers[0]) / scalers[1]
+#         df_i = (df_i.values)
+#         print(f"type(df_i): {type(df_i)}")
+#         print(f"shape (df_i): {(df_i.shape)}")
+#         # dnn_model = Net(len(features))
+#         # model_path = f"{parameters['models_path']}/{channel}/models/{model}_{i}.pt"
+#         # model_path = f"{parameters['models_path']}/{model}/{model}_{i}.pt"
+#         dnn_model = tf.keras.models.load_model(f'/depot/cms/hmm/trained_models/dnn_allyears_128_64_32/dnn_allyears_jul7_{i}.h5')
+
+#         """
+#         output = dnn_model.pre_output(df_i).detach().numpy()
+#         import pandas as pd
+#         print(pd.DataFrame(output))
+#         print(pd.DataFrame(output).value_counts())
+#         print(pd.DataFrame(output).value_counts().values.max())
+#         #print(dnn_model(df_i).detach().numpy()[0] - 0.9173)
+#         import sys
+#         sys.exit()
+#         """
+#         prediction = dnn_model.predict(df_i).ravel()
+#         prediction = prediction
+#         print(f"prediction: {prediction}")
+#         df.loc[eval_filter, score_name] = np.arctanh(prediction)
+
+#     return df[score_name]
+
 
 def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
     features = prepare_features(df, parameters, variation, add_year=True)
@@ -190,7 +248,10 @@ def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
         import sys
         sys.exit()
         """
-        df.loc[eval_filter, score_name] = np.arctanh((dnn_model(df_i).detach().numpy()))
+        model_out = np.arctanh((dnn_model(df_i).detach().numpy()))
+        # print(f"{score_name} model_out: {model_out}")
+        # print(f"max {score_name} model_out: {np.max(model_out)}")
+        df.loc[eval_filter, score_name] = model_out
 
     return df[score_name]
 
