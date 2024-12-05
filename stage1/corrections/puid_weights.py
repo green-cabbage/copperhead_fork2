@@ -253,10 +253,10 @@ def puid_weights(evaluator, year, jets, pt_name, jet_puid_opt, jet_puid, numeven
     yearname = year
     if "2017corrected" in jet_puid_opt:
         print("doing the 2017corrected jetPUID method !")
-        h_eff_name_L = f"h2_eff_mcUL{year}_L"
-        h_sf_name_L = f"h2_eff_sfUL{year}_L"
-        h_eff_name_T = f"h2_eff_mcUL{year}_T"
-        h_sf_name_T = f"h2_eff_sfUL{year}_T"
+        h_eff_name_L = f"h2_eff_mc{year}_L"
+        h_sf_name_L = f"h2_eff_sf{year}_L"
+        h_eff_name_T = f"h2_eff_mc{year}_T"
+        h_sf_name_T = f"h2_eff_sf{year}_T"
         jetpt = jets[pt_name].values
         jeteta = jets.eta.values
         puid_eff_L = evaluator[h_eff_name_L](jetpt, jeteta)
