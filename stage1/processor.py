@@ -24,7 +24,7 @@ from stage1.corrections.stxs_uncert import add_stxs_variations, stxs_lookups
 from stage1.corrections.lhe_weights import lhe_weights
 from stage1.corrections.pdf_variations import add_pdf_variations
 from stage1.corrections.qgl_weights import qgl_weights
-from stage1.corrections.btag_weights import btag_weights
+from stage1.corrections.btag_weights import btag_weights, btag_weights_old
 
 from stage1.corrections.puid_weights import puid_weights
 
@@ -38,6 +38,7 @@ from config.jec_parameters import jec_parameters
 from config.variables import variables
 from config.branches import branches
 import copy
+from python.math_tools import delta_r
 
 class DimuonProcessor(processor.ProcessorABC):
     def __init__(self, **kwargs):
@@ -69,6 +70,7 @@ class DimuonProcessor(processor.ProcessorABC):
             self.btag_systs = []
         print(f"self.btag_systs: {self.btag_systs}")
         print(f"self.parameters: {self.parameters}")
+        
         
         # prepare lookup tables for all kinds of corrections
         self.prepare_lookups()
@@ -111,6 +113,7 @@ class DimuonProcessor(processor.ProcessorABC):
         self.timer = Timer("global") if do_timer else None
 
     def process(self, df):
+        # print(f"df event: {df.event}")
         # Initialize timer
         if self.timer:
             self.timer.update()
@@ -331,6 +334,60 @@ class DimuonProcessor(processor.ProcessorABC):
 
             # update event selection with leading muon pT cut
             output["pass_leading_pt"] = pass_leading_pt
+
+            # #Do trigger matching 
+            # isoMu_filterbit = 2
+            # mu_id = 13
+            # # pt_threshold = 24 
+            # # if "2017" in year: # line 371 of AN-19-124
+            # #     pt_threshold = 29
+            # # else: # for 2016, 2018 dunno about Run3
+            # #     pt_threshold = 26
+            # pt_threshold = self.parameters["muon_leading_pt"] # line 371 of AN-19-124. "muon_leading_pt" is deceptive name, but that's where we saved the threshold
+
+            # dr_threshold = 0.1 # for matching gen muons to reco muons
+            # events = df
+            # IsoMu24_muons = (events.TrigObj.id == mu_id) &  \
+            #             ((events.TrigObj.filterBits & isoMu_filterbit) == isoMu_filterbit) & \
+            #         (events.TrigObj.pt > pt_threshold)
+            # #check the first two leading muons match any of the HLT trigger objs. if neither match, reject event
+            # ak_muon_selection = (
+            #     (events.Muon.pt_raw > self.parameters["muon_pt_cut"]) # pt_raw is pt b4 rochester
+            #     & (abs(events.Muon.eta_raw) < self.parameters["muon_eta_cut"])
+            #     & events.Muon[self.parameters["muon_id"]]
+            # )
+            # padded_muons_trig_match = ak.pad_none(df.Muon[ak_muon_selection], 2) # pad in case we have only one muon or zero in an event
+            # # padded_muons = ak.pad_none(events.Muon, 4)
+            # # print(f"copperhead2 EventProcessor padded_muons: \n {padded_muons}")
+            # mu1_trig_match = padded_muons_trig_match[:,0]
+            # mu2_trig_match = padded_muons_trig_match[:,1]
+            # # print(f"mu1_trig_match: {mu1_trig_match}")
+            # # print(f"mu2_trig_match: {mu2_trig_match}")
+            # # print(f"events.TrigObj[IsoMu24_muons].eta: {events.TrigObj[IsoMu24_muons].eta}")
+            # _,_, mu1_match_dR = delta_r(mu1_trig_match.eta, events.TrigObj[IsoMu24_muons].eta, mu1_trig_match.phi, events.TrigObj[IsoMu24_muons].phi)
+            # mu1_match = (mu1_match_dR < dr_threshold) & \
+            #     (mu1_trig_match.pt > pt_threshold)
+            # # print(f"mu1_match: {mu1_match}")
+            # mu1_match = ak.sum(mu1_match, axis=1)
+            # # print(f"mu1_match after sum: {mu1_match}")
+            # mu1_match = ak.fill_none(mu1_match, value=False)
+
+
+            # _,_, mu2_match_dR = delta_r(mu2_trig_match.eta, events.TrigObj[IsoMu24_muons].eta, mu2_trig_match.phi, events.TrigObj[IsoMu24_muons].phi)
+            # mu2_match = (mu2_match_dR < dr_threshold) & \
+            #     (mu2_trig_match.pt > pt_threshold)
+            # # print(f"mu2_match: {mu2_match}")
+            # mu2_match =  ak.sum(mu2_match, axis=1)
+            # # print(f"mu2_match after sum: {mu2_match}")
+            # mu2_match = ak.fill_none(mu2_match, value=False)
+            # # print(f"mu2_match after fillnone: {mu2_match}")
+
+            # trigger_match = (mu1_match >0) | (mu2_match > 0)
+            # # print(f"trigger_match: {trigger_match}")
+            # trigger_match = ak.to_numpy(trigger_match)
+
+            
+            # output["event_selection"] = output.event_selection & output.pass_leading_pt & trigger_match
             output["event_selection"] = output.event_selection & output.pass_leading_pt
 
             # --------------------------------------------------------#
@@ -825,12 +882,25 @@ class DimuonProcessor(processor.ProcessorABC):
                 self, self.btag_lookup, self.btag_systs, jets, weights, bjet_sel_mask
             )
             weights.add_weight("btag_wgt", btag_wgt)
+            # print(f"len(btag_wgt): {len(btag_wgt)}")
 
             # --- Btag weights variations --- #
             for name, bs in btag_syst.items():
                 weights.add_weight(f"btag_wgt_{name}", bs, how="only_vars")
-            print(f"weights.wgts.columns: {weights.wgts.columns}")
-            print(f"weights.df.columns: {weights.df.columns}")
+            #     if "cferr1" in name:
+            #         event_filter = df.event == 2
+            #         print(f"df.event: {df.event}")
+            #         print(f"event_filter: {event_filter}")
+            #         print(f"len event_filter: {len(event_filter)}")
+            #         print(f"bs: {bs['up']}")
+            #         print(f"len bs: {len(bs['up'])}")
+            #         print(f"bs[event_filter]: {bs['up'][event_filter]}")
+            #         print(f"njets: {njets}")
+            #         print(f"df.Jet.pt: {df.Jet.pt}")
+            #         print(f"bjet_sel_mask: {bjet_sel_mask}")
+            #     # print(f"btag {name}: {bs}")
+            # print(f"weights.wgts.columns: {weights.wgts.columns}")
+            # print(f"weights.df.columns: {weights.df.columns}")
         # Separate from ttH and VH phase space
         variables["nBtagLoose"] = (
             jets[
