@@ -83,7 +83,7 @@ def on_partition(args, parameters):
     # preprocess
     wgts = [c for c in df.columns if "wgt" in c]
     df.loc[:, wgts] = df.loc[:, wgts].fillna(0)
-    df.fillna(-999.0, inplace=True)
+    df.fillna(-999.0, inplace=True) 
 
     df = df[(df.dataset == dataset) & (df.year == year)]
 
@@ -150,6 +150,7 @@ def on_partition(args, parameters):
         nan_val = -999.0 # sometimes nan values are already replaced with  -999.0
         df.jet1_has_matched_gen_nominal.replace(nan_val, False, inplace=True)
         df.jet2_has_matched_gen_nominal.replace(nan_val, False, inplace=True)
+        # print(f"df.jet1_has_matched_gen_nominal: {df.jet1_has_matched_gen_nominal}")
 
         df["two_matched_jets"] = (
             df.jet1_has_matched_gen_nominal & df.jet2_has_matched_gen_nominal
@@ -171,8 +172,7 @@ def on_partition(args, parameters):
     dnn_models = parameters.get("dnn_models", {})
     bdt_models = parameters.get("bdt_models", {})
 
-    # df.to_csv("b4DNN.csv")
-    # raise ValueError
+    print(f"postprocessor syst_variations: {syst_variations}")
     
     for v in syst_variations:
         for channel, models in dnn_models.items():
@@ -240,36 +240,37 @@ def on_partition(args, parameters):
             mva_bin_model_name = "pytorch_jun27"
             if mva_bin_model_name not in parameters["mva_bins_original"]:
                 continue
-            # for variation in syst_variations:
-            score_name = f"score_{model_name}_nominal"
-            # score_name = f"score_{model_name}_{variation}"
-            print(f"score_name: {score_name}")
-            # print(f"df.columns: {df.columns}")
-            
-            if score_name in df.columns:
+            print(f"syst_variations: {syst_variations}")
+            for variation in syst_variations:
+            # score_name = f"score_{model_name}_nominal"
+                score_name = f"score_{model_name}_{variation}"
+                print(f"score_name: {score_name}")
+                # print(f"df.columns: {df.columns}")
                 
-                mva_bins = parameters["mva_bins_original"][mva_bin_model_name][str(year)]
-                print(f"mva_bins: {mva_bins}")
-                # print(f"mva_bins: {mva_bins}")
-                print(f'{score_name} df: {df[score_name]}')
-                # print(f'{score_name} df max: {np.max(df[score_name])}')
-                for i in range(len(mva_bins) - 1):
-                    lo = mva_bins[i]
-                    hi = mva_bins[i + 1]
-                    cut = (df[score_name] > lo) & (df[score_name] <= hi)
-                    df.loc[cut, "bin_number"] = i
-                if "nominal" not in score_name:
-                    print(f'{score_name} bin_number: {df["bin_number"]}')
-                df[score_name] = df["bin_number"]
-                parameters["mva_bins"].update(
-                    {
-                        model_name: {
-                            "2016": list(range(len(mva_bins))),
-                            "2017": list(range(len(mva_bins))),
-                            "2018": list(range(len(mva_bins))),
+                if score_name in df.columns:
+                    
+                    mva_bins = parameters["mva_bins_original"][mva_bin_model_name][str(year)]
+                    # print(f"mva_bins: {mva_bins}")
+                    # print(f"mva_bins: {mva_bins}")
+                    # print(f'{score_name} df: {df[score_name]}')
+                    # print(f'{score_name} df max: {np.max(df[score_name])}')
+                    for i in range(len(mva_bins) - 1):
+                        lo = mva_bins[i]
+                        hi = mva_bins[i + 1]
+                        cut = (df[score_name] > lo) & (df[score_name] <= hi)
+                        df.loc[cut, "bin_number"] = i
+                    # if "nominal" not in score_name:
+                        # print(f'{score_name} bin_number: {df["bin_number"]}')
+                    df[score_name] = df["bin_number"]
+                    parameters["mva_bins"].update(
+                        {
+                            model_name: {
+                                "2016": list(range(len(mva_bins))),
+                                "2017": list(range(len(mva_bins))),
+                                "2018": list(range(len(mva_bins))),
+                            }
                         }
-                    }
-                )
+                    )
 
     # < convert desired columns to histograms >
     # not parallelizing for now - nested parallelism leads to a lock

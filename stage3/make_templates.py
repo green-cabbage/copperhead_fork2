@@ -40,6 +40,7 @@ def to_templates(client, parameters, hist_df=None):
             load_stage2_output_hists, argset_load, client, parameters
         )
         hist_df = pd.concat(hist_rows).reset_index(drop=True)
+        print(f"hist_df: {hist_df}")
         if hist_df.shape[0] == 0:
             print("No templates to create!")
             return []

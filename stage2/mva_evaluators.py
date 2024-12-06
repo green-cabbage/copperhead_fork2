@@ -75,8 +75,13 @@ def prepare_features(df, parameters, variation="nominal", add_year=False):
         features = training_features
     features_var = []
     for trf in features:
-        if f"{trf}_{variation}" in df.columns:
-            features_var.append(f"{trf}_{variation}")
+        if "soft" in trf:
+            variation_current = "nominal"
+        else:
+            variation_current = variation
+        
+        if f"{trf}_{variation_current}" in df.columns:
+            features_var.append(f"{trf}_{variation_current}")
         elif trf in df.columns:
             features_var.append(trf)
         else:
@@ -198,6 +203,7 @@ def evaluate_mva_categorizer(df, model_name, score_name, parameters):
 
 def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
     features = prepare_features(df, parameters, variation, add_year=True)
+    # print(f"evaluate_pytorch_dnn {variation} features: {features}")
 
     try:
         df = df.compute()
@@ -227,7 +233,15 @@ def evaluate_pytorch_dnn(df, variation, model, parameters, score_name, channel):
             continue
         df_i.loc[df_i.region != "h-peak", "dimuon_mass"] = 125.0
         df_i[features] = df_i[features].fillna(-99).astype(float)
-        df_i = (df_i[features] - scalers[0]) / scalers[1]
+        df_i_in = df_i[features]
+        # commenting out the replacing -999.0 to use it as a debugging info
+        # df_i_in.replace(-999.0, 0, inplace=True) # mainly for nsoftjets5  htsoft2. Variation values have -999.0 values for these
+        
+        # print(f"{i} fold {variation} input features: {df_i_in}")
+        df_i = (df_i_in - scalers[0]) / scalers[1]
+        # if variation != "nominal":
+        #     df_i.to_csv("test_input.csv")
+        #     raise ValueError
         df_i = torch.tensor(df_i.values).float()
 
         dnn_model = Net(len(features))
