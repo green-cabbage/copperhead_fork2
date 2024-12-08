@@ -4,187 +4,12 @@ import numpy as np
 
 from hist import Hist
 from python.variable import Variable
-from python.io import save_stage2_output_hists, save_stage2_output_df
-import copy
+from python.io import save_stage2_output_hists
+
 
 def make_histograms(df, var_name, year, dataset, regions, channels, npart, parameters):
     debug = False
     print("start making hists!")
-    # try to get binning from config
-    if var_name in parameters["variables_lookup"].keys():
-        var = parameters["variables_lookup"][var_name]
-    else:
-        var = Variable(var_name, var_name, 50, 0, 5)
-
-    # prepare list of systematic variations
-    wgt_variations = [w for w in df.columns if ("wgt_" in w)]
-    # print(f"make histograms wgt_variations: {wgt_variations}")
-    syst_variations = parameters.get("syst_variations", ["nominal"])
-    # print(f"make histograms syst_variations: {syst_variations}")
-    variations = []
-    for w in wgt_variations:
-        for v in syst_variations:
-            variation = get_variation(w, v)
-            if variation:
-                variations.append(variation)
-    # print(f"make histograms variations: {variations}")
-    # prepare multidimensional histogram
-    # add axes for (1) mass region, (2) channel, (3) value or sumw2
-    hist = (
-        Hist.new.StrCat(regions, name="region")
-        .StrCat(channels, name="channel")
-        .StrCat(["value", "sumw2"], name="val_sumw2")
-    )
-    # add axis for observable variable
-    if "score" in var.name:
-        model_name = var.name.replace("score_", "").replace("_nominal", "")
-        mva_bin_name = "mva_bins"
-        # mva_bin_name = "mva_bins_original"
-        if mva_bin_name in parameters.keys():
-            if model_name in parameters[mva_bin_name].keys():
-                bins = parameters[mva_bin_name][model_name][f"{year}"]
-            else:
-                bins = np.arange(102) / 50.0
-        else:
-            bins = np.arange(102) / 50.0
-
-        print(f"make_histograms bins: {bins}")
-        hist = hist.Var(bins, name=var.name)
-    else:
-        hist = hist.Reg(var.nbins, var.xmin, var.xmax, name=var.name, label=var.caption)
-
-    # add axis for systematic variation
-    hist = hist.StrCat(variations, name="variation")
-
-    # specify container type
-    hist = hist.Double()
-
-    # loop over configurations and fill the histogram
-    loop_args = {
-        "region": regions,
-        "w": wgt_variations,
-        "v": syst_variations,
-        "channel": channels,
-    }
-    loop_args = [
-        dict(zip(loop_args.keys(), values))
-        for values in itertools.product(*loop_args.values())
-    ]
-    if debug:
-        hist_info_rows = []
-    total_yield = 0
-    out_dfs = []
-    for loop_arg in loop_args:
-        # print(f"loop_arg: {loop_arg}")
-        region = loop_arg["region"]
-        channel = loop_arg["channel"]
-        w = loop_arg["w"]
-        v = loop_arg["v"]
-        variation = get_variation(w, v)
-        if not variation:
-            continue
-
-        var_name = f"{var.name}_{v}"
-        if var_name not in df.columns:
-            if var.name in df.columns:
-                var_name = var.name
-            else:
-                continue
-
-        slicer = (
-            (df.region == region)
-            & (df[f"channel_{v}"] == channel)
-        )
-        data = df.loc[slicer, var_name]
-        weight = df.loc[slicer, w]
-        out_df_loop = pd.DataFrame({
-            "value" : data,
-            "weight" : weight,
-        })
-        # out_df_loop["weight"] = weight
-        out_df_loop["region"] = region
-        out_df_loop["channel"] = channel
-        out_df_loop["variation"] = variation
-        
-        # print(f"to fill {w} {v} values: {data}")
-        # print(f"to fill {w} {v} weight: {weight}")
-        # print(f"to fill {w} {v} out_df_loop: {out_df_loop}")
-        out_dfs.append(out_df_loop)
-        # print(f"to fill {w} {v} sum weight: {np.sum(weight)}")
-
-        # to_fill = {var.name: data, "region": region, "channel": channel} # original
-        # variation = loop_arg["v"]
-        # if "cferr" in w:
-        #     print(f"to fill {w} {v} values: {data}")
-        #     print(f"to fill {w} {v} weight: {weight}")
-        #     is_zero =  weight == 0
-        #     print(f"to fill {w} {v} weight is any zero: {np.any(is_zero)}")
-        #     # cols2print = ["channel_nominal", "jj_mass_nominal", ] + wgt_variations
-        #     # df_test = df.loc[slicer].loc[is_zero]
-        #     # df_test = df_test[cols2print]
-        #     # df_test.to_csv("test.csv")
-        #     # raise ValueError
-        
-        to_fill = {var.name: data, "region": region, "channel": channel}
-
-        to_fill_value = to_fill.copy()
-        to_fill_value["val_sumw2"] = "value"
-        to_fill_value["variation"] = variation
-        # hist.fill(**to_fill_value, weight=weight)
-
-        to_fill_sumw2 = to_fill.copy()
-        to_fill_sumw2["val_sumw2"] = "sumw2"
-        to_fill_sumw2["variation"] = variation
-        # hist.fill(**to_fill_sumw2, weight=weight * weight)
-
-        
-        # print(f"to fill {w} {v} to_fill_value: {to_fill_value}")
-        # print(f"to fill {w} {v} to_fill_sumw2: {to_fill_sumw2}")
-
-        hist_info_row = {
-            "year": year,
-            "var_name": var.name,
-            "dataset": dataset,
-            "variation": variation,
-            "region": region,
-            "channel": channel,
-            "yield": weight.sum(),
-        }
-        if weight.sum() == 0:
-            continue
-        total_yield += weight.sum()
-        if "return_hist" in parameters:
-            if parameters["return_hist"]:
-                hist_info_row["hist"] = hist
-        if debug:
-            hist_info_rows.append(hist_info_row)
-
-    out_df_total = pd.concat(out_dfs)
-    # print(f"out_df_total: {out_df_total}")
-    if total_yield == 0:
-        return None
-
-    # save histogram for this partition to disk
-    # (partitions will be joined in stage3)
-    save_hists = parameters.get("save_hists", False)
-    if save_hists:
-        # save_stage2_output_hists(hist, var.name, dataset, year, parameters, npart)
-
-        # new attempt
-        
-        save_stage2_output_df(out_df_total, var.name, dataset, year, parameters, npart)
-
-    # return info for debugging
-    if debug:
-        hist_info_rows = pd.DataFrame(hist_info_rows)
-    else:
-        hist_info_rows = None
-    print("done making hists!")
-    return hist_info_rows
-
-def make_histograms_original(df, var_name, year, dataset, regions, channels, npart, parameters):
-    debug = False
-    print("starting making hists!")
     # try to get binning from config
     if var_name in parameters["variables_lookup"].keys():
         var = parameters["variables_lookup"][var_name]
@@ -278,9 +103,7 @@ def make_histograms_original(df, var_name, year, dataset, regions, channels, npa
         )
         data = df.loc[slicer, var_name]
         weight = df.loc[slicer, w]
-        # print(f"to fill {w} {v} values: {data}")
-        # print(f"to fill {w} {v} weight: {weight}")
-        # print(f"to fill {w} {v} sum weight: {np.sum(weight)}")
+        print(f"to fill {w} {v} sum weight: {np.sum(weight)}")
 
         # to_fill = {var.name: data, "region": region, "channel": channel} # original
         # variation = loop_arg["v"]
@@ -325,13 +148,13 @@ def make_histograms_original(df, var_name, year, dataset, regions, channels, npa
         if debug:
             hist_info_rows.append(hist_info_row)
             
+    # raise ValueError
     if total_yield == 0:
         return None
 
     # save histogram for this partition to disk
     # (partitions will be joined in stage3)
     save_hists = parameters.get("save_hists", False)
-    print(f"save_hists: {save_hists}")
     if save_hists:
         save_stage2_output_hists(hist, var.name, dataset, year, parameters, npart)
 

@@ -11,12 +11,12 @@ from python.io import (
 from stage2.categorizer import split_into_channels, filter_channels
 from stage2.mva_evaluators import (
     evaluate_pytorch_dnn, 
-evaluate_tf_dnn,evaluate_tf_dnn_new,
+evaluate_tf_dnn,
     # evaluate_pytorch_dnn_pisa,
     evaluate_bdt,
     # evaluate_mva_categorizer,
 )
-from stage2.histogrammer import make_histograms, make_histograms_original
+from stage2.histogrammer import make_histograms
 
 import warnings
 
@@ -36,29 +36,17 @@ def process_partitions(client, parameters, df):
         if key in parameters:
             parameters[key] = list(set(parameters[key]))
 
-    # original start ------------------------------
-    # years = df.year.unique().compute()
-    # datasets = df.dataset.unique().compute()
-    # print(f"original type(years): {type(years)}")
-    # print(f"original years: {years}")
-    # print(f"original datasets: {datasets}")
-    # original end ------------------------------
+    
+    # years = df.year.unique()
+    # datasets = df.dataset.unique()
     years = pd.Series(parameters["years"])
     datasets = pd.Series(parameters["datasets"])
-    print(f"my years: {years}")
-    print(f"my datasets: {datasets}")
-
-    
     # delete previously generated outputs to prevent partial overwrite
     delete_existing_stage2_hists(datasets, years, parameters)
     delete_existing_stage2_parquet(datasets, years, parameters)
 
     
     # prepare parameters for parallelization
-    # years = df.year.unique()
-    # datasets = df.dataset.unique()
-    # years = years
-    # datasets = datasets
     argset = {
         "year": years,
         "dataset": datasets,
@@ -66,28 +54,20 @@ def process_partitions(client, parameters, df):
     if isinstance(df, pd.DataFrame):
         argset["df"] = [df]
     elif isinstance(df, dd.DataFrame):
-        print("dd dataframe")
         argset["df"] = [(i, df.partitions[i]) for i in range(df.npartitions)]
 
-    print(f" process_partitions type argset: {type(argset)}")
-    # # perform categorization, evaluate mva models, fill histograms
-    # hist_info_dfs = parallelize(on_partition, argset, client, parameters)
+    # perform categorization, evaluate mva models, fill histograms
+    hist_info_dfs = parallelize(on_partition, argset, client, parameters)
 
-    # # return info for debugging
-    # hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True)
-    # return hist_info_df_full
-
-    _ = parallelize(on_partition, argset, client, parameters)
-    return None
+    # return info for debugging
+    hist_info_df_full = pd.concat(hist_info_dfs).reset_index(drop=True)
+    return hist_info_df_full
 
 
 def on_partition(args, parameters):
     print("partion starting!")
-    print(f'parameters["hist_vars"]: {parameters["hist_vars"]}')
     year = args["year"]
     dataset = args["dataset"]
-    # print(f"year: {year}")
-    print(f"dataset: {dataset}")
     df = args["df"]
     if "mva_bins" not in parameters:
         parameters["mva_bins"] = {}
@@ -106,13 +86,9 @@ def on_partition(args, parameters):
     wgts = [c for c in df.columns if "wgt" in c]
     df.loc[:, wgts] = df.loc[:, wgts].fillna(0)
     df.fillna(-999.0, inplace=True) 
-    # print(f"df: {df}")
-    # print(f"df.dataset: {df.dataset}")
-    # print(f"df.year: {df.year}")
-    # print(f"df.year==2018: {df.year==2018}")
-    # print(f"df.year==vbf: {df.year=='vbf_powheg_dipole'}")
+
     # df = df[(df.dataset == dataset) & (df.year == year)]
-    # print(f"df: {df}")
+
 
     # debugging
     # slicer = (
@@ -158,10 +134,10 @@ def on_partition(args, parameters):
         # print(f"start split_into_channels {variation}")
         split_into_channels(df, v=variation)
 
+    #
     print(f"len(df) b4 filter_channels {len(df)}")
     df = filter_channels(df, channel="vbf", variations = syst_variations)
     print(f"len(df) after filter_channels {len(df)}")
-    
 
     
     regions = [r for r in parameters["regions"] if r in df.region.unique()]
@@ -200,10 +176,8 @@ def on_partition(args, parameters):
     dnn_models = parameters.get("dnn_models", {})
     bdt_models = parameters.get("bdt_models", {})
 
-    # print(f"postprocessor syst_variations: {syst_variations}")
-    # return None# testing
-
-    # original start -----------------------------------------------
+    print(f"postprocessor syst_variations: {syst_variations}")
+    
     for v in syst_variations:
         for channel, models in dnn_models.items():
             if channel not in parameters["channels"]:
@@ -244,40 +218,16 @@ def on_partition(args, parameters):
                     channel,
                 )
                 """
-    # original end -----------------------------------------------
-    # test start -----------------------------------------------
-    # dnn_scores = {}
-    # for v in syst_variations:
-    #     for channel, models in dnn_models.items():
-    #         if channel not in parameters["channels"]:
-    #             continue
-    #         for model in models:
-    #             score_name = f"score_{model}_{v}"
-    #             # print(f"score_name for DNN: {score_name}")
-    #             dnn_scores[score_name] = evaluate_tf_dnn_new(
-    #                 df,
-    #                 v,
-    #                 model,
-    #                 parameters,
-    #                 score_name,
-    #                 channel,
-    #             )
-                
-    # dnn_df = pd.DataFrame(dnn_scores)
-    # print(f"dnn_df: {dnn_df}")
-    # df = pd.concat([df,dnn_df], axis=1)
-    # test end -----------------------------------------------
 
-    
-        # # evaluate XGBoost BDTs
-        # for channel, models in bdt_models.items():
-        #     if channel not in parameters["channels"]:
-        #         continue
-        #     for model in models:
-        #         score_name = f"score_{model}_{v}"
-        #         df.loc[df[f"channel_{v}"] == channel, score_name] = evaluate_bdt(
-        #             df[df[f"channel_{v}"] == channel], v, model, parameters, score_name
-        #         )
+        # evaluate XGBoost BDTs
+        for channel, models in bdt_models.items():
+            if channel not in parameters["channels"]:
+                continue
+            for model in models:
+                score_name = f"score_{model}_{v}"
+                df.loc[df[f"channel_{v}"] == channel, score_name] = evaluate_bdt(
+                    df[df[f"channel_{v}"] == channel], v, model, parameters, score_name
+                )
     # cols2print = ["score_pytorch_jun27_Absolute_up", "score_pytorch_jun27_nominal"]
     # df_test = df[cols2print]
     # df_test.to_csv("test.csv")
@@ -294,7 +244,6 @@ def on_partition(args, parameters):
             # mva_bin_model_name = "pytorch_jun27"
             mva_bin_model_name = parameters["dnn_models"]["vbf"][0]
             print(f"mva_bin_model_name: {mva_bin_model_name}")
-            
             if mva_bin_model_name not in parameters["mva_bins_original"]:
                 continue
             print(f"syst_variations: {syst_variations}")
@@ -307,7 +256,7 @@ def on_partition(args, parameters):
                 if score_name in df.columns:
                     
                     mva_bins = parameters["mva_bins_original"][mva_bin_model_name][str(year)]
-                    print(f"mva_bins: {mva_bins}")
+                    # print(f"mva_bins: {mva_bins}")
                     # print(f"mva_bins: {mva_bins}")
                     # print(f'{score_name} df: {df[score_name]}')
                     # print(f'{score_name} df max: {np.max(df[score_name])}')
@@ -329,18 +278,36 @@ def on_partition(args, parameters):
                         }
                     )
 
-    
-    
     # < convert desired columns to histograms >
     # not parallelizing for now - nested parallelism leads to a lock
     hist_info_rows = []
     for var_name in parameters["hist_vars"]:
+        # hist_info_row = make_histograms(
+        #     df, var_name, year, dataset, regions, channels, npart, parameters
+        # )
+        # if hist_info_row is not None:
+        #     hist_info_rows.append(hist_info_row)
+        # if "dy" in dataset:
+        #     # for suff in ["01j", "2j"]:
+        #     for suff in ["2j"]:
+        #         hist_info_row = make_histograms(
+        #             df,
+        #             var_name,
+        #             year,
+        #             f"{dataset}_{suff}",
+        #             regions,
+        #             channels,
+        #             npart,
+        #             parameters,
+        #         )
+        #         if hist_info_row is not None:
+        #             hist_info_rows.append(hist_info_row)
         
         # my new change start -----------------------------------------
         if "dy" in dataset:
             for suff in ["01j", "2j"]:
             # for suff in ["2j"]:
-                hist_info_row = make_histograms_original(
+                hist_info_row = make_histograms(
                     df,
                     var_name,
                     year,
@@ -353,7 +320,7 @@ def on_partition(args, parameters):
                 if hist_info_row is not None:
                     hist_info_rows.append(hist_info_row)
         else:
-            hist_info_row = make_histograms_original(
+            hist_info_row = make_histograms(
                 df, var_name, year, dataset, regions, channels, npart, parameters
             )
             if hist_info_row is not None:
@@ -366,18 +333,12 @@ def on_partition(args, parameters):
     hist_info_df = pd.concat(hist_info_rows).reset_index(drop=True)
 
     # < save desired columns as unbinned data (e.g. dimuon_mass for fits) >
-    # do_save_unbinned = parameters.get("save_unbinned", False)
-    do_save_unbinned = False
+    do_save_unbinned = parameters.get("save_unbinned", False)
     if do_save_unbinned:
         save_unbinned(df, dataset, year, npart, channels, parameters)
 
     # < return some info for diagnostics & tests >
-    print(f"on partition final hist_info_df: {hist_info_df}")
-    # return hist_info_df
-
-    # del df
-    # del args["df"]
-    return None
+    return hist_info_df
 
 
 def save_unbinned(df, dataset, year, npart, channels, parameters):
