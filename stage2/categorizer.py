@@ -1,3 +1,5 @@
+import numpy as np
+
 def split_into_channels(df, v=""):
     df[f"njets_{v}"].fillna(0, inplace=True)
     df.loc[:, f"channel_{v}"] = "none"
@@ -22,6 +24,16 @@ def split_into_channels(df, v=""):
         (df[f"channel_{v}"] == "none") & (df[f"njets_{v}"] > 1), f"channel_{v}"
     ] = "ggh_2orMoreJets"
 
+def filter_channels(df, channel="vbf", variations = ["nominal"]):
+    channel_filter = np.zeros(len(df), dtype="bool") # start with array of Falses
+    for variation in variations:
+        desired_channel = (df[f"channel_{variation}"] == channel)
+        # print(f"desired_channel: {desired_channel}")
+        # print(f"desired_channel isnan any: {np.any(np.isnan(desired_channel.values))}")
+        channel_filter = channel_filter | desired_channel
+
+    df = df[channel_filter] # filter out events that don't match my desired category
+    return df
 
 def categorize_by_score(df, scores, mode="uniform", **kwargs):
     nbins = kwargs.pop("nbins", 4)

@@ -51,7 +51,7 @@ use_local_cluster = args.slurm_port is None
 node_ip = "128.211.149.133"
 
 if use_local_cluster:
-    ncpus_local = 30 #15 #30 #2
+    ncpus_local = 30 #15 #10#7 #30 #15 #30 #2
     slurm_cluster_ip = ""
     dashboard_address = f"{node_ip}:34875"
 else:
@@ -59,6 +59,9 @@ else:
     dashboard_address = f"{node_ip}:8787"
     ncpus_local = 200
 
+
+year = args.years[0]
+print(f"year: {year}")
 # global parameters
 parameters = {
     # < general settings >
@@ -72,12 +75,12 @@ parameters = {
     "label": args.label,
     "channels": ["vbf"],
     "regions": ["h-peak", "h-sidebands"],
-    # "syst_variations": ["nominal"],
+    "syst_variations": ["nominal"],
+    # "syst_variations": ['nominal', 'Absolute_up', 'Absolute_down', f'Absolute{year}_up', f'Absolute{year}_down', 'BBEC1_up', 'BBEC1_down', f'BBEC1{year}_up', f'BBEC1{year}_down', 'EC2_up', 'EC2_down', f'EC2{year}_up', f'EC2{year}_down', 'HF_up', 'HF_down', f'HF{year}_up', f'HF{year}_down', 'RelativeBal_up', 'RelativeBal_down', f'RelativeSample{year}_up', f'RelativeSample{year}_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # full Run2
+    # "syst_variations": ["nominal","Absolute_up",'Absolute_down',],
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2018_up', 'Absolute2018_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12018_up', 'BBEC12018_down', 'EC2_up', 'EC2_down', 'EC22018_up', 'EC22018_down', 'HF_up', 'HF_down', 'HF2018_up', 'HF2018_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2018_up', 'RelativeSample2018_down', 'FlavorQCD_up', 'FlavorQCD_down',],
-    "syst_variations": ['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2018_up', 'Absolute2018_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12018_up', 'BBEC12018_down', 'EC2_up', 'EC2_down', 'EC22018_up', 'EC22018_down', 'HF_up', 'HF_down', 'HF2018_up', 'HF2018_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2018_up', 'RelativeSample2018_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # full 2018
-    # "syst_variations": ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2018_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2018_down"],
-    # "syst_variations": ["nominal", "Absolute_up", "RelativeBal_up", "FlavorQCD_up", "RelativeSample2016_up","Absolute_down", "RelativeBal_down", "FlavorQCD_down", "RelativeSample2016_down"],
-    # "syst_variations": ["nominal", "Absolute2016_up", "Absolute2016_down","Absolute_up",],
+    # "syst_variations": ['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2018_up', 'Absolute2018_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12018_up', 'BBEC12018_down', 'EC2_up', 'EC2_down', 'EC22018_up', 'EC22018_down', 'HF_up', 'HF_down', 'HF2018_up', 'HF2018_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2018_up', 'RelativeSample2018_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # full 2018
+    
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2016_up', 'Absolute2016_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12016_up', 'BBEC12016_down', 'EC2_up', 'EC2_down', 'EC22016_up', 'EC22016_down', 'HF_up', 'HF_down', 'HF2016_up', 'HF2016_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2016_up', 'RelativeSample2016_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # taken from printing "self.pt_variations" in stage1/processor.py
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down'],
      # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2016_up', 'Absolute2016_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12016_up', 'BBEC12016_down', 'EC2_up', 'EC2_down', 'EC22016_up', 'EC22016_down', 'HF_up', 'HF_down', 'HF2016_up', 'HF2016_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2016_up', 'RelativeSample2016_down', 'FlavorQCD_up', 'FlavorQCD_down',], # taken from printing "self.pt_variations" in stage1/processor.py
@@ -85,9 +88,10 @@ parameters = {
     
     "custom_npartitions": {
         # "vbf_powheg_dipole": 1,
-        "dy_m105_160_amc" : 519,
+        "dy_m105_160_amc" : 519, #519
         "dy_m105_160_vbf_amc" : 295,
         "ttjets_dl" : 500,
+        "vbf_powheg_dipole" : 295,
     },
     #
     # < settings for histograms >
@@ -114,7 +118,8 @@ parameters = {
      "models_path" : "/depot/cms/hmm/copperhead/trained_models/",
     "dnn_models": {
         # "vbf": ["vbf"],
-         "vbf": ["pytorch_jun27"],
+         # "vbf": ["pytorch_jun27"],
+        "vbf": ["dnn_allyears_128_64_32"],#pytorch_jul12 pytorch_jul31  pytorch_sep1_vbf_vs_dy
     },
     "bdt_models": {},
     "mva_bins_original": mva_bins,
@@ -123,43 +128,44 @@ parameters = {
 
 parameters["datasets"] = [
     # "data_A",
-    # "data_B",
-    # "data_C",
-    # "data_D",
-    # "data_E",
-    # "data_F",
-    # "data_G",
-    # "data_H",
+    "data_B",
+    "data_C",
+    "data_D",
+    "data_E",
+    "data_F",
+    "data_G",
+    "data_H",
     # "dy_m105_160_amc",
     # "dy_m105_160_vbf_amc",
     # "ewk_lljj_mll105_160_py_dipole",
     # "ewk_lljj_mll105_160_ptj0",
     # "ttjets_dl",
-    "ttjets_sl",
+    # "ttjets_sl",
     # "ttw",
     # "ttz",
     # "st_tw_top",
     # "st_tw_antitop",
     # "ww_2l2nu",
-    # "wz_2l2q",
+    # "wz_2l2q", # 6
     # "wz_1l1nu2q",
     # "wz_3lnu",
     # "zz",
-    # # # "www",
-    # # # "wwz",
-    # # # "wzz",
-    # # # "zzz",
-    "ggh_amcPS",
-    "ggh_powhegPS",
-    "vbf_powheg_dipole",
-    # # "vbf_powhegPS",
-    "vbf_powheg_herwig",
+    # # # # # # # "www",
+    # # # # # # # "wwz",
+    # # # # # # # "wzz",
+    # # # # # # # "zzz",
+    # "ggh_amcPS",
+    # # # # # #"ggh_powhegPS",
+    # "vbf_powheg_dipole",
+    # # # # # "vbf_powhegPS",
+    # "vbf_powheg_herwig",
 ]
 # using one small dataset for debugging
 # parameters["datasets"] = ["ggh_amcPS","vbf_powheg_dipole"]
 
 if __name__ == "__main__":
     start_time = time.time()
+
     # prepare Dask client
     if use_local_cluster:
         print(
@@ -177,8 +183,8 @@ if __name__ == "__main__":
             processes=True,
             n_workers=ncpus_local, # 15 ncpus_local
             #dashboard_address=dash_local,
-            threads_per_worker=2,#1
-            memory_limit="20GB",#12
+            threads_per_worker=1,#1
+            memory_limit="50GB",#25
         )
     else:
     #     print(
@@ -237,4 +243,5 @@ if __name__ == "__main__":
 
     end_time = time.time()  # Record the end time
     execution_time = end_time - start_time
+    print("Success!")
     print(f"Execution time: {execution_time:.4f} seconds")

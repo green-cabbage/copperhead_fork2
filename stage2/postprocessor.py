@@ -37,10 +37,8 @@ def process_partitions(client, parameters, df):
             parameters[key] = list(set(parameters[key]))
 
     
-    # years = df.year.unique()
-    # datasets = df.dataset.unique()
-    years = pd.Series(parameters["years"])
-    datasets = pd.Series(parameters["datasets"])
+    years = df.year.unique()
+    datasets = df.dataset.unique()
     # delete previously generated outputs to prevent partial overwrite
     delete_existing_stage2_hists(datasets, years, parameters)
     delete_existing_stage2_parquet(datasets, years, parameters)
@@ -87,7 +85,7 @@ def on_partition(args, parameters):
     df.loc[:, wgts] = df.loc[:, wgts].fillna(0)
     df.fillna(-999.0, inplace=True) 
 
-    # df = df[(df.dataset == dataset) & (df.year == year)]
+    df = df[(df.dataset == dataset) & (df.year == year)]
 
 
     # debugging
@@ -135,10 +133,13 @@ def on_partition(args, parameters):
         split_into_channels(df, v=variation)
 
     #
+    
     print(f"len(df) b4 filter_channels {len(df)}")
     df = filter_channels(df, channel="vbf", variations = syst_variations)
     print(f"len(df) after filter_channels {len(df)}")
 
+    if len(df) ==0:
+        return pd.DataFrame()
     
     regions = [r for r in parameters["regions"] if r in df.region.unique()]
     channels = [
@@ -184,7 +185,7 @@ def on_partition(args, parameters):
                 continue
             for model in models:
                 score_name = f"score_{model}_{v}"
-                # print(f"score_name for DNN: {score_name}")
+                print(f"score_name for DNN: {score_name}")
                 # df.loc[
                 #     df[f"channel_{v}"] == channel, score_name
                 # ] = evaluate_pytorch_dnn(
@@ -243,14 +244,13 @@ def on_partition(args, parameters):
         for model_name in models:
             # mva_bin_model_name = "pytorch_jun27"
             mva_bin_model_name = parameters["dnn_models"]["vbf"][0]
-            print(f"mva_bin_model_name: {mva_bin_model_name}")
             if mva_bin_model_name not in parameters["mva_bins_original"]:
                 continue
             print(f"syst_variations: {syst_variations}")
             for variation in syst_variations:
             # score_name = f"score_{model_name}_nominal"
                 score_name = f"score_{model_name}_{variation}"
-                # print(f"score_name: {score_name}")
+                print(f"score_name: {score_name}")
                 # print(f"df.columns: {df.columns}")
                 
                 if score_name in df.columns:

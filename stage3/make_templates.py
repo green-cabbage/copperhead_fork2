@@ -3,12 +3,15 @@ import pandas as pd
 
 from python.workflow import parallelize
 from python.variable import Variable
-from python.io import load_stage2_output_hists, save_template, mkdir
+from python.io import load_stage2_output_hists, save_template, mkdir, load_stage2_output_df2hists
 
 import warnings
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 from uproot3_methods.classes.TH1 import from_numpy
+import glob
+import dask.dataframe as dd
+
 
 decorrelation_scheme = {
     "LHERen": ["DY", "EWK", "ggH", "TT+ST"],
@@ -36,9 +39,38 @@ def to_templates(client, parameters, hist_df=None):
             "var_name": parameters["templates_vars"],
             "dataset": datasets,
         }
+        # original ----------------------
         hist_rows = parallelize(
             load_stage2_output_hists, argset_load, client, parameters
         )
+        # original ---------------------------------
+        # new soln ---------------------------------------
+        # hist_rows = []
+        # for dataset in datasets:
+        #     year = argset_load["year"][0]
+        #     var_name = argset_load["var_name"][0]
+        #     # dataset = argset_load["dataset"]
+        #     global_path = parameters.get("global_path", None)
+        #     label = parameters.get("label", None)
+        #     path = f"{global_path}/{label}/stage2_histograms/{var_name}/{year}/"
+        #     paths = glob.glob(f"{path}/{dataset}_*.parquet")
+        #     df_l = []
+        #     print(f"path: {path}/{dataset}_*.pa")
+        #     print(f"paths: {paths}")
+        #     for load_path in paths:
+        #         df_i = dd.from_pandas(pd.DataFrame(), npartitions=1)
+        #         df_i = dd.read_parquet(load_path)
+        #         df_l.append(df_i)
+        #     print(f"df_l: {df_l}")
+        #     if len(df_l) == 0:
+        #         continue
+        #     df = dd.concat(df_l) 
+        #     argset_load["df"] = [(i, df.partitions[i]) for i in range(df.npartitions)]
+        #     hist_rows = hist_rows + parallelize(
+        #         load_stage2_output_df2hists, argset_load, client, parameters
+        #     )
+        # new soln -------------------------------------------
+        
         hist_df = pd.concat(hist_rows).reset_index(drop=True)
         print(f"hist_df: {hist_df}")
         if hist_df.shape[0] == 0:
@@ -303,8 +335,11 @@ def make_templates(args, parameters={}):
                     print(f"Could not merge histograms for {dataset} due to error {e}")
                     continue
 
-
-                the_hist = hist[slicer_value].project(var.name).values()
+                try: 
+                    the_hist = hist[slicer_value].project(var.name).values()
+                except Exception as e:
+                    print(f"Could not project histograms for {dataset} due to error {e}")
+                    continue
                 the_hist_nominal = hist[slicer_nominal].project(var.name).values()
                 the_sumw2 = hist[slicer_sumw2].project(var.name).values()
 

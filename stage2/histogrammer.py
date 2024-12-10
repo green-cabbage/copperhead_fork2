@@ -18,6 +18,7 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
 
     # prepare list of systematic variations
     wgt_variations = [w for w in df.columns if ("wgt_" in w)]
+    # wgt_variations = ["wgt_nominal"]
     # print(f"make histograms wgt_variations: {wgt_variations}")
     syst_variations = parameters.get("syst_variations", ["nominal"])
     # print(f"make histograms syst_variations: {syst_variations}")
@@ -91,14 +92,10 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
             else:
                 continue
 
-        # slicer = (
-        #     (df.dataset == dataset)
-        #     & (df.region == region)
-        #     & (df.year == year)
-        #     & (df[f"channel_{v}"] == channel)
-        # )
         slicer = (
-            (df.region == region)
+            (df.dataset == dataset)
+            & (df.region == region)
+            & (df.year == year)
             & (df[f"channel_{v}"] == channel)
         )
         data = df.loc[slicer, var_name]

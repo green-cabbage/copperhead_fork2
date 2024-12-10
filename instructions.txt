@@ -17,6 +17,7 @@ Dmitry's advice: check to all years and make sure you get good shapes -> then ch
 
 
 
+
 My workflow that resulted in 1.7 observed all eras (Nov 4 2014):
 
 datasets: Data, ggH and VBF, DY, EWK, TT+ST, VV
@@ -35,14 +36,14 @@ Once all years are done, go to the stage3_datacards directory, and setup a combi
 
 combine env setup start -----------------------------------------------------------------------------------------------
 
-cd /path/to/stage3_datacards/
+cd /path/to/stage3_datacards/ (right now, it's /depot/cms/private/users/yun79/hmm/copperheadV1clean/)
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 cmssw-el7 --bind /depot:/depot
 voms-proxy-init -voms cms
 
 export SCRAM_ARCH=slc7_amd64_gcc700
 cmsrel CMSSW_10_2_13
-cd CMSSW_10_2_13/src
+cd CMSSW_10_2_13/src (if already installed, it's /depot/cms/private/users/yun79/hmm/copperheadV1clean/DmitryMaster_JECoff_GeofitFixed_Nov01/stage3_datacards/score_pytorch_jun27/CMSSW_10_2_13)
 cmsenv
 
 # this part needs to be done once start ------------------------------------
@@ -71,7 +72,7 @@ Now do combine part:
 <combine -d combined_allyears.root -M Significance -m 125 --expectSignal=1 -n _2018_ -t -1 --rMin -2 --rMax 5 > allyears_prefitsignificance_exp.log > # this is prefit expected signficance
 
 
-<combine -d combined_allyears.root -M Significance -m 125 --X-rtd FITTER_NEWER_GIVE_UP --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0 --cminRunAllDiscreteCombinations --cminApproxPreFitTolerance=0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rtd MINIMIZER_MaxCalls=9999999 --X-rtd MINIMIZER_analytic --X-rtd FAST_VERTICAL_MORPH --cminDefaultMinimizerTolerance 0.01 --X-rtd MINIMIZER_freezeDisassociatedParams --expectSignal=1 -n _2018_ -t -1 --toysFrequentist --rMin -2 --rMax 5 > allyears_postfitsignificance_exp.log  > # this is postfit expected signficance
+<combine -d combined_allyears.root -M Significance -m 125 --X-rtd FITTER_NEWER_GIVE_UP --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0 --cminRunAllDiscreteCombinations --cminApproxPreFitTolerance=0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.01 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rtd MINIMIZER_MaxCalls=9999999 --X-rtd MINIMIZER_analytic --X-rtd FAST_VERTICAL_MORPH --cminDefaultMinimizerTolerance 0.01 --X-rtd MINIMIZER_freezeDisassociatedParams -n _2018_ --toysFrequentist --rMin -2 --rMax 5  --expectSignal=1  -t -1 > allyears_postfitsignificance_exp.log  > # this is postfit expected signficance
 
 
 
@@ -81,3 +82,44 @@ Now do combine part:
 For fit diagnostics for b only and s+b only NP fitting:
 
 combine -M FitDiagnostics --saveShapes --saveWithUncertainties combined_allyears.root -n combined_allyears_fitdiag --setParameters "mask_ch1=1,mask_ch3=1,mask_ch5=1"
+
+
+
+Dec 06 2024
+-----------------------------------------------------------------------------------------------
+
+New instructions on loading combine
+
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+
+/depot/cms/users/yun79/combine/CMSSW_14_1_0_pre4/src
+cmsenv
+
+-----------------------------------------------------------------------------------------------
+
+Instructions on generating NLL curvve plot
+
+<load comebine and go to datacard path>
+
+text2workspace.py <datacard_name>.txt
+
+
+combine -M MultiDimFit  <datacard_name>.root -m 125 --freezeParameters MH -n .scan.with_syst --algo grid --points 20 --setParameterRanges r=0,5
+
+combine -M MultiDimFit  <datacard_name>.root -m 125 --freezeParameters MH -n .bestfit.with_syst --setParameterRanges r=0.5,2.5 --saveWorkspace
+
+combine -M MultiDimFit higgsCombine.bestfit.with_syst.MultiDimFit.mH125.root -m 125 --freezeParameters MH,allConstrainedNuisances -n .scan.with_syst.statonly_correct --algo grid --points 20 --setParameterRanges r=0.5,2.5 --snapshotName MultiDimFit
+
+plot1DScan.py higgsCombine.scan.with_syst.MultiDimFit.mH125.root --main-label "With systematics" --main-color 1 --others higgsCombine.scan.with_syst.statonly_correct.MultiDimFit.mH125.root:"Stat-only":2 -o "nll_curve" --breakdown syst,stat
+
+
+-------------------------------------------------------------------------------------------------------------
+
+Instructions for impact plots
+
+text2workspace.py combined_allyears.txt -m 125
+combineTool.py -M Impacts -d combined_allyears.root -m 125 --doInitialFit --robustFit 1
+combineTool.py -M Impacts -d combined_allyears.root -m 125 --robustFit 1 --doFits
+combineTool.py -M Impacts -d combined_allyears.root -m 125 -o impacts_allyears.json
+plotImpacts.py -i impacts_allyears.json -o impacts_allyears
+
