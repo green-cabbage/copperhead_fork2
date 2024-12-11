@@ -107,6 +107,7 @@ class DimuonProcessor(processor.ProcessorABC):
 
         print(f"self.do_jecunc: {self.do_jecunc}")
         print(f"self.do_jerunc: {self.do_jerunc}")
+        self.jec_pars = jec_pars
         
         # enable timer for debugging
         do_timer = kwargs.get("do_timer", False)
@@ -413,8 +414,8 @@ class DimuonProcessor(processor.ProcessorABC):
         prepare_jets(df, is_mc)
         jets = df.Jet
 
-        # self.do_jec = True
-        self.do_jec = False
+        self.do_jec = True
+        # self.do_jec = False
 
         # # We only need to reapply JEC for 2018 data
         # # (unless new versions of JEC are released)
@@ -422,6 +423,19 @@ class DimuonProcessor(processor.ProcessorABC):
             self.do_jec = True
 
         print(f"self.do_jec: {self.do_jec}")
+
+        # jets = apply_jec(
+        #     df,
+        #     jets,
+        #     dataset,
+        #     is_mc,
+        #     self.year,
+        #     self.do_jec,
+        #     self.do_jecunc,
+        #     self.do_jerunc,
+        #     self.jec_factories,
+        #     self.jec_factories_data,
+        # )
 
         jets = apply_jec(
             df,
@@ -432,9 +446,9 @@ class DimuonProcessor(processor.ProcessorABC):
             self.do_jec,
             self.do_jecunc,
             self.do_jerunc,
-            self.jec_factories,
-            self.jec_factories_data,
+            self.jec_pars
         )
+
 
         # ------------------------------------------------------------#
         # Calculate other event weights
@@ -946,7 +960,7 @@ class DimuonProcessor(processor.ProcessorABC):
         self.roccor_lookup = rochester_lookup.rochester_lookup(rochester_data)
 
         # JEC, JER and uncertainties
-        self.jec_factories, self.jec_factories_data = jec_factories(self.year)
+        # self.jec_factories, self.jec_factories_data = jec_factories(self.year)
 
         # Muon scale factors
         self.musf_lookup = musf_lookup(self.parameters)

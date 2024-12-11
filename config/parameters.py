@@ -31,10 +31,20 @@ parameters.update(
     }
 )
 
+# #RERECO
+# parameters["lumimask"] = {
+#     "2016": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt",
+#     "2017": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.txt",
+#     "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt",
+# }
+
+# UL
 parameters["lumimask"] = {
-    "2016": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt",
-    "2017": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.txt",
-    "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt",
+    "2016preVFP": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt",
+    "2016postVFP": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt",
+    "2017": "/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/lumimasks/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt",
+    # "2018": "data/lumimasks/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt",
+    "2018": "/work/users/yun79/dmitry/another_fork/copperhead_fork2//data/lumimasks/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt",
 }
 
 parameters["hlt"] = {

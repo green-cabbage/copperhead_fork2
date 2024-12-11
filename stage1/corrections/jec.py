@@ -2,8 +2,108 @@ from coffea.jetmet_tools import CorrectedJetsFactory, JECStack
 from coffea.lookup_tools import extractor
 from config.jec_parameters import jec_parameters
 import copy
+import os
+import correctionlib as core
+import awkward as ak
+
+def get_corr_inputs(input_dict, corr_obj):
+    """
+    Helper function for getting values of input variables
+    given a dictionary and a correction object.
+    """
+    input_values = [input_dict[inp.name] for inp in corr_obj.inputs]
+    return input_values
+
+def getDataJecTag(jec_pars, dataset):
+    """
+    helper function that returns the correct JEC tag for the specific run
+    """
+    jec_data_tag_dict = jec_pars["jec_data_tags"]
+    for jec_tag, run in jec_data_tag_dict.items():
+        run = run[0]
+        if run in dataset:
+            return jec_tag
+
+    # if nothing gets returned, we have an issue
+    print("ERROR: No JEC data TAG was GIVEN")
+    raise ValueError
 
 def apply_jec(
+    df,
+    jets,
+    dataset,
+    is_mc,
+    year,
+    do_jec,
+    do_jecunc,
+    do_jerunc,
+    jec_pars
+):
+    input_dict = {
+        # jet transverse momentum
+        "JetPt": ak.flatten(jets.pt_raw),
+        # jet pseudorapidity
+        "JetEta": ak.flatten(jets.eta),
+        # jet azimuthal angle
+        "JetPhi": ak.flatten(jets.phi),
+        # jet area
+        "JetA": ak.flatten(jets.area),
+        # median energy density (pileup)
+        "Rho": ak.flatten(jets.rho),
+        # # systematic variation (only for JER SF)
+        # "systematic": "nom",
+        # # pT of matched gen-level jet (only for JER smearing)
+        # "GenPt": 80.0,  # or -1 if no match
+        # # unique event ID used for deterministic
+        # # pseudorandom number generation (only for JER smearing)
+        # "EventID": 12345,
+    }
+    # print(f"type(jets.pt_raw): {type(jets.pt_raw)}")
+    # print(f"input_dict: {input_dict}")
+    algo = "AK4PFchs"
+    if is_mc:
+        # jec_levels = ["L1FastJet", "L2Relative", "L3Absolute"] # hard code for now
+        jec_levels = jec_pars["jec_levels_mc"]
+        jec =  jec_parameters["jec_tags"] 
+    else: # data
+        # jec_levels = ["L1FastJet", "L2Relative", "L3Absolute", "L2L3Residual"]
+        jec_levels = jec_pars["jec_levels_data"]
+        jec = getDataJecTag(jec_pars, dataset)
+
+    # print(f"jec: {jec}")
+    # print(f"jec_levels: {jec_levels}")
+    fname = f"/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/POG/JME/{year}_UL/jet_jerc.json.gz" # Hard code for now
+    cset = core.CorrectionSet.from_file(os.path.join(fname))
+    print("cset done")
+    sf_total = ak.ones_like(ak.flatten(jets.eta))
+    for lvl in jec_levels:
+        key = "{}_{}_{}".format(jec, lvl, algo)
+        print("JSON access to keys: '{}'".format(key))
+        sf = cset[key]
+        inputs = get_corr_inputs(input_dict, sf)
+        sf_val = sf.evaluate(*inputs)
+        print(f"{lvl} sf_val: {sf_val}")
+        sf_total = sf_total * sf_val
+    # print(f"sf_total: {sf_total}")
+    # unflatten the correction
+    sf_total = ak.unflatten(
+        sf_total,
+        counts=ak.num(jets.eta, axis=1),
+    )
+    # print(f"sf_total unflattened: {sf_total}")
+
+    # now apply the corrections to pt and mass
+    # print(f"jets.pt b4: {jets.pt}")
+    # print(f"jets.mass b4: {jets.mass}")
+    jets["pt"] = jets.pt_raw*sf_total
+    jets["mass"] = jets.mass_raw*sf_total
+    jets["pt_jec"] = jets["pt"]
+    jets["mass_jec"] = jets["mass"]
+    # print(f"jets.pt after: {jets.pt}")
+    # print(f"jets.mass after: {jets.mass}")
+    return jets
+
+def apply_jec_rereco(
     df,
     jets,
     dataset,

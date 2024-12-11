@@ -1,5 +1,5 @@
 def for_all_years(value):
-    out = {k: value for k in ["2016", "2017", "2018"]}
+    out = {k: value for k in ["2016preVFP","2016postVFP", "2017", "2018","2022EE",]}
     return out
 
 
@@ -14,7 +14,20 @@ def get_variations(sources):
 jec_parameters = {}
 
 jec_unc_to_consider = {
-    "2016": [
+    "2016preVFP": [
+        "Absolute",
+        "Absolute2016",
+        "BBEC1",
+        "BBEC12016",
+        "EC2",
+        "EC22016",
+        "HF",
+        "HF2016",
+        "RelativeBal",
+        "RelativeSample2016",
+        "FlavorQCD",
+    ],
+    "2016postVFP": [
         "Absolute",
         "Absolute2016",
         "BBEC1",
@@ -53,16 +66,31 @@ jec_unc_to_consider = {
         "RelativeSample2018",
         "FlavorQCD",
     ],
+    "2022EE": [
+        "Absolute",
+        "Absolute2018",
+        "BBEC1",
+        "BBEC12018",
+        "EC2",
+        "EC22018",
+        "HF",
+        "HF2018",
+        "RelativeBal",
+        "RelativeSample2018",
+        "FlavorQCD",
+    ],
 }
 
 jec_parameters["jec_variations"] = {
-    year: get_variations(jec_unc_to_consider[year]) for year in ["2016", "2017", "2018"]
+    year: get_variations(jec_unc_to_consider[year]) for year in ["2016preVFP","2016postVFP", "2017", "2018","2022EE"]
 }
 
 jec_parameters["runs"] = {
-    "2016": ["B", "C", "D", "E", "F", "G", "H"],
+    "2016preVFP": ["B", "C", "D", "E", "F"],
+    "2016postVFP": ["F", "G", "H"],
     "2017": ["B", "C", "D", "E", "F"],
     "2018": ["A", "B", "C", "D"],
+    "2022EE": ["A", "B", "C", "D"],
 }
 
 jec_parameters["jec_levels_mc"] = for_all_years(
@@ -73,38 +101,49 @@ jec_parameters["jec_levels_data"] = for_all_years(
 )
 
 jec_parameters["jec_tags"] = {
-    "2016": "Summer16_07Aug2017_V11_MC",
-    "2017": "Fall17_17Nov2017_V32_MC",
-    "2018": "Autumn18_V19_MC",
+    "2016preVFP": "Summer19UL16APV_V7_MC",
+    "2016postVFP": "Summer19UL16_V7_MC",
+    "2017": "Summer19UL17_V5_MC",
+    "2018": "Summer19UL18_V5_MC",
 }
 
 jec_parameters["jer_tags"] = {
-    "2016": "Summer16_25nsV1_MC",
-    "2017": "Fall17_V3_MC",
-    "2018": "Autumn18_V7_MC",
+    "2016preVFP": "Summer20UL16APV_JRV3_MC",
+    "2016postVFP": "Summer20UL16_JRV3_MC",
+    "2017": "Summer19UL17_JRV2_MC",
+    "2018": "Summer19UL18_JRV2_MC",
 }
 
 jec_parameters["jec_data_tags"] = {
-    "2016": {
-        "Summer16_07Aug2017BCD_V11_DATA": ["B", "C", "D"],
-        "Summer16_07Aug2017EF_V11_DATA": ["E", "F"],
-        "Summer16_07Aug2017GH_V11_DATA": ["G", "H"],
+    "2016preVFP": {
+        "Summer19UL16APV_RunBCD_V7_DATA": ["B", "C", "D"],
+        "Summer19UL16APV_RunEF_V7_DATA": ["E", "F"],
+    },
+    "2016postVFP": {
+        "Summer19UL16_RunFGH_V7_DATA": ["F","G","H"],
     },
     "2017": {
-        "Fall17_17Nov2017B_V32_DATA": ["B"],
-        "Fall17_17Nov2017C_V32_DATA": ["C"],
-        "Fall17_17Nov2017DE_V32_DATA": ["D", "E"],
-        "Fall17_17Nov2017F_V32_DATA": ["F"],
+        "Summer19UL17_RunB_V5_DATA": ["B"],
+        "Summer19UL17_RunC_V5_DATA": ["C"],
+        "Summer19UL17_RunD_V5_DATA": ["D"],
+        "Summer19UL17_RunE_V5_DATA": ["E"],
+        "Summer19UL17_RunF_V5_DATA": ["F"],
     },
     "2018": {
-        "Autumn18_RunA_V19_DATA": ["A"],
-        "Autumn18_RunB_V19_DATA": ["B"],
-        "Autumn18_RunC_V19_DATA": ["C"],
-        "Autumn18_RunD_V19_DATA": ["D"],
+        "Summer19UL18_RunA_V5_DATA": ["A"],
+        "Summer19UL18_RunB_V5_DATA": ["B"],
+        "Summer19UL18_RunC_V5_DATA": ["C"],
+        "Summer19UL18_RunD_V5_DATA": ["D"],
+    },
+    "2022EE": {
+        "Summer19UL18_RunA_V5_DATA": ["A"],
+        "Summer19UL18_RunB_V5_DATA": ["B"],
+        "Summer19UL18_RunC_V5_DATA": ["C"],
+        "Summer19UL18_RunD_V5_DATA": ["D"],
     },
 }
 
 jer_variations = ["jer1", "jer2", "jer3", "jer4", "jer5", "jer6"]
 jec_parameters["jer_variations"] = {
-    year: get_variations(jer_variations) for year in ["2016", "2017", "2018"]
+    year: get_variations(jer_variations) for year in ["2016preVFP","2016postVFP", "2017", "2018","2022EE"]
 }
