@@ -446,7 +446,7 @@ class DimuonProcessor(processor.ProcessorABC):
             self.do_jec,
             self.do_jecunc,
             self.do_jerunc,
-            self.jec_pars
+            self.jec_pars,
         )
 
 
@@ -588,7 +588,10 @@ class DimuonProcessor(processor.ProcessorABC):
         # ] = "h-sidebands"
         # output.loc[((mass >= 115.0) & (mass <= 135.0)), "region"] = "h-peak"
         output["dataset"] = dataset
-        output["year"] = int(self.year)
+        if "2016" in self.year:
+            output["year"] = int(2016)
+        else:
+            output["year"] = int(self.year)
 
 
         # --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
@@ -990,7 +993,10 @@ class DimuonProcessor(processor.ProcessorABC):
         self.extractor.add_weight_sets([f"* * {puid_filename}"])
         # Calibration of event-by-event mass resolution
         for mode in ["Data", "MC"]:
-            label = f"res_calib_{mode}_{self.year}"
+            if "2016" in self.year:
+                label = f"res_calib_{mode}_{2016}"
+            else:
+                label = f"res_calib_{mode}_{self.year}"
             path = self.parameters["res_calib_path"]
             file_path = f"{path}/{label}.root"
             self.extractor.add_weight_sets([f"{label} {label} {file_path}"])

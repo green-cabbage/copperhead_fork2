@@ -79,7 +79,10 @@ def mass_resolution(is_mc, evaluator, df, year):
     if is_mc:
         label = f"res_calib_MC_{year}"
     else:
-        label = f"res_calib_Data_{year}"
+        if "2016" in year:
+            label = f"res_calib_Data_{2016}"
+        else:
+            label = f"res_calib_Data_{year}"
     calibration = np.array(
         evaluator[label](
             df.mu1_pt.values, abs(df.mu1_eta.values), abs(df.mu2_eta.values)
