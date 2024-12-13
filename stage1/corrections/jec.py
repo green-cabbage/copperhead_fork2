@@ -19,10 +19,12 @@ def getDataJecTag(jec_pars, dataset):
     helper function that returns the correct JEC tag for the specific run
     """
     jec_data_tag_dict = jec_pars["jec_data_tags"]
-    for jec_tag, run in jec_data_tag_dict.items():
-        run = run[0]
-        if run in dataset:
-            return jec_tag
+    print(f"jec_data_tag_dict: {jec_data_tag_dict}")
+    for jec_tag, runs in jec_data_tag_dict.items():
+        for run in runs:
+            print(f"run: {run}")
+            if run in dataset:
+                return jec_tag
 
     # if nothing gets returned, we have an issue
     print("ERROR: No JEC data TAG was GIVEN")
@@ -37,7 +39,7 @@ def apply_jec(
     do_jec,
     do_jecunc,
     do_jerunc,
-    jec_pars
+    jec_pars,
 ):
     input_dict = {
         # jet transverse momentum
@@ -64,7 +66,7 @@ def apply_jec(
     if is_mc:
         # jec_levels = ["L1FastJet", "L2Relative", "L3Absolute"] # hard code for now
         jec_levels = jec_pars["jec_levels_mc"]
-        jec =  jec_parameters["jec_tags"] 
+        jec =  jec_parameters["jec_tags"][year]
     else: # data
         # jec_levels = ["L1FastJet", "L2Relative", "L3Absolute", "L2L3Residual"]
         jec_levels = jec_pars["jec_levels_data"]
@@ -82,25 +84,172 @@ def apply_jec(
         sf = cset[key]
         inputs = get_corr_inputs(input_dict, sf)
         sf_val = sf.evaluate(*inputs)
-        print(f"{lvl} sf_val: {sf_val}")
+        # print(f"{lvl} sf_val: {sf_val}")
         sf_total = sf_total * sf_val
     # print(f"sf_total: {sf_total}")
     # unflatten the correction
+    counts = ak.num(jets.eta, axis=1)
     sf_total = ak.unflatten(
         sf_total,
-        counts=ak.num(jets.eta, axis=1),
+        counts=counts,
     )
-    # print(f"sf_total unflattened: {sf_total}")
+    print(f"sf_total unflattened: {sf_total}")
 
     # now apply the corrections to pt and mass
-    # print(f"jets.pt b4: {jets.pt}")
-    # print(f"jets.mass b4: {jets.mass}")
-    jets["pt"] = jets.pt_raw*sf_total
-    jets["mass"] = jets.mass_raw*sf_total
+    print(f"jets.pt b4: {jets.pt}")
+    print(f"jets.mass b4: {jets.mass}")
+    if do_jec:
+        jets["pt"] = jets.pt_raw*sf_total
+        jets["mass"] = jets.mass_raw*sf_total
     jets["pt_jec"] = jets["pt"]
     jets["mass_jec"] = jets["mass"]
-    # print(f"jets.pt after: {jets.pt}")
-    # print(f"jets.mass after: {jets.mass}")
+    print(f"jets.pt after: {jets.pt}")
+    print(f"jets.mass after: {jets.mass}")
+    if is_mc:
+        jec_vars = jec_pars["jec_unc_to_consider"]
+        # print(f"jec_vars: {jec_vars}")
+        if do_jecunc:
+            # print(f"jec_vars: {jec_vars}")
+            for unc in jec_vars:
+                # key = "{}_{}_{}".format(jec, unc, algo)
+                key = "{}_Regrouped_{}_{}".format(jec, unc, algo)
+                print("JSON UNC access to key: '{}'".format(key))
+                sf = cset[key]
+                
+                inputs = get_corr_inputs(input_dict, sf)
+                jecunc_sf = sf.evaluate(*inputs)
+                jecunc_sf = ak.unflatten(
+                    jecunc_sf,
+                    counts=counts,
+                )
+                # print(f"{unc} jecunc_sf: {jecunc_sf}")
+                direction = "up"
+                scale = (1 + jecunc_sf)
+                # print(f"{unc} up scale: {scale}")
+                # print(f"pt flag: JES_{unc}_{direction}_pt")
+                jets[f"JES_{unc}_{direction}_pt"] = jets.pt * scale
+                jets[f"JES_{unc}_{direction}_mass"] = jets.mass * scale
+                direction = "down"
+                scale = (1 - jecunc_sf)
+                # print(f"{unc} down scale: {scale}")
+                jets[f"JES_{unc}_{direction}_pt"] = jets.pt * scale
+                jets[f"JES_{unc}_{direction}_mass"] = jets.mass * scale
+
+        if do_jerunc: 
+            #
+            # accessing the JER scale factor
+            #
+            
+            jer = jec_pars["jer_tags"]           
+            key = "{}_{}_{}".format(jer, "ScaleFactor", algo)
+            print(" JER scale factor access to key: '{}'".format(key))
+            sf = cset[key]
+
+            # update the input with jec pt plus other inputs for JER smearing
+            input_dict["JetPt"] = ak.flatten(jets.pt)
+            input_dict["systematic"] = "nom"
+            input_dict["GenPt"] = ak.flatten(jets.pt_gen)
+            random_array = jets.pt + jets.eta + jets.phi + jets.mass # just add bunch of kinematics. if you truly want a random number, you could use what nick made 
+            input_dict["EventID"] = ak.flatten(random_array)
+
+            sf_input_names = [inp.name for inp in sf.inputs]
+            print("Inputs: " + ", ".join(sf_input_names))
+            inputs = get_corr_inputs(input_dict, sf)
+            jersf_nom_value = sf.evaluate(*inputs)
+            # print(f"jersf_nom_value: {jersf_nom_value}")
+            
+            # obtain jersf down
+            input_dict["systematic"] = "down"
+            inputs = get_corr_inputs(input_dict, sf)
+            jersf_down_value = sf.evaluate(*inputs)
+            # print(f"jersf_down_value: {jersf_down_value}")
+
+            #
+            # accessing the JER (pT resolution)
+            #
+            # NOTE: "systematic" only impacts jer SF calculation, so we don't need to change input_dict["systematic"]
+            key = "{}_{}_{}".format(jer, "PtResolution", algo)
+            print("JSON access to key: '{}'".format(key))
+            sf = cset[key]
+            
+            sf_input_names = [inp.name for inp in sf.inputs]
+            print("Inputs: " + ", ".join(sf_input_names))
+            inputs = get_corr_inputs(input_dict, sf)
+            jer_value = sf.evaluate(*inputs)
+            # print(f"jer_value: {jer_value}")
+
+            #
+            # performing JER smearing
+            # (needs JER/JERSF from previous step)
+            #
+
+            fname_jersmear = f"/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/POG/JME/jer_smear.json.gz" # Hard code for now
+            # print("\nLoading JSON file: {}".format(fname_jersmear))
+            cset_jersmear = core.CorrectionSet.from_file(os.path.join(fname_jersmear))
+            
+            key_jersmear = "JERSmear"
+            # print("JSON access to key: '{}'".format(key_jersmear))
+            sf_jersmear = cset_jersmear[key_jersmear]
+            
+            # add previously obtained JER/JERSF values to inputs
+            input_dict["JER"] = jer_value
+            input_dict["JERSF"] = jersf_nom_value
+            
+            sf_input_names = [inp.name for inp in sf_jersmear.inputs]
+            # print("Inputs: " + ", ".join(sf_input_names))
+            
+            inputs = get_corr_inputs(input_dict, sf_jersmear)
+            jersmear_factor_nom = sf_jersmear.evaluate(*inputs)
+
+            input_dict["JERSF"] = jersf_down_value
+            inputs = get_corr_inputs(input_dict, sf_jersmear)
+            jersmear_factor_down = sf_jersmear.evaluate(*inputs)
+            
+
+            jersmear_factor_nom = ak.unflatten(
+                jersmear_factor_nom,
+                counts=counts,
+            )
+            jersmear_factor_down = ak.unflatten(
+                jersmear_factor_down,
+                counts=counts,
+            )
+            jersf_nom_value = ak.unflatten(
+                jersf_nom_value,
+                counts=counts,
+            )
+            jersf_down_value = ak.unflatten(
+                jersf_down_value,
+                counts=counts,
+            )
+
+            # print(f"jersmear_factor_nom: {jersmear_factor_nom}")
+            # print(f"jersmear_factor_down: {jersmear_factor_down}")
+
+            # now apply the up and down jer variations
+            unc = "JER" # NOTE: from Dmitry's July2 2020 presentation, on jet pT is changed on JER uncertainty, but JER smear in general also impacts mass
+            direction = "up" # JER up variation: JEC and JER-corrected pT
+            scale = jersmear_factor_nom
+            # print(f"{unc} up scale: {scale}")
+            
+            jets[f"{unc}_{direction}_pt"] = jets.pt * scale
+            # jets[f"{unc}_{direction}_mass"] = jets.mass * scale
+            
+
+            # print(f"jersf_down_value/jersf_nom_value: {jersf_down_value/jersf_nom_value}")
+            # print(f"jets.pt_jec - jets.pt_gen: {jets.pt_jec - jets.pt_gen}")
+            direction = "down" # JER down variation is more direct correection, formula from Dmitry's presentation on Jul 2nd 2020
+            down_pt = jets.pt_gen + (jets.pt_jec - jets.pt_gen) * (jersf_down_value/jersf_nom_value)
+            # print(f"{unc} down scale: {scale}")
+            jets[f"{unc}_{direction}_pt"] = down_pt
+            # jets[f"{unc}_{direction}_mass"] = jets.mass * scale
+            
+            # print(f"jets.pt b4 smearing: {jets.pt}")
+            # print(f"jets.pt_jec b4 smearing: {jets.pt_jec}")
+            # print(f" {unc}_up_pt after smearing: {jets[f'{unc}_up_pt']}")
+            # print(f" {unc}_down_pt after smearing: {jets[f'{unc}_down_pt']}")
+            
+
     return jets
 
 def apply_jec_rereco(

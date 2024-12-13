@@ -448,6 +448,7 @@ class DimuonProcessor(processor.ProcessorABC):
             self.do_jerunc,
             self.jec_pars,
         )
+        print(f"jet.fields after apply_jec: {jets.fields}")
 
 
         # ------------------------------------------------------------#
@@ -699,8 +700,8 @@ class DimuonProcessor(processor.ProcessorABC):
         if variation == "nominal":
             if self.do_jec:
                 jet_columns += ["pt_jec", "mass_jec"]
-            if is_mc and self.do_jerunc:
-                jet_columns += ["pt_orig", "mass_orig"]
+            # if is_mc and self.do_jerunc:
+            #     jet_columns += ["pt_orig", "mass_orig"]
 
         # Find jets that have selected muons within dR<0.4 from them
         matched_mu_pt = jets.matched_muons.pt_fsr
@@ -727,45 +728,62 @@ class DimuonProcessor(processor.ProcessorABC):
 
         # Select particular JEC variation
         if "jer" in variation: # https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution#JER_Scaling_factors_and_Uncertai
-            print("doing JER unc!")
-            jer_mask_dict ={
-                "jer1" : abs(jets.eta) < 1.93,
-                "jer2" : (abs(jets.eta) > 1.93) & (abs(jets.eta) < 2.5),
-                "jer3" : (abs(jets.eta) > 2.5) & (abs(jets.eta) < 3.0) & (jets.pt < 50),
-                "jer4" : (abs(jets.eta) > 2.5) & (abs(jets.eta) < 3.0) & (jets.pt > 50),
-                "jer5" : (abs(jets.eta) > 3.0) & (abs(jets.eta) < 5.0) & (jets.pt < 50),
-                "jer6" : (abs(jets.eta) > 3.0) & (abs(jets.eta) < 5.0) & (jets.pt > 50),
-            }
-            jets_nominal = jets[jet_columns]
-            print(f"JER variation: {variation}")
-            if "_up" in variation:
-                unc_name = variation.replace("_up", "")
-                print(f"unc_name: {unc_name}")
-                jets_jer_up = jets['JER']['up'][jet_columns]
-                jer_mask = jer_mask_dict[unc_name]
-                jets = ak.where(jer_mask, jets_jer_up, jets_nominal)
-            elif "_down" in variation:
-                unc_name = variation.replace("_down", "")
-                print(f"unc_name: {unc_name}")
-                jets_jer_down = jets['JER']['down'][jet_columns]
-                jer_mask = jer_mask_dict[unc_name]
-                jets = ak.where(jer_mask, jets_jer_down, jets_nominal)
-
+            if self.do_jerunc:
+                print("doing JER unc!")
+                jer_mask_dict ={
+                    "jer1" : abs(jets.eta) < 1.93,
+                    "jer2" : (abs(jets.eta) > 1.93) & (abs(jets.eta) < 2.5),
+                    "jer3" : (abs(jets.eta) > 2.5) & (abs(jets.eta) < 3.0) & (jets.pt < 50),
+                    "jer4" : (abs(jets.eta) > 2.5) & (abs(jets.eta) < 3.0) & (jets.pt > 50),
+                    "jer5" : (abs(jets.eta) > 3.0) & (abs(jets.eta) < 5.0) & (jets.pt < 50),
+                    "jer6" : (abs(jets.eta) > 3.0) & (abs(jets.eta) < 5.0) & (jets.pt > 50),
+                }
+                jets_nominal = jets[jet_columns]
+                print(f"JER variation: {variation}")
+                if "_up" in variation:
+                    unc_name = variation.replace("_up", "")
+                    print(f"unc_name: {unc_name}")
+                    # jets_jer_up = jets['JER']['up'][jet_columns]
+                    jets_jer_up = jets[jet_columns]
+                    jets_jer_up["pt"] = jets[f'JER_up_pt'] # update only pT
+                    jer_mask = jer_mask_dict[unc_name]
+                    jets = ak.where(jer_mask, jets_jer_up, jets_nominal)
+                elif "_down" in variation:
+                    unc_name = variation.replace("_down", "")
+                    print(f"unc_name: {unc_name}")
+                    # jets_jer_down = jets['JER']['down'][jet_columns]
+                    jets_jer_down = jets[jet_columns]
+                    jets_jer_down["pt"] = jets[f'JER_down_pt']
+                    jer_mask = jer_mask_dict[unc_name]
+                    jets = ak.where(jer_mask, jets_jer_down, jets_nominal)
+                # print(f"{variation} jet pt: {jets.pt}")
+            else: 
+                pass
 
         
         else: # if jec uncertainty
             if "_up" in variation:
                 print("doing JEC unc!")
-                unc_name = "JES_" + variation.replace("_up", "")
-                if unc_name not in jets.fields:
-                    return
-                jets = jets[unc_name]["up"][jet_columns]
+                # unc_name = "JES_" + variation.replace("_up", "")
+                unc_name = "JES_" + variation
+                print(f"unc_name: {unc_name}")
+                # if unc_name not in jets.fields:
+                    # return
+                jets_pd = jets[jet_columns] # copy nominal values first
+                jets_pd["pt"] = jets[f"{unc_name}_pt"]
+                jets_pd["mass"] = jets[f"{unc_name}_mass"]
+                jets = jets_pd
             elif "_down" in variation:
                 print("doing JEC unc!")
-                unc_name = "JES_" + variation.replace("_down", "")
-                if unc_name not in jets.fields:
-                    return
-                jets = jets[unc_name]["down"][jet_columns]
+                # unc_name = "JES_" + variation.replace("_down", "")
+                unc_name = "JES_" + variation
+                print(f"unc_name: {unc_name}")
+                # if unc_name not in jets.fields:
+                    # return
+                jets_pd = jets[jet_columns] # copy nominal values first
+                jets_pd["pt"] = jets[f"{unc_name}_pt"]
+                jets_pd["mass"] = jets[f"{unc_name}_mass"]
+                jets = jets_pd
             else:
                 jets = jets[jet_columns]
 
