@@ -152,12 +152,20 @@ jec_parameters["runs"] = {
     "2018": ["A", "B", "C", "D"],
 }
 
+# jec_parameters["jec_levels_mc"] = for_all_years(
+#     ["L1FastJet", "L2Relative", "L3Absolute"]
+# )
+# jec_parameters["jec_levels_data"] = for_all_years(
+#     ["L1FastJet", "L2Relative", "L3Absolute", "L2L3Residual"]
+# )
+
 jec_parameters["jec_levels_mc"] = for_all_years(
-    ["L1FastJet", "L2Relative", "L3Absolute"]
+    ["L2Relative", "L3Absolute"]
 )
 jec_parameters["jec_levels_data"] = for_all_years(
-    ["L1FastJet", "L2Relative", "L3Absolute", "L2L3Residual"]
+    ["L2Relative", "L3Absolute", "L2L3Residual"]
 )
+
 
 jec_parameters["jec_tags"] = {
     "2016preVFP": "Summer19UL16APV_V7_MC",

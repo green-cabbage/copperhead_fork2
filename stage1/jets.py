@@ -171,7 +171,8 @@ def jet_id(jets, parameters, year):
 
 def jet_puid(jets, parameters, year):
     jet_puid_opt = parameters["jet_puid"]
-    puId = jets.puId17 if year == "2017" else jets.puId
+    # puId = jets.puId17 if year == "2017" else jets.puId
+    puId = jets.puId
     jet_puid_wps = {
         "loose": (puId >= 4) | (jets.pt > 50),
         "medium": (puId >= 6) | (jets.pt > 50),
