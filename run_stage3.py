@@ -44,6 +44,8 @@ else:
     slurm_cluster_ip = f"{node_ip}:{args.slurm_port}"
     dashboard_address = f"{node_ip}:8787"
 
+year = args.years[0]
+print(f"year: {year}")
 # global parameters
 parameters = {
     # < general settings >
@@ -58,11 +60,8 @@ parameters = {
     "channels": ["vbf"],
     "regions": ["h-peak", "h-sidebands"],
     # "syst_variations": ["nominal"],
-    # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2017_up', 'Absolute2017_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12017_up', 'BBEC12017_down', 'EC2_up', 'EC2_down', 'EC22017_up', 'EC22017_down', 'HF_up', 'HF_down', 'HF2017_up', 'HF2017_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2017_up', 'RelativeSample2017_down', 'FlavorQCD_up', 'FlavorQCD_down', ], # taken from printing "self.pt_variations" in stage1/processor.py
-    # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2016_up', 'Absolute2016_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12016_up', 'BBEC12016_down', 'EC2_up', 'EC2_down', 'EC22016_up', 'EC22016_down', 'HF_up', 'HF_down', 'HF2016_up', 'HF2016_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2016_up', 'RelativeSample2016_down', 'FlavorQCD_up', 'FlavorQCD_down',],
-    # "syst_variations": ["nominal", "Absolute", "RelativeBal", "FlavorQCD", "RelativeSample2018"],
-    # "syst_variations": ['nominal', 'Absolute', 'Absolute2018', 'BBEC1', 'BBEC12018', 'EC2', 'EC22018', 'HF', 'HF2018', 'RelativeBal', 'RelativeSample2018', 'FlavorQCD', ],
-    "syst_variations": ['nominal', 'Absolute', 'Absolute2018', 'BBEC1', 'BBEC12018', 'EC2', 'EC22018', 'HF', 'HF2018', 'RelativeBal', 'RelativeSample2018', 'FlavorQCD', 'jer1', 'jer2', 'jer3', 'jer4', 'jer5', 'jer6', ],
+    # "syst_variations": ['nominal', 'Absolute', 'Absolute2018', 'BBEC1', 'BBEC12018', 'EC2', 'EC22018', 'HF', 'HF2018', 'RelativeBal', 'RelativeSample2018', 'FlavorQCD', 'jer1', 'jer2', 'jer3', 'jer4', 'jer5', 'jer6', ],
+    "syst_variations": ['nominal', 'Absolute', f'Absolute_{year}', 'BBEC1', f'BBEC1_{year}', 'EC2', f'EC2_{year}', 'HF', f'HF_{year}', 'RelativeBal', f'RelativeSample_{year}', 'FlavorQCD', 'jer1', 'jer2', 'jer3', 'jer4', 'jer5', 'jer6', ],
     # < plotting settings >
     "plot_vars": [],  # "dimuon_mass"],
     "variables_lookup": variables_lookup,

@@ -75,8 +75,8 @@ parameters = {
     "label": args.label,
     "channels": ["vbf"],
     "regions": ["h-peak", "h-sidebands"],
-    "syst_variations": ["nominal"],
-    # "syst_variations": ['nominal', 'Absolute_up', 'Absolute_down', f'Absolute{year}_up', f'Absolute{year}_down', 'BBEC1_up', 'BBEC1_down', f'BBEC1{year}_up', f'BBEC1{year}_down', 'EC2_up', 'EC2_down', f'EC2{year}_up', f'EC2{year}_down', 'HF_up', 'HF_down', f'HF{year}_up', f'HF{year}_down', 'RelativeBal_up', 'RelativeBal_down', f'RelativeSample{year}_up', f'RelativeSample{year}_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # full Run2
+    # "syst_variations": ["nominal"],
+    "syst_variations": ['nominal', 'Absolute_up', 'Absolute_down', f'Absolute_{year}_up', f'Absolute_{year}_down', 'BBEC1_up', 'BBEC1_down', f'BBEC1_{year}_up', f'BBEC1_{year}_down', 'EC2_up', 'EC2_down', f'EC2_{year}_up', f'EC2_{year}_down', 'HF_up', 'HF_down', f'HF_{year}_up', f'HF_{year}_down', 'RelativeBal_up', 'RelativeBal_down', f'RelativeSample_{year}_up', f'RelativeSample_{year}_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # full Run2
     # "syst_variations": ["nominal","Absolute_up",'Absolute_down',],
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2018_up', 'Absolute2018_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12018_up', 'BBEC12018_down', 'EC2_up', 'EC2_down', 'EC22018_up', 'EC22018_down', 'HF_up', 'HF_down', 'HF2018_up', 'HF2018_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2018_up', 'RelativeSample2018_down', 'FlavorQCD_up', 'FlavorQCD_down',],
     # "syst_variations": ['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2018_up', 'Absolute2018_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12018_up', 'BBEC12018_down', 'EC2_up', 'EC2_down', 'EC22018_up', 'EC22018_down', 'HF_up', 'HF_down', 'HF2018_up', 'HF2018_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2018_up', 'RelativeSample2018_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # full 2018
@@ -128,13 +128,14 @@ parameters = {
 
 parameters["datasets"] = [
     # "data_A",
-    "data_B",
-    "data_C",
-    "data_D",
-    "data_E",
-    "data_F",
-    "data_G",
-    "data_H",
+    # "data_B",
+    # "data_C",
+    # "data_D",
+    # "data_E",
+    # "data_F",
+    # "data_G",
+    # "data_H",
+    "dy_M-100To200",
     # "dy_m105_160_amc",
     # "dy_m105_160_vbf_amc",
     # "ewk_lljj_mll105_160_py_dipole",
