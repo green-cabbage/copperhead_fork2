@@ -209,8 +209,9 @@ def delete_existing_stage2_hists(datasets, years, parameters):
                 # original end ----------------------------------------------------
                 # better soln start --------------------------------------
                 # print(f"delete_existing_stage2_hists dataset: {dataset}")
+                print(f"delete_existing_stage2_hists paths: {path}")
                 paths = glob.glob(f"{path}/{dataset}*.pickle") + glob.glob(f"{path}/{dataset}*.parquet")
-                # print(f"delete_existing_stage2_hists paths: {paths}")
+                print(f"delete_existing_stage2_hists paths: {paths}")
                 for fname in paths:
                     if os.path.exists(fname):
                             remove(fname)

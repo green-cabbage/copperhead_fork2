@@ -11,7 +11,7 @@ from python.io import (
 from stage2.categorizer import split_into_channels, filter_channels
 from stage2.mva_evaluators import (
     evaluate_pytorch_dnn, 
-evaluate_tf_dnn,
+    evaluate_tf_dnn,
     # evaluate_pytorch_dnn_pisa,
     evaluate_bdt,
     # evaluate_mva_categorizer,
@@ -40,8 +40,12 @@ def process_partitions(client, parameters, df):
     years = df.year.unique()
     datasets = df.dataset.unique()
     # delete previously generated outputs to prevent partial overwrite
-    delete_existing_stage2_hists(datasets, years, parameters)
-    delete_existing_stage2_parquet(datasets, years, parameters)
+    year_savepaths = parameters["years"] # 
+    print(f"process_partitions year_savepath: {year_savepaths}")
+    # delete_existing_stage2_hists(datasets, years, parameters)
+    # delete_existing_stage2_parquet(datasets, years, parameters)
+    delete_existing_stage2_hists(datasets, year_savepaths, parameters)
+    delete_existing_stage2_parquet(datasets, year_savepaths, parameters)
 
     
     # prepare parameters for parallelization
@@ -87,6 +91,10 @@ def on_partition(args, parameters):
 
     df = df[(df.dataset == dataset) & (df.year == year)]
 
+    # print(f"on partition year: {year}")
+    # print(f"on partition year match: {(df.year == year)}")
+    
+    # print(f"df: {df.columns}")
 
     # debugging
     # slicer = (
@@ -103,6 +111,8 @@ def on_partition(args, parameters):
     # VBF filter
     print("start vbf filter cut")
     if "dy_m105_160_amc" in dataset:
+        df = df[df.gjj_mass <= 350]
+    elif "dy_M-100To200" in dataset:
         df = df[df.gjj_mass <= 350]
     if "dy_m105_160_vbf_amc" in dataset:
         df = df[df.gjj_mass > 350]
