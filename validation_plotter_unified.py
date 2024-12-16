@@ -13,13 +13,13 @@ import cmsstyle as CMS
 from collections import OrderedDict
 
 # real process arrangement
-group_data_processes = ["data_A", "data_B", "data_C", "data_D", "data_E",  "data_F"]
+group_data_processes = ["data_A", "data_B", "data_C", "data_D", "data_E",  "data_F", "data_G", "data_H"]
 # group_DY_processes = ["dy_M-100To200", "dy_M-50"] # dy_M-50 is not used in ggH BDT training input
 # group_DY_processes = ["dy_M-100To200"]
 # group_DY_processes = ["dy_M-100To200","dy_VBF_filter"]
 group_DY_processes = [
     "dy_M-50",
-    # "dy_M-100To200",
+    "dy_M-100To200",
     "dy_m105_160_amc",
     "dy_m105_160_vbf_amc",
     "dy_VBF_filter_customJMEoff",
@@ -31,7 +31,8 @@ group_DY_processes = [
 group_Top_processes = ["ttjets_dl", "ttjets_sl", "st_tw_top", "st_tw_antitop"]
 group_Ewk_processes = ["ewk_lljj_mll105_160_ptj0"]
 group_VV_processes = ["ww_2l2nu", "wz_3lnu", "wz_2l2q", "wz_1l1nu2q", "zz"]# diboson
-group_ggH_processes = ["ggh_amcPS"]
+# group_ggH_processes = ["ggh_amcPS"]
+group_ggH_processes = ["ggh_powhegPS"]
 group_VBF_processes = ["vbf_powheg_dipole"]
 
 if __name__ == "__main__":
@@ -93,6 +94,14 @@ if __name__ == "__main__":
     help="load path",
     )
     parser.add_argument(
+    "-label",
+    "--label",
+    dest="label",
+    default="",
+    action="store",
+    help="label",
+    )
+    parser.add_argument(
     "-save",
     "--save_path",
     dest="save_path",
@@ -151,19 +160,27 @@ if __name__ == "__main__":
     action=argparse.BooleanOptionalAction,
     help="If true, uses dask gateway client instead of local",
     )
+    # parser.add_argument(
+    # "--vbf",
+    # dest="vbf_cat_mode",
+    # default=False, 
+    # action=argparse.BooleanOptionalAction,
+    # help="If true, apply vbf cut for vbf category, else, ggH category cut",
+    # )
     parser.add_argument(
-    "--vbf",
-    dest="vbf_cat_mode",
-    default=False, 
-    action=argparse.BooleanOptionalAction,
-    help="If true, apply vbf cut for vbf category, else, ggH category cut",
+    "-cat",
+    "--category",
+    dest="category",
+    default="nocat",
+    action="store",
+    help="define production mode category. optionsare ggh, vbf and nocat (no category cut)",
     )
     parser.add_argument(
     "--vbf_filter_study",
     dest="do_vbf_filter_study",
     default=False, 
     action=argparse.BooleanOptionalAction,
-    help="If true, apply vbf cut for vbf category, else, ggH category cut",
+    help="If true, apply vbf filter cut for dy samples",
     )
     #---------------------------------------------------------
     # gather arguments
@@ -190,7 +207,7 @@ if __name__ == "__main__":
         for bkg_sample in bkg_samples:
             if bkg_sample.upper() == "DY": # enforce upper case to prevent confusion
                 # available_processes.append("dy_M-50")
-                # available_processes.append("dy_M-100To200")
+                available_processes.append("dy_M-100To200")
                 available_processes.append("dy_m105_160_amc")
             elif bkg_sample.upper() == "TT": # enforce upper case to prevent confusion
                 available_processes.append("ttjets_dl")
@@ -214,7 +231,8 @@ if __name__ == "__main__":
     if len(sig_samples) >0:
         for sig_sample in sig_samples:
             if sig_sample.upper() == "GGH": # enforce upper case to prevent confusion
-                available_processes.append("ggh_amcPS")
+                # available_processes.append("ggh_amcPS")
+                available_processes.append("ggh_powhegPS")
             elif sig_sample.upper() == "VBF": # enforce upper case to prevent confusion
                 available_processes.append("vbf_powheg_dipole")
             else:
@@ -234,6 +252,7 @@ if __name__ == "__main__":
             variables2plot.append(f"{particle}_phi")
             variables2plot.append(f"{particle}_cos_theta_cs")
             variables2plot.append(f"{particle}_phi_cs")
+            # variables2plot.append(f"{particle}_rap") # not included yet
             variables2plot.append(f"mmj_min_dPhi_nominal")
             variables2plot.append(f"mmj_min_dEta_nominal")
             # variables2plot.append(f"rpt_nominal")
@@ -250,6 +269,9 @@ if __name__ == "__main__":
             variables2plot.append(f"jj_pt_nominal")
             variables2plot.append(f"jj_dEta_nominal")
             variables2plot.append(f"jj_dPhi_nominal")
+            variables2plot.append(f"zeppenfeld_nominal")
+            variables2plot.append(f"rpt_nominal")
+            
         elif ("mu" in particle) :
             for kinematic in kinematic_vars:
                 # plot both leading and subleading muons/jets
@@ -297,7 +319,11 @@ if __name__ == "__main__":
         print(f"loading process {process}..")
         full_load_path = args.load_path+f"/{process}/*.parquet"
         print(f"full_load_path: {full_load_path}")
-        events = dak.from_parquet(full_load_path)
+        try:
+            events = dak.from_parquet(full_load_path)
+        except:
+            print(f"full_load_path: {full_load_path} Not available. Skipping")
+            continue
         # print(f"events.fields: {events.fields}")
 
         # ------------------------------------------------------
@@ -435,10 +461,11 @@ if __name__ == "__main__":
                     raise ValueError
                 # region = events.z_peak
                 btag_cut =(events.nBtagLoose_nominal >= 2) | (events.nBtagMedium_nominal >= 1)
-                if args.vbf_cat_mode:
-                    
+                # if args.vbf_cat_mode:
+                if args.category == "vbf":
                     print("vbf mode!")
                     prod_cat_cut =  vbf_cut & ak.fill_none(events.jet1_pt_nominal > 35, value=False) 
+                    prod_cat_cut = prod_cat_cut & ~btag_cut # btag cut is for VH and ttH categories
                     # apply additional cut to MC samples if vbf 
                     # VBF filter cut start -------------------------------------------------
                     if args.do_vbf_filter_study:
@@ -461,9 +488,17 @@ if __name__ == "__main__":
                                 print(f"no extra processing for {process}")
                                 pass
                     # VBF filter cut end -------------------------------------------------
-                else: # we're interested in ggH category
+                # else: # we're interested in ggH category
+                elif args.category == "ggh":
                     print("ggH mode!")
-                    prod_cat_cut =  ~vbf_cut
+                    prod_cat_cut =  ~vbf_cut 
+                    prod_cat_cut = prod_cat_cut & ~btag_cut # btag cut is for VH and ttH categories
+                elif args.category == "nocat":
+                    print("nocat mode!")
+                    prod_cat_cut =  ak.ones_like(vbf_cut, dtype="bool")
+                else:
+                    print("Error: invalid category option!")
+                    raise ValueError
                 # print(f"prod_cat_cut sum b4: {ak.sum(prod_cat_cut).compute()}")
                 
                
@@ -473,7 +508,6 @@ if __name__ == "__main__":
                 category_selection = (
                     prod_cat_cut  
                     & region 
-                    & ~btag_cut # btag cut is for VH and ttH categories
                 )
                 # original end -----------------------------------------
                 # test start ------------------------------------------
@@ -842,11 +876,13 @@ if __name__ == "__main__":
             # -------------------------------------------------------
             # All data are prepped, now plot Data/MC histogram
             # -------------------------------------------------------
-            if args.vbf_cat_mode:
-                production_cat = "vbf"
-            else:
-                production_cat = "ggh"
-            full_save_path = f"{args.save_path}/{args.year}/ROOT/Reg_{args.region}/Cat_{production_cat}"
+            # if args.vbf_cat_mode:
+            #     production_cat = "vbf"
+            # else:
+            #     production_cat = "ggh"
+            # full_save_path = f"{args.save_path}/{args.year}/ROOT/Reg_{args.region}/Cat_{production_cat}"
+
+            full_save_path = f"{args.save_path}/{args.year}/ROOT/Reg_{args.region}/Cat_{args.category}/{args.label}"
             if not os.path.exists(full_save_path):
                 os.makedirs(full_save_path)
             canvas.SaveAs(f"{full_save_path}/{var}.pdf");
@@ -907,7 +943,11 @@ if __name__ == "__main__":
             
             for process in available_processes:    
                 print(f"process: {process}")
-                events = loaded_events[process]
+                try:
+                    events = loaded_events[process]
+                except:
+                    print(f"skipping {process}")
+                    continue
                 is_data = "data" in process.lower()
                 print(f"is_data: {is_data}")
                 if is_data:
@@ -951,9 +991,11 @@ if __name__ == "__main__":
                 # vbf_cut = ak.fill_none(events.vbf_cut, value=False) # in the future none values will be replaced with False
                 vbf_cut = (events.jj_mass_nominal > 400) & (events.jj_dEta_nominal > 2.5) & (events.jet1_pt_nominal > 35)
                 vbf_cut = ak.fill_none(vbf_cut, value=False)
-                if args.vbf_cat_mode:
+                # if args.vbf_cat_mode:
+                if args.category == "vbf":
                     print("vbf mode!")
                     prod_cat_cut =  vbf_cut & ak.fill_none(events.jet1_pt_nominal > 35, value=False) 
+                    prod_cat_cut = prod_cat_cut & ~btag_cut # btag cut is for VH and ttH categories
                     print("applying jet1 pt 35 Gev cut!")
                     if args.do_vbf_filter_study:
                         print("applying VBF filter gen cut!")
@@ -974,15 +1016,21 @@ if __name__ == "__main__":
                             else:
                                 print(f"no extra processing for {process}")
                                 pass
-                else: # we're interested in ggH category
+                # else: # we're interested in ggH category
+                elif args.category == "ggh":
                     print("ggH mode!")
-                    prod_cat_cut =  ~vbf_cut
-
+                    prod_cat_cut =  ~vbf_cut 
+                    prod_cat_cut = prod_cat_cut & ~btag_cut # btag cut is for VH and ttH categories
+                elif args.category == "nocat":
+                    print("nocat mode!")
+                    prod_cat_cut =  ak.ones_like(vbf_cut, dtype="bool")
+                else:
+                    print("Error: invalid category option!")
+                    raise ValueError
             
                 category_selection = (
                     prod_cat_cut & 
-                    region &
-                    ~btag_cut # btag cut is for VH and ttH categories
+                    region 
                 )
                 print(f"category_selection length: {len(category_selection)}")
                 print(f"category_selection {process} sum : {ak.sum(ak.values_astype(category_selection, np.int32))}")
@@ -1155,11 +1203,14 @@ if __name__ == "__main__":
             # -------------------------------------------------------
             # All data are prepped, now plot Data/MC histogram
             # -------------------------------------------------------
-            if args.vbf_cat_mode:
-                production_cat = "vbf"
-            else:
-                production_cat = "ggh"
-            full_save_path = args.save_path+f"/{args.year}/mplhep/Reg_{args.region}/Cat_{production_cat}"
+            # if args.vbf_cat_mode:
+            #     production_cat = "vbf"
+            # else:
+            #     production_cat = "ggh"
+            # full_save_path = args.save_path+f"/{args.year}/mplhep/Reg_{args.region}/Cat_{production_cat}"
+            full_save_path = args.save_path+f"/{args.year}/mplhep/Reg_{args.region}/Cat_{args.category}/{args.label}"
+
+            
             if not os.path.exists(full_save_path):
                 os.makedirs(full_save_path)
             full_save_fname = f"{full_save_path}/{var}.pdf"
