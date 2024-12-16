@@ -8,6 +8,7 @@ from python.io import save_stage2_output_hists
 
 
 def make_histograms(df, var_name, year, dataset, regions, channels, npart, parameters):
+    year_savepath = parameters["years"][0] # yearpath for make_histograms to know which directory to save the files
     debug = False
     print("start making hists!")
     # try to get binning from config
@@ -91,7 +92,8 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
                 var_name = var.name
             else:
                 continue
-
+        # print(f"year: {year}")
+        # print(f"df.year: {df.year}")
         slicer = (
             (df.dataset == dataset)
             & (df.region == region)
@@ -153,7 +155,9 @@ def make_histograms(df, var_name, year, dataset, regions, channels, npart, param
     # (partitions will be joined in stage3)
     save_hists = parameters.get("save_hists", False)
     if save_hists:
-        save_stage2_output_hists(hist, var.name, dataset, year, parameters, npart)
+        # save_stage2_output_hists(hist, var.name, dataset, year, parameters, npart)
+        save_stage2_output_hists(hist, var.name, dataset, year_savepath, parameters, npart)
+        
 
     # return info for debugging
     if debug:
