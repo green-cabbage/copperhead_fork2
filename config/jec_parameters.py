@@ -152,19 +152,19 @@ jec_parameters["runs"] = {
     "2018": ["A", "B", "C", "D"],
 }
 
-# jec_parameters["jec_levels_mc"] = for_all_years(
-#     ["L1FastJet", "L2Relative", "L3Absolute"]
-# )
-# jec_parameters["jec_levels_data"] = for_all_years(
-#     ["L1FastJet", "L2Relative", "L3Absolute", "L2L3Residual"]
-# )
-
 jec_parameters["jec_levels_mc"] = for_all_years(
-    ["L2Relative", "L3Absolute"]
+    ["L1FastJet", "L2Relative", "L3Absolute"]
 )
 jec_parameters["jec_levels_data"] = for_all_years(
-    ["L2Relative", "L3Absolute", "L2L3Residual"]
+    ["L1FastJet", "L2Relative", "L3Absolute", "L2L3Residual"]
 )
+
+# jec_parameters["jec_levels_mc"] = for_all_years(
+#     ["L2Relative", "L3Absolute"]
+# )
+# jec_parameters["jec_levels_data"] = for_all_years(
+#     ["L2Relative", "L3Absolute", "L2L3Residual"]
+# )
 
 
 jec_parameters["jec_tags"] = {

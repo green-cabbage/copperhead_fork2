@@ -414,13 +414,13 @@ class DimuonProcessor(processor.ProcessorABC):
         prepare_jets(df, is_mc)
         jets = df.Jet
 
-        self.do_jec = True
-        # self.do_jec = False
+        # self.do_jec = True
+        self.do_jec = False
 
         # # We only need to reapply JEC for 2018 data
         # # (unless new versions of JEC are released)
-        if ("data" in dataset) and ("2018" in self.year):
-            self.do_jec = True
+        # if ("data" in dataset) and ("2018" in self.year):
+            # self.do_jec = True
 
         print(f"self.do_jec: {self.do_jec}")
 

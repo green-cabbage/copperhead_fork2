@@ -93,6 +93,9 @@ def to_templates(client, parameters, hist_df=None):
 
 def make_templates(args, parameters={}):
     year = args["year"]
+    print(f"make_template year: {year}")
+    print(f'args["hist_df"].year: {args["hist_df"].year}')
+
     region = args["region"]
     channel = args["channel"]
     var_name = args["var_name"]
@@ -100,6 +103,11 @@ def make_templates(args, parameters={}):
         (args["hist_df"].var_name == var_name) & (args["hist_df"].year == year)
     ]
     print(f"hist_df: {hist_df}")
+    if "2016" in year:
+        year_savepath = year
+        year = "2016"
+    else:
+        year_savepath = year
 
     if var_name in parameters["variables_lookup"].keys():
         var = parameters["variables_lookup"][var_name]
@@ -206,6 +214,7 @@ def make_templates(args, parameters={}):
                     print("no parton shower exists for this sample!")
                     raise ValueError
                 # vals_baseline = hist_df.loc[hist_df.dataset == baseline_dataset, "hist"].values 
+                print(f'hist_df.loc[hist_df.dataset == baseline_dataset, "hist"]: {hist_df.loc[hist_df.dataset == baseline_dataset, "hist"]}')
                 hist_baseline = hist_df.loc[hist_df.dataset == baseline_dataset, "hist"].values.sum()
                 
                 the_hist_nominal_baseline = hist_baseline[slicer_nominal].project(var.name).values()
@@ -310,6 +319,7 @@ def make_templates(args, parameters={}):
                         try:
                             hist_sum = hist_sum+histogram
                         except Exception as e:
+                            # print(f"Exception {e}")
                             bad_idxs.append(hist_idx)
                             # print(f"bad idx {hist_idx} with error {e}")
                         # print(f"make_templates histogram: {histogram}")
@@ -496,7 +506,9 @@ def make_templates(args, parameters={}):
         out_dir += "/" + var.name
         mkdir(out_dir)
 
-        out_fn = f"{out_dir}/{channel}_{region}_{year}.root"
+        # out_fn = f"{out_dir}/{channel}_{region}_{year}.root"
+        out_fn = f"{out_dir}/{channel}_{region}_{year_savepath}.root"
+        
         print(f"out_fn: {out_fn}")
         save_template(templates, out_fn, parameters)
 

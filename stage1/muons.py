@@ -77,7 +77,10 @@ def mass_resolution(is_mc, evaluator, df, year):
     dpt2 = (df.mu2_ptErr * df.dimuon_mass) / (2 * df.mu2_pt)
 
     if is_mc:
-        label = f"res_calib_MC_{year}"
+        if "2016" in year:
+            label = f"res_calib_MC_{2016}"
+        else:
+            label = f"res_calib_MC_{year}"
     else:
         if "2016" in year:
             label = f"res_calib_Data_{2016}"

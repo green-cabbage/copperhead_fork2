@@ -93,14 +93,22 @@ def build_datacards(var_name, yield_df, parameters):
     mkdir(datacard_path)
 
     for year in years:
+        if "2016" in year:
+            year_savepath = year
+            year = "2016"
+        else:
+            year_savepath = year
         for channel in channels:
             for region in regions:
                 region_new = rename_regions[region]
-                bin_name = f"{channel}_{region_new}_{year}"
+                # bin_name = f"{channel}_{region_new}_{year}"
+                bin_name = f"{channel}_{region_new}_{year_savepath}"
                 datacard_name = (
-                    f"{datacard_path}/datacard_{channel}_{region_new}_{year}.txt"
+                    # f"{datacard_path}/datacard_{channel}_{region_new}_{year}.txt"
+                    f"{datacard_path}/datacard_{channel}_{region_new}_{year_savepath}.txt"
                 )
-                templates_file = f"{templates_path}/{channel}_{region}_{year}.root"
+                # templates_file = f"{templates_path}/{channel}_{region}_{year}.root"
+                templates_file = f"{templates_path}/{channel}_{region}_{year_savepath}.root"
                 datacard = open(datacard_name, "w")
                 datacard.write("imax 1\n")
                 datacard.write("jmax *\n")

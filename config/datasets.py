@@ -123,9 +123,9 @@ datasets = {
         # "ewk_lljj_mll50_mjj120": "/store/mc/RunIISummer20UL17NanoAODv9/EWK_LLJJ_MLL-50_MJJ-120_TuneCP5_13TeV-madgraph-pythia8_dipole/NANOAODSIM/106X_mc2017_realistic_v9-v1",
         #"ewk_lljj_mll105_160": "/store/mc/RunIISummer16NanoAODv6/EWK_LLJJ_MLL_105-160_SM_5f_LO_TuneEEC5_13TeV-madgraph-herwigpp/",
         #"ewk_lljj_mll105_160_py": "/store/mc/RunIISummer16NanoAODv6/EWK_LLJJ_MLL_105-160_SM_5f_LO_TuneCUETP8M1_PSweights_13TeV-madgraph-pythia8/",
-        "ewk_lljj_mll105_160_ptj0": "/store/group/local/hmm/FSRmyNanoProdMc2017_NANOV8g_06May2020/EWK_LLJJ_MLL_105-160_SM_5f_LO_TuneCH3_13TeV-madgraph-herwig7_corrected/",
+        "ewk_lljj_mll105_160_ptj0": "/store/group/local/hmm/FSRmyNanoProdMc2017_NANOV8g_06May2020/EWK_LLJJ_MLL_105-160_SM_5f_LO_TuneCH3_13TeV-madgraph-herwig7_corrected/",# taken from RERECO
         "ewk_lljj_mll105_160_py_dipole": "/store/group/local/hmm/FSRmyNanoProdMc2017_NANOV8i/EWK_LLJJ_MLL_105-160_TuneCP5_13TeV-madgraph-pythia_dipole/", # taken from RERECO
-        "ggh_powhegPS":"/store/mc/RunIISummer20UL17NanoAODv9/GluGluHToMuMu_M125_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1", # taken from RERECO
+        "ggh_powhegPS":"/store/mc/RunIISummer20UL17NanoAODv9/GluGluHToMuMu_M125_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1",
         "ggh_amcPS": "/store/group/local/hmm/FSRmyNanoProdMc2017_NANOV8a/GluGluHToMuMu_M125_TuneCP5_PSweights_13TeV_amcatnloFXFX_pythia8/", # taken from RERECO
         "vbf_powheg_dipole": "/store/mc/RunIISummer20UL17NanoAODv9/VBFHToMuMu_M125_TuneCP5_withDipoleRecoil_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1",
         "vbf_powheg_herwig": "/store/group/local/hmm/FSRmyNanoProdMc2017_NANOV8h_06May2020/VBFHToMuMu_M-125_TuneCP5_13TeV-powheg-herwig7_fixed/", # taken from RERECO

@@ -250,7 +250,11 @@ import pandas as pd
 
 
 def puid_weights(evaluator, year, jets, pt_name, jet_puid_opt, jet_puid, numevents):
-    yearname = year
+    if "2016" in year:
+        yearname = "2016"
+    else:
+        yearname = year
+    
     if "2017corrected" in jet_puid_opt:
         print("doing the 2017corrected jetPUID method !")
         h_eff_name_L = f"h2_eff_mc{year}_L"

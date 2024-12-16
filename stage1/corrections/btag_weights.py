@@ -104,9 +104,9 @@ def btag_weights(processor, lookup, systs, jets, weights, bjet_sel_mask):
             # print(f"cferr1_up: {cferr1_up}")
             # print(f"cferr1_up prod: {cferr1_up.prod(level=0)}")
             is_nan = np.isnan(cferr1_up.prod(level=0))
-            print(f"cferr1_up is_nan: {np.any(is_nan)}")
+            # print(f"cferr1_up is_nan: {np.any(is_nan)}")
             # print(f"cferr1_up : {cferr1_up.prod(level=0)}")
-            print(f"cferr1_up : {cferr1_up}")
+            # print(f"cferr1_up : {cferr1_up}")
 
         # btag_sys = btag[f"{sys}_up"]
         # print(f'btag_sys b4 {btag_sys}')

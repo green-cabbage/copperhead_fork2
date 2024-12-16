@@ -45,7 +45,10 @@ else:
     dashboard_address = f"{node_ip}:8787"
 
 year = args.years[0]
-print(f"year: {year}")
+if "2016" in year:
+    year = "2016"
+# print(f"year: {year}")
+
 # global parameters
 parameters = {
     # < general settings >
@@ -95,8 +98,10 @@ parameters["grouping"] = {
     # # # # "dy_m105_160_vbf_amc": "DY",
     "dy_m105_160_amc_01j": "DYJ01",
     "dy_m105_160_vbf_amc_01j": "DYJ01", 
+    "dy_M-100To200_01j": "DYJ01",
     "dy_m105_160_amc_2j": "DYJ2",
     "dy_m105_160_vbf_amc_2j": "DYJ2",
+    "dy_M-100To200_2j": "DYJ2",
     # # # # "ewk_lljj_mll105_160_py_dipole": "EWK",
     "ewk_lljj_mll105_160_ptj0": "EWK",
     "ttjets_dl": "TT+ST",
@@ -114,8 +119,8 @@ parameters["grouping"] = {
     # # # # # "wwz": "VVV",
     # # # # # "wzz": "VVV",
     # # # # # "zzz": "VVV",
-    "ggh_amcPS": "ggH_hmm",
-    # # # ## "ggh_powhegPS": "ggH",
+    # # # # #"ggh_amcPS": "ggH_hmm",
+    "ggh_powhegPS": "ggH_hmm",
     "vbf_powheg_dipole": "qqH_hmm",
 }
 

@@ -61,7 +61,10 @@ def apply_jec(
         # "EventID": 12345,
     }
     # print(f"type(jets.pt_raw): {type(jets.pt_raw)}")
-    # print(f"input_dict: {input_dict}")
+    # debugging
+    # for key, value in input_dict.items():
+    #     print(f"{key} value: {ak.to_numpy(value)}")
+    
     algo = "AK4PFchs"
     if is_mc:
         # jec_levels = ["L1FastJet", "L2Relative", "L3Absolute"] # hard code for now
@@ -76,31 +79,35 @@ def apply_jec(
     # print(f"jec_levels: {jec_levels}")
     fname = f"/work/users/yun79/dmitry/another_fork/copperhead_fork2/data/POG/JME/{year}_UL/jet_jerc.json.gz" # Hard code for now
     cset = core.CorrectionSet.from_file(os.path.join(fname))
-    print("cset done")
-    sf_total = ak.ones_like(ak.flatten(jets.eta))
-    for lvl in jec_levels:
-        key = "{}_{}_{}".format(jec, lvl, algo)
-        print("JSON access to keys: '{}'".format(key))
-        sf = cset[key]
-        inputs = get_corr_inputs(input_dict, sf)
-        sf_val = sf.evaluate(*inputs)
-        # print(f"{lvl} sf_val: {sf_val}")
-        sf_total = sf_total * sf_val
-    # print(f"sf_total: {sf_total}")
-    # unflatten the correction
     counts = ak.num(jets.eta, axis=1)
-    sf_total = ak.unflatten(
-        sf_total,
-        counts=counts,
-    )
-    print(f"sf_total unflattened: {sf_total}")
-
-    # now apply the corrections to pt and mass
-    print(f"jets.pt b4: {jets.pt}")
-    print(f"jets.mass b4: {jets.mass}")
+    print("cset done")
     if do_jec:
+        sf_total = ak.ones_like(ak.flatten(jets.eta))
+        for lvl in jec_levels:
+            key = "{}_{}_{}".format(jec, lvl, algo)
+            print("JSON access to keys: '{}'".format(key))
+            sf = cset[key]
+            sf_input_names = [inp.name for inp in sf.inputs]
+            print(f"{lvl} Inputs: " + ", ".join(sf_input_names))
+            inputs = get_corr_inputs(input_dict, sf)
+            # print(f"{lvl} inputs: {inputs}")
+            sf_val = sf.evaluate(*inputs)
+            print(f"{lvl} sf_val: {sf_val}")
+            sf_total = sf_total * sf_val
+        # print(f"sf_total: {sf_total}")
+        # unflatten the correction
+        sf_total = ak.unflatten(
+            sf_total,
+            counts=counts,
+        )
+        print(f"sf_total unflattened: {sf_total}")
+    
+        # now apply the corrections to pt and mass
+        print(f"jets.pt b4: {jets.pt}")
+        print(f"jets.mass b4: {jets.mass}")
         jets["pt"] = jets.pt_raw*sf_total
         jets["mass"] = jets.mass_raw*sf_total
+    
     jets["pt_jec"] = jets["pt"]
     jets["mass_jec"] = jets["mass"]
     print(f"jets.pt after: {jets.pt}")
@@ -146,7 +153,7 @@ def apply_jec(
             sf = cset[key]
 
             # update the input with jec pt plus other inputs for JER smearing
-            input_dict["JetPt"] = ak.flatten(jets.pt)
+            input_dict["JetPt"] = ak.flatten(jets.pt_jec)
             input_dict["systematic"] = "nom"
             input_dict["GenPt"] = ak.flatten(jets.pt_gen)
             random_array = jets.pt + jets.eta + jets.phi + jets.mass # just add bunch of kinematics. if you truly want a random number, you could use what nick made 

@@ -102,8 +102,12 @@ class SamplesInfo(object):
 
         self.paths = datasets[self.year]
 
-        if "2016" in self.year:
-            self.lumi = 35900.0
+        if "2016preVFP" in self.year:
+            self.lumi = 19500.0
+        elif "2016postVFP" in self.year:
+            self.lumi = 16800.0
+        # if "2016" in self.year:
+        #     self.lumi = 35900.0
         elif "2017" in self.year:
             self.lumi = 41530.0
         elif "2018" in self.year:
@@ -312,16 +316,21 @@ class SamplesInfo(object):
             print(f"sumGenWgts: {N}")
             numevents = self.metadata["nGenEvts"]
             print(f"numevents: {numevents}")
+            
+            print(f"self.lumi: {self.lumi}")
             if isinstance(cross_sections[self.sample], dict):
-                xsec = cross_sections[self.sample][self.year]
+                if "2016" in self.year: # hard code for now
+                    xsec = cross_sections[self.sample]["2016"]
+                else:
+                    xsec = cross_sections[self.sample][self.year]
             else:
                 xsec = cross_sections[self.sample]
-            # print(self.lumi, xsec, N)
+            print(f"xsec: {xsec}")
             if N > 0:
                 self.lumi_weights[self.sample] = xsec * self.lumi / N
             else:
                 self.lumi_weights[self.sample] = 0
-            # print(f"{self.sample}: events={numevents}")
+            print(f"self. {self.sample}: {self.lumi_weights[self.sample]}")
             return numevents
         else:
             return self.data_entries

@@ -51,7 +51,7 @@ use_local_cluster = args.slurm_port is None
 node_ip = "128.211.149.133"
 
 if use_local_cluster:
-    ncpus_local = 30 #15 #10#7 #30 #15 #30 #2
+    ncpus_local = 20 #15 #10#7 #30 #15 #30 #2
     slurm_cluster_ip = ""
     dashboard_address = f"{node_ip}:34875"
 else:
@@ -61,7 +61,9 @@ else:
 
 
 year = args.years[0]
-print(f"year: {year}")
+if "2016" in year:
+    year = "2016"
+# print(f"year: {year}")
 # global parameters
 parameters = {
     # < general settings >
@@ -75,8 +77,8 @@ parameters = {
     "label": args.label,
     "channels": ["vbf"],
     "regions": ["h-peak", "h-sidebands"],
-    # "syst_variations": ["nominal"],
-    "syst_variations": ['nominal', 'Absolute_up', 'Absolute_down', f'Absolute_{year}_up', f'Absolute_{year}_down', 'BBEC1_up', 'BBEC1_down', f'BBEC1_{year}_up', f'BBEC1_{year}_down', 'EC2_up', 'EC2_down', f'EC2_{year}_up', f'EC2_{year}_down', 'HF_up', 'HF_down', f'HF_{year}_up', f'HF_{year}_down', 'RelativeBal_up', 'RelativeBal_down', f'RelativeSample_{year}_up', f'RelativeSample_{year}_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # full Run2
+    "syst_variations": ["nominal"],
+    # "syst_variations": ['nominal', 'Absolute_up', 'Absolute_down', f'Absolute_{year}_up', f'Absolute_{year}_down', 'BBEC1_up', 'BBEC1_down', f'BBEC1_{year}_up', f'BBEC1_{year}_down', 'EC2_up', 'EC2_down', f'EC2_{year}_up', f'EC2_{year}_down', 'HF_up', 'HF_down', f'HF_{year}_up', f'HF_{year}_down', 'RelativeBal_up', 'RelativeBal_down', f'RelativeSample_{year}_up', f'RelativeSample_{year}_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # full Run2
     # "syst_variations": ["nominal","Absolute_up",'Absolute_down',],
     # "syst_variations":['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2018_up', 'Absolute2018_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12018_up', 'BBEC12018_down', 'EC2_up', 'EC2_down', 'EC22018_up', 'EC22018_down', 'HF_up', 'HF_down', 'HF2018_up', 'HF2018_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2018_up', 'RelativeSample2018_down', 'FlavorQCD_up', 'FlavorQCD_down',],
     # "syst_variations": ['nominal', 'Absolute_up', 'Absolute_down', 'Absolute2018_up', 'Absolute2018_down', 'BBEC1_up', 'BBEC1_down', 'BBEC12018_up', 'BBEC12018_down', 'EC2_up', 'EC2_down', 'EC22018_up', 'EC22018_down', 'HF_up', 'HF_down', 'HF2018_up', 'HF2018_down', 'RelativeBal_up', 'RelativeBal_down', 'RelativeSample2018_up', 'RelativeSample2018_down', 'FlavorQCD_up', 'FlavorQCD_down', 'jer1_up', 'jer1_down', 'jer2_up', 'jer2_down', 'jer3_up', 'jer3_down', 'jer4_up', 'jer4_down', 'jer5_up', 'jer5_down', 'jer6_up', 'jer6_down'], # full 2018
@@ -90,8 +92,9 @@ parameters = {
         # "vbf_powheg_dipole": 1,
         "dy_m105_160_amc" : 519, #519
         "dy_m105_160_vbf_amc" : 295,
-        "ttjets_dl" : 500,
-        "vbf_powheg_dipole" : 295,
+        # "ttjets_dl" : 500,
+        # "vbf_powheg_dipole" : 295,
+        "dy_M-100To200": 300,
     },
     #
     # < settings for histograms >
@@ -127,16 +130,16 @@ parameters = {
 }
 
 parameters["datasets"] = [
-    # "data_A",
-    # "data_B",
-    # "data_C",
-    # "data_D",
-    # "data_E",
-    # "data_F",
-    # "data_G",
-    # "data_H",
-    "dy_M-100To200",
-    # "dy_m105_160_amc",
+    "data_A",
+    "data_B",
+    "data_C",
+    "data_D",
+    "data_E",
+    "data_F",
+    "data_G",
+    "data_H",
+    # "dy_M-100To200",
+    # # # # # # # # "dy_m105_160_amc",
     # "dy_m105_160_vbf_amc",
     # "ewk_lljj_mll105_160_py_dipole",
     # "ewk_lljj_mll105_160_ptj0",
@@ -151,14 +154,14 @@ parameters["datasets"] = [
     # "wz_1l1nu2q",
     # "wz_3lnu",
     # "zz",
-    # # # # # # # "www",
-    # # # # # # # "wwz",
-    # # # # # # # "wzz",
-    # # # # # # # "zzz",
-    # "ggh_amcPS",
-    # # # # # #"ggh_powhegPS",
+    # # # # # # # # "www",
+    # # # # # # # # "wwz",
+    # # # # # # # # "wzz",
+    # # # # # # # # "zzz",
+    # # # # # # # ## "ggh_amcPS",
+    # "ggh_powhegPS",
     # "vbf_powheg_dipole",
-    # # # # # "vbf_powhegPS",
+    # # # # # # "vbf_powhegPS",
     # "vbf_powheg_herwig",
 ]
 # using one small dataset for debugging
