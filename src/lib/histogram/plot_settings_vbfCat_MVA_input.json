@@ -31,6 +31,14 @@
         "xlabel": "$\\eta(\\mu\\mu)$ [GeV]",
         "color": "royalblue"
     },
+    "dimuon_rap": {
+        "variable": "dimuon_rap",
+        "binning_linspace": [-2.5, 2.5, 31],
+        "density": false,
+        "ylabel": "Events / 1 GeV",
+        "xlabel": "$y(\\mu\\mu)$ [GeV]",
+        "color": "royalblue"
+    },
     "dimuon_rapidity": {
         "variable": "dimuon_rapidity",
         "binning_linspace": [-2.5, 2.5, 31],

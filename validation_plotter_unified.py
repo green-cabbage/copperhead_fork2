@@ -11,6 +11,7 @@ import time
 import tqdm
 import cmsstyle as CMS
 from collections import OrderedDict
+import glob
 
 # real process arrangement
 group_data_processes = ["data_A", "data_B", "data_C", "data_D", "data_E",  "data_F", "data_G", "data_H"]
@@ -252,17 +253,16 @@ if __name__ == "__main__":
             variables2plot.append(f"{particle}_phi")
             variables2plot.append(f"{particle}_cos_theta_cs")
             variables2plot.append(f"{particle}_phi_cs")
-            # variables2plot.append(f"{particle}_rap") # not included yet
             variables2plot.append(f"mmj_min_dPhi_nominal")
             variables2plot.append(f"mmj_min_dEta_nominal")
-            # variables2plot.append(f"rpt_nominal")
-            # variables2plot.append(f"ll_zstar_log_nominal")
+            variables2plot.append(f"rpt_nominal")
+            variables2plot.append(f"ll_zstar_log_nominal")
             
             # --------------------------------------------------
             # variables2plot.append(f"rpt")
             # variables2plot.append(f"ll_zstar_log")
             # variables2plot.append(f"dimuon_ebe_mass_res")
-            # variables2plot.append(f"{particle}_rapidity")
+            variables2plot.append(f"{particle}_rapidity")
         elif "dijet" in particle:
             # variables2plot.append(f"gjj_mass")
             variables2plot.append(f"jj_mass_nominal")
@@ -317,7 +317,10 @@ if __name__ == "__main__":
     loaded_events = {} # intialize dictionary containing all the arrays
     for process in tqdm.tqdm(available_processes):
         print(f"loading process {process}..")
-        full_load_path = args.load_path+f"/{process}/*.parquet"
+        # full_load_path = args.load_path+f"/{process}/*.parquet"
+        full_load_path = args.load_path+f"/{process}/*/*.parquet"
+        if len(glob.glob(full_load_path)) ==0: # check if there's files in the load path
+            full_load_path = args.load_path+f"/{process}/*.parquet" # try coppperheadV1 path, if this also is empty, then skip
         print(f"full_load_path: {full_load_path}")
         try:
             events = dak.from_parquet(full_load_path)
@@ -347,8 +350,10 @@ if __name__ == "__main__":
             "dimuon_pt", 
             "jet2_pt_nominal",
             "jj_pt_nominal",
-            "zeppenfeld_nominal"
+            "zeppenfeld_nominal",
         ]
+
+            
         # # add in weights
         # for field in events.fields:
         #     if "wgt_nominal" in field:
@@ -356,7 +361,16 @@ if __name__ == "__main__":
                 
         is_data = "data" in process.lower()
         if not is_data: # MC sample
-             fields2load += ["gjj_mass", "gjj_dR", "gjet1_pt", "gjet2_pt"]
+            fields2load += ["gjj_mass", "gjj_dR", "gjet1_pt", "gjet2_pt"]
+            # fields2load += [# quck test
+            #     "wgt_nominal_muID" ,
+            #     "wgt_nominal_muIso" ,
+            #     "wgt_nominal_muTrig",
+            #     'wgt_nominal_jetpuid_wgt',
+            #     'wgt_nominal_qgl_wgt',
+            #     "wgt_nominal_zpt_wgt",
+            #     "wgt_nominal_btag_wgt",
+            # ]
 
         # filter out redundant fields by using the set object
         fields2load = list(set(fields2load))
@@ -954,6 +968,12 @@ if __name__ == "__main__":
                     weights = ak.to_numpy(ak.fill_none(events["wgt_nominal"], value=0.0))
                 else: # MC
                     weights = ak.fill_none(events["wgt_nominal"], value=0.0)
+                    
+                    # weights = weights/events.wgt_nominal_muID/ events.wgt_nominal_muIso / events.wgt_nominal_muTrig #  quick test
+                    # weights = weights/events.wgt_nominal_qgl_wgt/ events.wgt_nominal_zpt_wgt /events.wgt_nominal_btag_wgt#  quick test
+                    
+
+                    
                     # print(f"weights {process} b4 numpy: {weights}")
                     weights = ak.to_numpy(weights) # MC are already normalized by xsec*lumi
                     # for some reason, some nan weights are still passes ak.fill_none() bc they're "nan", not None, this used to be not a problem
