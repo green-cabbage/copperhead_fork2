@@ -339,18 +339,34 @@
     },
     "nsoftjets2": {
         "variable": "nsoftjets2",
-        "binning_linspace": [-0.001, 19.999, 21],
+        "binning_linspace": [0, 25, 26],
         "density": false,
         "ylabel": "Events",
-        "xlabel": "nBtagLoose",
+        "xlabel": "nsoftjets2",
         "color": "royalblue"
     },
     "nsoftjets5": {
         "variable": "nsoftjets5",
-        "binning_linspace": [-0.001, 19.999, 21],
+        "binning_linspace": [0, 25, 26],
         "density": false,
         "ylabel": "Events",
-        "xlabel": "nBtagLoose",
+        "xlabel": "nsoftjets5",
+        "color": "royalblue"
+    },
+    "htsoft2": {
+        "variable": "htsoft2",
+        "binning_linspace": [0, 60, 26],
+        "density": false,
+        "ylabel": "Events",
+        "xlabel": "htsoft2",
+        "color": "royalblue"
+    },
+    "htsoft5": {
+        "variable": "htsoft5",
+        "binning_linspace": [0, 60, 26],
+        "density": false,
+        "ylabel": "Events",
+        "xlabel": "htsoft5",
         "color": "royalblue"
     },
     "zeppenfeld": {
@@ -360,7 +376,13 @@
         "ylabel": "Events",
         "xlabel": "zeppenfeld",
         "color": "royalblue"
+    },
+    "pt_centrality": {
+        "variable": "pt_centrality",
+        "binning_linspace": [0, 2, 21],
+        "density": false,
+        "ylabel": "Events",
+        "xlabel": "pT centrality",
+        "color": "royalblue"
     }
-
-
 }
