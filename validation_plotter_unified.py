@@ -12,6 +12,13 @@ import tqdm
 import cmsstyle as CMS
 from collections import OrderedDict
 import glob
+import copy
+
+def get_scalar_ptCentrality(events):
+    pt_centrality_scalar = events.dimuon_pt - abs(events.jet1_pt_nominal + events.jet2_pt_nominal)/2
+    pt_centrality_scalar = pt_centrality_scalar / abs(events.jet1_pt_nominal - events.jet2_pt_nominal)
+    return pt_centrality_scalar
+    
 
 # real process arrangement
 group_data_processes = ["data_A", "data_B", "data_C", "data_D", "data_E",  "data_F", "data_G", "data_H"]
@@ -247,20 +254,19 @@ if __name__ == "__main__":
         raise ValueError
     for particle in args.variables:
         if "dimuon" in particle:
-            variables2plot.append(f"{particle}_mass")
-            variables2plot.append(f"{particle}_pt")
+            # variables2plot.append(f"{particle}_mass")
+            # variables2plot.append(f"{particle}_pt")
             # variables2plot.append(f"{particle}_eta")
             # variables2plot.append(f"{particle}_phi")
-            # variables2plot.append(f"{particle}_cos_theta_cs")
-            # variables2plot.append(f"{particle}_phi_cs")
+            variables2plot.append(f"{particle}_cos_theta_cs")
+            variables2plot.append(f"{particle}_phi_cs")
+            variables2plot.append(f"{particle}_cos_theta_eta")
+            variables2plot.append(f"{particle}_phi_eta")
             # variables2plot.append(f"mmj_min_dPhi_nominal")
             # variables2plot.append(f"mmj_min_dEta_nominal")
             # variables2plot.append(f"rpt_nominal")
             # variables2plot.append(f"ll_zstar_log_nominal")
             
-            # --------------------------------------------------
-            # variables2plot.append(f"rpt")
-            # variables2plot.append(f"ll_zstar_log")
             # variables2plot.append(f"dimuon_ebe_mass_res")
             # variables2plot.append(f"{particle}_rapidity")
         elif "dijet" in particle:
@@ -269,13 +275,13 @@ if __name__ == "__main__":
             # variables2plot.append(f"jj_pt_nominal")
             # variables2plot.append(f"jj_dEta_nominal")
             # variables2plot.append(f"jj_dPhi_nominal")
-            # variables2plot.append(f"zeppenfeld_nominal")
+            variables2plot.append(f"zeppenfeld_nominal")
             # variables2plot.append(f"rpt_nominal")
-            variables2plot.append(f"pt_centrality_nominal")
-            variables2plot.append(f"nsoftjets2_nominal")
-            variables2plot.append(f"htsoft2_nominal")
-            variables2plot.append(f"nsoftjets5_nominal")
-            variables2plot.append(f"htsoft5_nominal")
+            # variables2plot.append(f"pt_centrality_nominal")
+            # variables2plot.append(f"nsoftjets2_nominal")
+            # variables2plot.append(f"htsoft2_nominal")
+            # variables2plot.append(f"nsoftjets5_nominal")
+            # variables2plot.append(f"htsoft5_nominal")
             
         elif ("mu" in particle) :
             for kinematic in kinematic_vars:
@@ -293,6 +299,10 @@ if __name__ == "__main__":
        
         else:
             print(f"Unsupported variable: {particle} is given!")
+
+
+    variables2plot_orig = copy.deepcopy(variables2plot)
+    # variables2plot += ["pt_centrality_scalar"]
     print(f"variables2plot: {variables2plot}")
     # obtain plot settings from config file
     # plot_setting_fname = "./src/lib/histogram/plot_settings_stage1.json"
@@ -338,7 +348,7 @@ if __name__ == "__main__":
         # select only needed variables to load to save run time
         # ------------------------------------------------------
         
-        fields2load = variables2plot + [
+        fields2load = variables2plot_orig + [
             "wgt_nominal",
             # "fraction", 
             # "h_sidebands", 
@@ -357,7 +367,7 @@ if __name__ == "__main__":
             "jj_pt_nominal",
             "zeppenfeld_nominal",
         ]
-
+        
             
         # # add in weights
         # for field in events.fields:
@@ -367,15 +377,10 @@ if __name__ == "__main__":
         is_data = "data" in process.lower()
         if not is_data: # MC sample
             fields2load += ["gjj_mass", "gjj_dR", "gjet1_pt", "gjet2_pt"]
-            # fields2load += [# quck test
-            #     "wgt_nominal_muID" ,
-            #     "wgt_nominal_muIso" ,
-            #     "wgt_nominal_muTrig",
-            #     'wgt_nominal_jetpuid_wgt',
-            #     'wgt_nominal_qgl_wgt',
-            #     "wgt_nominal_zpt_wgt",
-            #     "wgt_nominal_btag_wgt",
-            # ]
+            # temp addition
+            # if "separate_wgt_zpt_wgt" in events.fields:
+                # fields2load.append("separate_wgt_zpt_wgt")
+            
 
         # filter out redundant fields by using the set object
         fields2load = list(set(fields2load))
@@ -450,6 +455,7 @@ if __name__ == "__main__":
                     # could be an issue of copying bunching of parquet files from one directory to another, but not exactly sure
                     weights = np.nan_to_num(weights, nan=0.0) 
 
+                
                 # print(f"weights {process} after numpy: {weights}")
                 # print(f"weights {process} isnan sum: {np.sum(np.isnan(weights))}")
                 
@@ -555,6 +561,9 @@ if __name__ == "__main__":
                     fraction_weight = fraction_weight[values_filter]
                     weights = weights*fraction_weight
                 # print(f"weights after category selection {process}: {weights}")    
+
+                
+               
                     
                 np_hist, _ = np.histogram(values, bins=binning, weights = weights)
                 # print(f"np_hist old {process} : {np_hist}")
@@ -975,8 +984,11 @@ if __name__ == "__main__":
                     weights = ak.fill_none(events["wgt_nominal"], value=0.0)
                     
                     # weights = weights/events.wgt_nominal_muID/ events.wgt_nominal_muIso / events.wgt_nominal_muTrig #  quick test
-                    # weights = weights/events.wgt_nominal_qgl_wgt/ events.wgt_nominal_zpt_wgt /events.wgt_nominal_btag_wgt#  quick test
-                    
+                    # temporary over write
+                    # print(f"events.fields: {events.fields}")
+                    # if "separate_wgt_zpt_wgt" in events.fields:
+                    #     print("removing Zpt rewgt!")
+                    #     weights = weights/events["separate_wgt_zpt_wgt"]
 
                     
                     # print(f"weights {process} b4 numpy: {weights}")
@@ -1014,7 +1026,7 @@ if __name__ == "__main__":
                 # do category cut
                 btag_cut =ak.fill_none((events.nBtagLoose_nominal >= 2), value=False) | ak.fill_none((events.nBtagMedium_nominal >= 1), value=False)
                 # vbf_cut = ak.fill_none(events.vbf_cut, value=False) # in the future none values will be replaced with False
-                vbf_cut = (events.jj_mass_nominal > 400) & (events.jj_dEta_nominal > 2.5) & (events.jet1_pt_nominal > 35)
+                vbf_cut = (events.jj_mass_nominal > 400) & (events.jj_dEta_nominal > 2.5) 
                 vbf_cut = ak.fill_none(vbf_cut, value=False)
                 # if args.vbf_cat_mode:
                 if args.category == "vbf":
@@ -1070,14 +1082,19 @@ if __name__ == "__main__":
                 events = events[category_selection]
                 fraction_weight = ak.ones_like(events.wgt_nominal) # TBF, all fractions should be same
                 print(f"var: {var}")
-                values = ak.to_numpy(ak.fill_none(events[var], value=-999.0))
+                # temp overwrite
+                if ("scalar" in var) and ("centrality" in var):
+                    values = get_scalar_ptCentrality(events)
+                    values = ak.to_numpy(ak.fill_none(values, value=-999.0))
+                else:
+                    values = ak.to_numpy(ak.fill_none(events[var], value=-999.0))
                 # print(f"weights.shape: {weights[weights>0].shape}")
                 
                 # temporary overwrite start -------------------------
                 # we have bad ll_zstar_log caluclation, so we re-calculate on the spot
-                if var == "ll_zstar_log":
-                    print("ll_zstar_log overwrite!")
-                    values = ak.to_numpy(np.log(np.abs(events["zeppenfeld"])))
+                # if var == "ll_zstar_log":
+                #     print("ll_zstar_log overwrite!")
+                #     values = ak.to_numpy(np.log(np.abs(events["zeppenfeld"])))
                 # elif var == "rpt":
                 #     print("rpt overwrite!")
                 #     numerator = np.abs(events["jj_pt"] + events["dimuon_pt"])
@@ -1106,6 +1123,9 @@ if __name__ == "__main__":
                     # print(f"fraction_weight: {fraction_weight}")
                     weights = weights*fraction_weight
                 # print(f"weights.shape: {weights[weights>0].shape}")
+                
+                # weights = weights/ np.sum(weights) # temporary overwrite to normalize
+                # print(f"weights {process} sum: {np.sum(weights)}")
 
                 if process in group_data_processes:
                     print("data activated")
