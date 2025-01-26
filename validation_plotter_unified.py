@@ -254,34 +254,34 @@ if __name__ == "__main__":
         raise ValueError
     for particle in args.variables:
         if "dimuon" in particle:
-            # variables2plot.append(f"{particle}_mass")
-            # variables2plot.append(f"{particle}_pt")
-            # variables2plot.append(f"{particle}_eta")
-            # variables2plot.append(f"{particle}_phi")
+            variables2plot.append(f"{particle}_mass")
+            variables2plot.append(f"{particle}_pt")
+            variables2plot.append(f"{particle}_eta")
+            variables2plot.append(f"{particle}_phi")
             variables2plot.append(f"{particle}_cos_theta_cs")
             variables2plot.append(f"{particle}_phi_cs")
             variables2plot.append(f"{particle}_cos_theta_eta")
             variables2plot.append(f"{particle}_phi_eta")
-            # variables2plot.append(f"mmj_min_dPhi_nominal")
-            # variables2plot.append(f"mmj_min_dEta_nominal")
-            # variables2plot.append(f"rpt_nominal")
-            # variables2plot.append(f"ll_zstar_log_nominal")
+            variables2plot.append(f"mmj_min_dPhi_nominal")
+            variables2plot.append(f"mmj_min_dEta_nominal")
+            variables2plot.append(f"ll_zstar_log_nominal")
             
-            # variables2plot.append(f"dimuon_ebe_mass_res")
-            # variables2plot.append(f"{particle}_rapidity")
+            variables2plot.append(f"dimuon_ebe_mass_res")
+            variables2plot.append(f"dimuon_ebe_mass_res_rel")
+            variables2plot.append(f"{particle}_rapidity")
         elif "dijet" in particle:
             # variables2plot.append(f"gjj_mass")
-            # variables2plot.append(f"jj_mass_nominal")
-            # variables2plot.append(f"jj_pt_nominal")
-            # variables2plot.append(f"jj_dEta_nominal")
-            # variables2plot.append(f"jj_dPhi_nominal")
+            variables2plot.append(f"jj_mass_nominal")
+            variables2plot.append(f"jj_pt_nominal")
+            variables2plot.append(f"jj_dEta_nominal")
+            variables2plot.append(f"jj_dPhi_nominal")
             variables2plot.append(f"zeppenfeld_nominal")
-            # variables2plot.append(f"rpt_nominal")
-            # variables2plot.append(f"pt_centrality_nominal")
-            # variables2plot.append(f"nsoftjets2_nominal")
-            # variables2plot.append(f"htsoft2_nominal")
-            # variables2plot.append(f"nsoftjets5_nominal")
-            # variables2plot.append(f"htsoft5_nominal")
+            variables2plot.append(f"rpt_nominal")
+            variables2plot.append(f"pt_centrality_nominal")
+            variables2plot.append(f"nsoftjets2_nominal")
+            variables2plot.append(f"htsoft2_nominal")
+            variables2plot.append(f"nsoftjets5_nominal")
+            variables2plot.append(f"htsoft5_nominal")
             
         elif ("mu" in particle) :
             for kinematic in kinematic_vars:
@@ -302,7 +302,8 @@ if __name__ == "__main__":
 
 
     variables2plot_orig = copy.deepcopy(variables2plot)
-    # variables2plot += ["pt_centrality_scalar"]
+    if "jj_mass_nominal" in variables2plot:
+        variables2plot += ["jj_mass_nominal_range2"] # add another range to plot
     print(f"variables2plot: {variables2plot}")
     # obtain plot settings from config file
     # plot_setting_fname = "./src/lib/histogram/plot_settings_stage1.json"
@@ -1083,9 +1084,9 @@ if __name__ == "__main__":
                 fraction_weight = ak.ones_like(events.wgt_nominal) # TBF, all fractions should be same
                 print(f"var: {var}")
                 # temp overwrite
-                if ("scalar" in var) and ("centrality" in var):
-                    values = get_scalar_ptCentrality(events)
-                    values = ak.to_numpy(ak.fill_none(values, value=-999.0))
+                if ("_range2" in var):
+                    var_reduced = var.replace("_range2","")
+                    values = ak.to_numpy(ak.fill_none(events[var_reduced], value=-999.0))
                 else:
                     values = ak.to_numpy(ak.fill_none(events[var], value=-999.0))
                 # print(f"weights.shape: {weights[weights>0].shape}")

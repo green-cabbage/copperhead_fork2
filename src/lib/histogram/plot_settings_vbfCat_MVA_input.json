@@ -57,26 +57,26 @@
     },
     "dimuon_cos_theta_cs": {
         "variable": "dimuon_cos_theta_cs",
-        "binning_linspace": [0, 1, 51],
-        "density": false,
+        "binning_linspace": [-1, 1, 51],
+        "logscale": false,
         "ylabel": "Events / 1 GeV",
         "xlabel": "$cos(\\theta_{CS})$",
         "color": "royalblue"
     },
     "dimuon_phi_cs": {
         "variable": "dimuon_phi_cs",
-        "binning_linspace": [0, 6.5, 51],
-        "density": false,
+        "binning_linspace": [-3.14159, 3.14159, 51],
+        "logscale": false,
         "ylabel": "Events / 1 GeV",
-        "xlabel": "\\phi_{CS}$",
+        "xlabel": "$\\phi_{CS}$",
         "color": "royalblue"
     },
     "dimuon_cos_theta_eta": {
         "variable": "dimuon_cos_theta_eta",
-        "binning_linspace": [0, 1, 51],
+        "binning_linspace": [-1, 1, 51],
         "density": false,
         "ylabel": "Events / 1 GeV",
-        "xlabel": "$cos(\\theta_{CS})$",
+        "xlabel": "$cos(\\theta_{\\eta})$",
         "color": "royalblue"
     },
     "dimuon_phi_eta": {
@@ -84,7 +84,7 @@
         "binning_linspace": [0, 6.5, 51],
         "density": false,
         "ylabel": "Events / 1 GeV",
-        "xlabel": "\\phi_{CS}$",
+        "xlabel": "$\\phi_{\\eta}$",
         "color": "royalblue"
     },
     "dimuon_ebe_mass_res": {
@@ -93,6 +93,14 @@
         "density": false,
         "ylabel": "Events / 1 GeV",
         "xlabel": "$\\sigma_{m_{\\mu\\mu}}$",
+        "color": "royalblue"
+    },
+    "dimuon_ebe_mass_res_rel": {
+        "variable": "dimuon_ebe_mass_res_rel",
+        "binning_linspace": [0, 1.0, 31],
+        "density": false,
+        "ylabel": "Events / 1 GeV",
+        "xlabel": "$\\sigma_{m_{\\mu\\mu}}/m_{\\mu\\mu}$",
         "color": "royalblue"
     },
     "rpt": {
@@ -146,6 +154,14 @@
     "jj_mass": {
         "variable": "jj_mass",
         "binning_linspace": [400, 2500, 22],
+        "density": false,
+        "ylabel": "Events / 1 GeV",
+        "xlabel": "$m_{jj}$ [GeV]",
+        "color": "royalblue"
+    },
+    "jj_mass_range2": {
+        "variable": "jj_mass_range2",
+        "binning_linspace": [0, 500, 41],
         "density": false,
         "ylabel": "Events / 1 GeV",
         "xlabel": "$m_{jj}$ [GeV]",
@@ -379,7 +395,15 @@
     },
     "pt_centrality": {
         "variable": "pt_centrality",
-        "binning_linspace": [0, 2, 21],
+        "binning_linspace": [0, 20, 51],
+        "density": false,
+        "ylabel": "Events",
+        "xlabel": "pT centrality",
+        "color": "royalblue"
+    },
+    "pt_centrality_scalar": {
+        "variable": "pt_centrality",
+        "binning_linspace": [0, 20, 51],
         "density": false,
         "ylabel": "Events",
         "xlabel": "pT centrality",
