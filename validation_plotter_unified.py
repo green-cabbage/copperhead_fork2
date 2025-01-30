@@ -37,7 +37,7 @@ group_DY_processes = [
 # group_DY_processes = [] # just VBf filter
 
 group_Top_processes = ["ttjets_dl", "ttjets_sl", "st_tw_top", "st_tw_antitop"]
-group_Ewk_processes = ["ewk_lljj_mll105_160_ptj0"]
+group_Ewk_processes = ["ewk_lljj_mll50_mjj120"]
 group_VV_processes = ["ww_2l2nu", "wz_3lnu", "wz_2l2q", "wz_1l1nu2q", "zz"]# diboson
 # group_ggH_processes = ["ggh_amcPS"]
 group_ggH_processes = ["ggh_powhegPS"]
@@ -230,7 +230,8 @@ if __name__ == "__main__":
                 # available_processes.append("wz_1l1nu2q")
                 available_processes.append("zz")
             elif bkg_sample.upper() == "EWK": # enforce upper case to prevent confusion
-                available_processes.append("ewk_lljj_mll105_160_ptj0")
+                # available_processes.append("ewk_lljj_mll105_160_ptj0")
+                available_processes.append("ewk_lljj_mll50_mjj120")
             else:
                 print(f"unknown background {bkg_sample} was given!")
         
