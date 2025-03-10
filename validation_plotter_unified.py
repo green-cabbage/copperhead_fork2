@@ -32,11 +32,17 @@ group_DY_processes = [
     "dy_m105_160_vbf_amc",
     "dy_VBF_filter_customJMEoff",
     "dy_VBF_filter_fromGridpack",
+    "dyTo2L_M-50_0j",
+    "dyTo2L_M-50_1j",
+    "dyTo2L_M-50_2j",
+    "dyTo2L_M-50_incl",
 ]
+
+
 # group_DY_processes = ["dy_M-100To200","dy_VBF_filter_customJMEoff"]
 # group_DY_processes = [] # just VBf filter
 
-group_Top_processes = ["ttjets_dl", "ttjets_sl", "st_tw_top", "st_tw_antitop"]
+group_Top_processes = ["ttjets_dl", "ttjets_sl", "st_tw_top", "st_tw_antitop", "tt_inclusive"]
 group_Ewk_processes = ["ewk_lljj_mll50_mjj120"]
 group_VV_processes = ["ww_2l2nu", "wz_3lnu", "wz_2l2q", "wz_1l1nu2q", "zz"]# diboson
 # group_ggH_processes = ["ggh_amcPS"]
@@ -217,9 +223,15 @@ if __name__ == "__main__":
                 # available_processes.append("dy_M-50")
                 available_processes.append("dy_M-100To200")
                 available_processes.append("dy_m105_160_amc")
+                # available_processes.append("dyTo2L_M-50_0j")
+                # available_processes.append("dyTo2L_M-50_1j")
+                # available_processes.append("dyTo2L_M-50_2j")
+                available_processes.append("dyTo2L_M-50_incl")
+            
             elif bkg_sample.upper() == "TT": # enforce upper case to prevent confusion
-                available_processes.append("ttjets_dl")
-                available_processes.append("ttjets_sl")
+                # available_processes.append("ttjets_dl")
+                # available_processes.append("ttjets_sl")
+                available_processes.append("tt_inclusive")
             elif bkg_sample.upper() == "ST": # enforce upper case to prevent confusion
                 available_processes.append("st_tw_top")
                 available_processes.append("st_tw_antitop")
@@ -257,19 +269,19 @@ if __name__ == "__main__":
         if "dimuon" in particle:
             variables2plot.append(f"{particle}_mass")
             variables2plot.append(f"{particle}_pt")
-            variables2plot.append(f"{particle}_eta")
-            variables2plot.append(f"{particle}_phi")
-            variables2plot.append(f"{particle}_cos_theta_cs")
-            variables2plot.append(f"{particle}_phi_cs")
-            variables2plot.append(f"{particle}_cos_theta_eta")
-            variables2plot.append(f"{particle}_phi_eta")
-            variables2plot.append(f"mmj_min_dPhi_nominal")
-            variables2plot.append(f"mmj_min_dEta_nominal")
-            variables2plot.append(f"ll_zstar_log_nominal")
+            # variables2plot.append(f"{particle}_eta")
+            # variables2plot.append(f"{particle}_phi")
+            # variables2plot.append(f"{particle}_cos_theta_cs")
+            # variables2plot.append(f"{particle}_phi_cs")
+            # variables2plot.append(f"{particle}_cos_theta_eta")
+            # variables2plot.append(f"{particle}_phi_eta")
+            # variables2plot.append(f"mmj_min_dPhi_nominal")
+            # variables2plot.append(f"mmj_min_dEta_nominal")
+            # variables2plot.append(f"ll_zstar_log_nominal")
             
-            variables2plot.append(f"dimuon_ebe_mass_res")
-            variables2plot.append(f"dimuon_ebe_mass_res_rel")
-            variables2plot.append(f"{particle}_rapidity")
+            # variables2plot.append(f"dimuon_ebe_mass_res")
+            # variables2plot.append(f"dimuon_ebe_mass_res_rel")
+            # variables2plot.append(f"{particle}_rapidity")
         elif "dijet" in particle:
             # variables2plot.append(f"gjj_mass")
             variables2plot.append(f"jj_mass_nominal")
@@ -549,9 +561,9 @@ if __name__ == "__main__":
                 category_selection = ak.to_numpy(category_selection) # this will be multiplied with weights
                 # print(f"weights b4 category selection {process} : {weights}")
                 weights = weights*category_selection
-                # print(f"weights {process} : {weights}")
+                
                 values = ak.to_numpy(ak.fill_none(events[var], value=-999.0))
-
+                
                 
                 # print(f"values[0]: {values[0]}")
                 values_filter = values!=-999.0
@@ -980,24 +992,7 @@ if __name__ == "__main__":
                     continue
                 is_data = "data" in process.lower()
                 print(f"is_data: {is_data}")
-                if is_data:
-                    weights = ak.to_numpy(ak.fill_none(events["wgt_nominal"], value=0.0))
-                else: # MC
-                    weights = ak.fill_none(events["wgt_nominal"], value=0.0)
-                    
-                    # weights = weights/events.wgt_nominal_muID/ events.wgt_nominal_muIso / events.wgt_nominal_muTrig #  quick test
-                    # temporary over write
-                    # print(f"events.fields: {events.fields}")
-                    # if "separate_wgt_zpt_wgt" in events.fields:
-                    #     print("removing Zpt rewgt!")
-                    #     weights = weights/events["separate_wgt_zpt_wgt"]
-
-                    
-                    # print(f"weights {process} b4 numpy: {weights}")
-                    weights = ak.to_numpy(weights) # MC are already normalized by xsec*lumi
-                    # for some reason, some nan weights are still passes ak.fill_none() bc they're "nan", not None, this used to be not a problem
-                    # could be an issue of copying bunching of parquet files from one directory to another, but not exactly sure
-                    weights = np.nan_to_num(weights, nan=0.0) 
+                
                 #-----------------------------------------------    
                 # obtain the category selection
 
@@ -1014,12 +1009,12 @@ if __name__ == "__main__":
                 h_peak = ((mass > 115.03) & (mass < 135.03))
                 if args.region == "signal":
                     region = h_sidebands | h_peak
-                elif args.region == "h_peak":
+                elif args.region == "h-peak":
                     region = h_peak 
-                elif args.region == "h_sidebands":
+                elif args.region == "h-sidebands":
                     print("h_sidebands region chosen!")
                     region = h_sidebands 
-                elif args.region == "z_peak":
+                elif args.region == "z-peak":
                     region = z_peak 
                 else: 
                     print("ERROR: acceptable region!")
@@ -1076,12 +1071,37 @@ if __name__ == "__main__":
                 # print(f"category_selection {process} : {category_selection}")
 
                 # filter events fro selected category
-                category_selection = ak.to_numpy(category_selection) # this will be multiplied with weights
-                # weights = weights*category_selection
-                weights = weights[category_selection]
-                
-                # 
+
+                print(f"len(events) {process} b4 selection: {len(events)}")
                 events = events[category_selection]
+                print(f"len(events) {process} after selection: {len(events)}")
+                
+                # category_selection = ak.to_numpy(category_selection) # this will be multiplied with weights
+                # print(f"len(weights) {process} b4 selection: {len(weights)}")
+                # weights = weights[category_selection]
+                # print(f"len(weights) {process} after selection: {len(weights)}")
+
+                # extract weights
+                if is_data:
+                    weights = ak.to_numpy(ak.fill_none(events["wgt_nominal"], value=0.0))
+                else: # MC
+                    weights = ak.fill_none(events["wgt_nominal"], value=0.0)
+                    
+                    # weights = weights/events.wgt_nominal_muID/ events.wgt_nominal_muIso / events.wgt_nominal_muTrig #  quick test
+                    # temporary over write
+                    # print(f"events.fields: {events.fields}")
+                    # if "separate_wgt_zpt_wgt" in events.fields:
+                    #     print("removing Zpt rewgt!")
+                    #     weights = weights/events["separate_wgt_zpt_wgt"]
+
+                    
+                    # print(f"weights {process} b4 numpy: {weights}")
+                    weights = ak.to_numpy(weights) # MC are already normalized by xsec*lumi
+                    # for some reason, some nan weights are still passes ak.fill_none() bc they're "nan", not None, this used to be not a problem
+                    # could be an issue of copying bunching of parquet files from one directory to another, but not exactly sure
+                    weights = np.nan_to_num(weights, nan=0.0) 
+                    
+                
                 fraction_weight = ak.ones_like(events.wgt_nominal) # TBF, all fractions should be same
                 print(f"var: {var}")
                 # temp overwrite
@@ -1091,6 +1111,8 @@ if __name__ == "__main__":
                 else:
                     values = ak.to_numpy(ak.fill_none(events[var], value=-999.0))
                 # print(f"weights.shape: {weights[weights>0].shape}")
+                print(f"weights {process} : {weights.shape}")
+                print(f"values {process} : {values.shape}")
                 
                 # temporary overwrite start -------------------------
                 # we have bad ll_zstar_log caluclation, so we re-calculate on the spot
@@ -1114,6 +1136,7 @@ if __name__ == "__main__":
                     
                 print(f"values is nan: {np.any(np.isnan(values))}")
                 print(f"values is none: {np.any(ak.is_none(values))}")
+                
                 # temporary overwrite end -------------------------
                 # print(f"values[0]: {values[0]}")
                 values_filter = values!=-999.0
