@@ -36,6 +36,7 @@ group_DY_processes = [
     "dyTo2L_M-50_1j",
     "dyTo2L_M-50_2j",
     "dyTo2L_M-50_incl",
+    "dy_M-100To200_MiNNLO",
 ]
 
 
@@ -220,17 +221,19 @@ if __name__ == "__main__":
     if len(bkg_samples) >0:
         for bkg_sample in bkg_samples:
             if bkg_sample.upper() == "DY": # enforce upper case to prevent confusion
-                # available_processes.append("dy_M-50")
+                available_processes.append("dy_M-50")
                 available_processes.append("dy_M-100To200")
-                available_processes.append("dy_m105_160_amc")
+                # available_processes.append("dy_m105_160_amc")
                 # available_processes.append("dyTo2L_M-50_0j")
                 # available_processes.append("dyTo2L_M-50_1j")
                 # available_processes.append("dyTo2L_M-50_2j")
-                available_processes.append("dyTo2L_M-50_incl")
+                # available_processes.append("dyTo2L_M-50_incl")
+                # available_processes.append("dy_m105_160_vbf_amc")
+                available_processes.append("dy_M-100To200_MiNNLO")
             
             elif bkg_sample.upper() == "TT": # enforce upper case to prevent confusion
-                # available_processes.append("ttjets_dl")
-                # available_processes.append("ttjets_sl")
+                available_processes.append("ttjets_dl")
+                available_processes.append("ttjets_sl")
                 available_processes.append("tt_inclusive")
             elif bkg_sample.upper() == "ST": # enforce upper case to prevent confusion
                 available_processes.append("st_tw_top")
@@ -269,38 +272,42 @@ if __name__ == "__main__":
         if "dimuon" in particle:
             variables2plot.append(f"{particle}_mass")
             variables2plot.append(f"{particle}_pt")
-            # variables2plot.append(f"{particle}_eta")
-            # variables2plot.append(f"{particle}_phi")
-            # variables2plot.append(f"{particle}_cos_theta_cs")
-            # variables2plot.append(f"{particle}_phi_cs")
-            # variables2plot.append(f"{particle}_cos_theta_eta")
-            # variables2plot.append(f"{particle}_phi_eta")
-            # variables2plot.append(f"mmj_min_dPhi_nominal")
-            # variables2plot.append(f"mmj_min_dEta_nominal")
-            # variables2plot.append(f"ll_zstar_log_nominal")
+            variables2plot.append(f"{particle}_eta")
+            variables2plot.append(f"{particle}_phi")
+            variables2plot.append(f"{particle}_cos_theta_cs")
+            variables2plot.append(f"{particle}_phi_cs")
+            variables2plot.append(f"{particle}_cos_theta_eta")
+            variables2plot.append(f"{particle}_phi_eta")
+            variables2plot.append(f"mmj_min_dPhi_nominal")
+            variables2plot.append(f"mmj_min_dEta_nominal")
+            variables2plot.append(f"ll_zstar_log_nominal")
             
-            # variables2plot.append(f"dimuon_ebe_mass_res")
-            # variables2plot.append(f"dimuon_ebe_mass_res_rel")
-            # variables2plot.append(f"{particle}_rapidity")
+            variables2plot.append(f"dimuon_ebe_mass_res")
+            variables2plot.append(f"dimuon_ebe_mass_res_rel")
+            variables2plot.append(f"{particle}_rapidity")
         elif "dijet" in particle:
-            # variables2plot.append(f"gjj_mass")
             variables2plot.append(f"jj_mass_nominal")
-            variables2plot.append(f"jj_pt_nominal")
-            variables2plot.append(f"jj_dEta_nominal")
-            variables2plot.append(f"jj_dPhi_nominal")
-            variables2plot.append(f"zeppenfeld_nominal")
-            variables2plot.append(f"rpt_nominal")
-            variables2plot.append(f"pt_centrality_nominal")
-            variables2plot.append(f"nsoftjets2_nominal")
-            variables2plot.append(f"htsoft2_nominal")
-            variables2plot.append(f"nsoftjets5_nominal")
-            variables2plot.append(f"htsoft5_nominal")
+            # variables2plot.append(f"jj_pt_nominal")
+            # variables2plot.append(f"jj_dEta_nominal")
+            # variables2plot.append(f"jj_dPhi_nominal")
+            # variables2plot.append(f"zeppenfeld_nominal")
+            # variables2plot.append(f"rpt_nominal")
+            # variables2plot.append(f"pt_centrality_nominal")
+            # variables2plot.append(f"nsoftjets2_nominal")
+            # variables2plot.append(f"htsoft2_nominal")
+            # variables2plot.append(f"nsoftjets5_nominal")
+            # variables2plot.append(f"htsoft5_nominal")
+
+            # --------------------------------------------------
+            # variables2plot.append(f"gjj_mass")
             
         elif ("mu" in particle) :
             for kinematic in kinematic_vars:
                 # plot both leading and subleading muons/jets
                 variables2plot.append(f"{particle}1_{kinematic}")
                 variables2plot.append(f"{particle}2_{kinematic}")
+            variables2plot.append(f"{particle}1_pt_over_mass")
+            variables2plot.append(f"{particle}2_pt_over_mass")
         elif ("jet" in particle):
             variables2plot.append(f"njets_nominal")
             for kinematic in kinematic_vars:
@@ -319,8 +326,15 @@ if __name__ == "__main__":
         variables2plot += ["jj_mass_nominal_range2"] # add another range to plot
     print(f"variables2plot: {variables2plot}")
     # obtain plot settings from config file
-    # plot_setting_fname = "./src/lib/histogram/plot_settings_stage1.json"
-    plot_setting_fname = "./src/lib/histogram/plot_settings_vbfCat_MVA_input.json"
+
+    
+    if args.category == "ggh":
+        plot_setting_fname = "./src/lib/histogram/plot_settings_gghCat_BDT_input.json"
+    else: # in no cat case, just use vbfCat plot settings
+        plot_setting_fname = "./src/lib/histogram/plot_settings_vbfCat_MVA_input.json"
+
+    print(f"plot_setting_fname: {plot_setting_fname}")
+    
     with open(plot_setting_fname, "r") as file:
         plot_settings = json.load(file)
     status = args.status.replace("_", " ")
@@ -398,6 +412,10 @@ if __name__ == "__main__":
 
         # filter out redundant fields by using the set object
         fields2load = list(set(fields2load))
+
+        # TOREMOVE
+        if "separate_wgt_zpt_wgt" in events.fields:
+            events["wgt_nominal"] = events["wgt_nominal"] / events["separate_wgt_zpt_wgt"] # remove zpt wgt
         
         events = events[fields2load]
         # load data to memory using compute()
