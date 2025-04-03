@@ -37,13 +37,14 @@ group_DY_processes = [
     "dyTo2L_M-50_2j",
     "dyTo2L_M-50_incl",
     "dy_M-100To200_MiNNLO",
+    "dy_M-50_MiNNLO"
 ]
 
 
 # group_DY_processes = ["dy_M-100To200","dy_VBF_filter_customJMEoff"]
 # group_DY_processes = [] # just VBf filter
 
-group_Top_processes = ["ttjets_dl", "ttjets_sl", "st_tw_top", "st_tw_antitop", "tt_inclusive"]
+group_Top_processes = ["ttjets_dl", "ttjets_sl", "st_tw_top", "st_tw_antitop", "tt_inclusive", "st_t_top", "st_t_antitop"]
 group_Ewk_processes = ["ewk_lljj_mll50_mjj120"]
 group_VV_processes = ["ww_2l2nu", "wz_3lnu", "wz_2l2q", "wz_1l1nu2q", "zz"]# diboson
 # group_ggH_processes = ["ggh_amcPS"]
@@ -230,11 +231,14 @@ if __name__ == "__main__":
                 # available_processes.append("dyTo2L_M-50_incl")
                 # available_processes.append("dy_m105_160_vbf_amc")
                 available_processes.append("dy_M-100To200_MiNNLO")
+                available_processes.append("dy_M-50_MiNNLO")
             
             elif bkg_sample.upper() == "TT": # enforce upper case to prevent confusion
                 available_processes.append("ttjets_dl")
                 available_processes.append("ttjets_sl")
                 available_processes.append("tt_inclusive")
+                available_processes.append("st_t_top")
+                available_processes.append("st_t_antitop")
             elif bkg_sample.upper() == "ST": # enforce upper case to prevent confusion
                 available_processes.append("st_tw_top")
                 available_processes.append("st_tw_antitop")
@@ -247,6 +251,11 @@ if __name__ == "__main__":
             elif bkg_sample.upper() == "EWK": # enforce upper case to prevent confusion
                 # available_processes.append("ewk_lljj_mll105_160_ptj0")
                 available_processes.append("ewk_lljj_mll50_mjj120")
+            elif bkg_sample.upper() == "OTHER": # enforce upper case to prevent confusion
+                available_processes.append("www")
+                available_processes.append("wwz")
+                available_processes.append("wzz")
+                available_processes.append("zzz")
             else:
                 print(f"unknown background {bkg_sample} was given!")
         
@@ -286,17 +295,19 @@ if __name__ == "__main__":
             variables2plot.append(f"dimuon_ebe_mass_res_rel")
             variables2plot.append(f"{particle}_rapidity")
         elif "dijet" in particle:
+            variables2plot.append(f"jj_dEta_nominal")
             variables2plot.append(f"jj_mass_nominal")
-            # variables2plot.append(f"jj_pt_nominal")
-            # variables2plot.append(f"jj_dEta_nominal")
-            # variables2plot.append(f"jj_dPhi_nominal")
-            # variables2plot.append(f"zeppenfeld_nominal")
-            # variables2plot.append(f"rpt_nominal")
-            # variables2plot.append(f"pt_centrality_nominal")
-            # variables2plot.append(f"nsoftjets2_nominal")
-            # variables2plot.append(f"htsoft2_nominal")
-            # variables2plot.append(f"nsoftjets5_nominal")
-            # variables2plot.append(f"htsoft5_nominal")
+            variables2plot.append(f"jj_pt_nominal")
+            
+            variables2plot.append(f"jj_dPhi_nominal")
+            variables2plot.append(f"zeppenfeld_nominal")
+            
+            variables2plot.append(f"rpt_nominal")
+            variables2plot.append(f"pt_centrality_nominal")
+            variables2plot.append(f"nsoftjets2_nominal")
+            variables2plot.append(f"htsoft2_nominal")
+            variables2plot.append(f"nsoftjets5_nominal")
+            variables2plot.append(f"htsoft5_nominal")
 
             # --------------------------------------------------
             # variables2plot.append(f"gjj_mass")
@@ -324,6 +335,8 @@ if __name__ == "__main__":
     variables2plot_orig = copy.deepcopy(variables2plot)
     if "jj_mass_nominal" in variables2plot:
         variables2plot += ["jj_mass_nominal_range2"] # add another range to plot
+    if "dimuon_mass" in variables2plot:
+        variables2plot = ["dimuon_mass_zpeak"] + variables2plot# add another range to plot
     print(f"variables2plot: {variables2plot}")
     # obtain plot settings from config file
 
@@ -338,6 +351,9 @@ if __name__ == "__main__":
     with open(plot_setting_fname, "r") as file:
         plot_settings = json.load(file)
     status = args.status.replace("_", " ")
+
+    # print(f"plot_settings.keys(): {plot_settings.keys()}")
+    # raise ValueError
     
     # define client for parallelization 
     if args.use_gateway:
@@ -413,9 +429,13 @@ if __name__ == "__main__":
         # filter out redundant fields by using the set object
         fields2load = list(set(fields2load))
 
-        # TOREMOVE
-        if "separate_wgt_zpt_wgt" in events.fields:
-            events["wgt_nominal"] = events["wgt_nominal"] / events["separate_wgt_zpt_wgt"] # remove zpt wgt
+        # # TOREMOVE
+        # if "separate_wgt_qgl_wgt" in events.fields:
+        #     print("removing separate_wgt_qgl_wgt!")
+        #     events["wgt_nominal"] = events["wgt_nominal"] / events["separate_wgt_qgl_wgt"] # remove zpt wgt
+        # if "separate_wgt_zpt_wgt" in events.fields:
+        #     print("removing separate_wgt_zpt_wgt!")
+        #     events["wgt_nominal"] = events["wgt_nominal"] / events["separate_wgt_zpt_wgt"] # remove zpt wgt
         
         events = events[fields2load]
         # load data to memory using compute()
@@ -495,9 +515,7 @@ if __name__ == "__main__":
                 fraction_weight = 1/events.fraction # TBF, all fractions should be same
 
                 # obtain the category selection
-                # vbf_cut = ak.fill_none(events.vbf_cut, value=False) # in the future none values will be replaced with False
-                vbf_cut = (events.jj_mass_nominal > 400) & (events.jj_dEta_nominal > 2.5) 
-                vbf_cut = ak.fill_none(vbf_cut, value=False)
+                
                 # print("doing root style!")
                 # print(f"args.region: {args.region}")
                 mass = events.dimuon_mass
@@ -517,11 +535,13 @@ if __name__ == "__main__":
                     print("ERROR: acceptable region!")
                     raise ValueError
                 # region = events.z_peak
-                btag_cut =(events.nBtagLoose_nominal >= 2) | (events.nBtagMedium_nominal >= 1)
+                btag_cut = btag_cut =ak.fill_none((events.nBtagLoose_nominal >= 2), value=False) | ak.fill_none((events.nBtagMedium_nominal >= 1), value=False)
+                vbf_cut = (events.jj_mass_nominal > 400) & (events.jj_dEta_nominal > 2.5) & (events.jet1_pt_nominal > 35) 
+                vbf_cut = ak.fill_none(vbf_cut, value=False)
                 # if args.vbf_cat_mode:
                 if args.category == "vbf":
                     print("vbf mode!")
-                    prod_cat_cut =  vbf_cut & ak.fill_none(events.jet1_pt_nominal > 35, value=False) 
+                    prod_cat_cut =  vbf_cut
                     prod_cat_cut = prod_cat_cut & ~btag_cut # btag cut is for VH and ttH categories
                     # apply additional cut to MC samples if vbf 
                     # VBF filter cut start -------------------------------------------------
@@ -588,6 +608,7 @@ if __name__ == "__main__":
                 values = values[values_filter]
                 weights = weights[values_filter]
 
+
                 # MC samples are already normalized by their xsec*lumi, but data is not
                 if process in group_data_processes:
                     fraction_weight = fraction_weight[values_filter]
@@ -598,7 +619,8 @@ if __name__ == "__main__":
                
                     
                 np_hist, _ = np.histogram(values, bins=binning, weights = weights)
-                # print(f"np_hist old {process} : {np_hist}")
+
+                
                 
                
                 # collect same histogram, but for weight squares for error calculation 
@@ -960,6 +982,7 @@ if __name__ == "__main__":
         # this mplhep implementation assumes non-empty data; otherwise, it will crash
         # Dictionary for histograms and binnings
 
+        
         for var in tqdm.tqdm(variables2plot):
             var_step = time.time()
             # for process in available_processes:
@@ -1022,7 +1045,7 @@ if __name__ == "__main__":
 
                 # do mass region cut
                 mass = events.dimuon_mass
-                z_peak = ((mass > 76) & (mass < 106))
+                z_peak = ((mass > 70) & (mass < 110))
                 h_sidebands =  ((mass > 110) & (mass < 115.03)) | ((mass > 135.03) & (mass < 150))
                 h_peak = ((mass > 115.03) & (mass < 135.03))
                 if args.region == "signal":
@@ -1041,12 +1064,12 @@ if __name__ == "__main__":
                 # do category cut
                 btag_cut =ak.fill_none((events.nBtagLoose_nominal >= 2), value=False) | ak.fill_none((events.nBtagMedium_nominal >= 1), value=False)
                 # vbf_cut = ak.fill_none(events.vbf_cut, value=False) # in the future none values will be replaced with False
-                vbf_cut = (events.jj_mass_nominal > 400) & (events.jj_dEta_nominal > 2.5) 
+                vbf_cut = (events.jj_mass_nominal > 400) & (events.jj_dEta_nominal > 2.5) & (events.jet1_pt_nominal > 35) 
                 vbf_cut = ak.fill_none(vbf_cut, value=False)
                 # if args.vbf_cat_mode:
                 if args.category == "vbf":
                     print("vbf mode!")
-                    prod_cat_cut =  vbf_cut & ak.fill_none(events.jet1_pt_nominal > 35, value=False) 
+                    prod_cat_cut =  vbf_cut
                     prod_cat_cut = prod_cat_cut & ~btag_cut # btag cut is for VH and ttH categories
                     print("applying jet1 pt 35 Gev cut!")
                     if args.do_vbf_filter_study:
@@ -1126,11 +1149,18 @@ if __name__ == "__main__":
                 if ("_range2" in var):
                     var_reduced = var.replace("_range2","")
                     values = ak.to_numpy(ak.fill_none(events[var_reduced], value=-999.0))
+                elif ("_zpeak" in var):
+                    var_reduced = var.replace("_zpeak","")
+                    values = ak.to_numpy(ak.fill_none(events[var_reduced], value=-999.0))
                 else:
                     values = ak.to_numpy(ak.fill_none(events[var], value=-999.0))
                 # print(f"weights.shape: {weights[weights>0].shape}")
                 print(f"weights {process} : {weights.shape}")
                 print(f"values {process} : {values.shape}")
+                val_filter = values > 6
+                print(f"values[val_filter]: {values[val_filter]}")
+                
+
                 
                 # temporary overwrite start -------------------------
                 # we have bad ll_zstar_log caluclation, so we re-calculate on the spot
