@@ -243,6 +243,8 @@ class DimuonProcessor(processor.ProcessorABC):
                 "pt_raw",
                 "eta_raw",
                 "pfRelIso04_all",
+                "isGlobal",
+                "isTracker"
             ] + [self.parameters["muon_id"]]
             muons = ak.to_pandas(df.Muon[muon_columns])
 
@@ -364,6 +366,8 @@ class DimuonProcessor(processor.ProcessorABC):
             # update event selection with leading muon pT cut
             output["pass_leading_pt"] = pass_leading_pt
 
+
+            cutflow["step4_muon_selection_purdue_leadingMuPt"] = output["pass_leading_pt"].fillna(False).to_numpy() 
             # ---------------------------------------------------
             # Do trigger matching 
             # ---------------------------------------------------
@@ -425,8 +429,8 @@ class DimuonProcessor(processor.ProcessorABC):
             output["event_selection"] = output.event_selection & trigger_match
             # output["event_selection"] = output.event_selection & output.pass_leading_pt
 
-            cutflow["step4_muon_selection_baseline"] = trigger_match 
-            print(f'cutflow["step4_muon_selection_baseline"]: {cutflow["step4_muon_selection_baseline"]}')
+            cutflow["step4_muon_selection_purdue_trigmatch"] = trigger_match 
+            # print(f'cutflow["step4_muon_selection_purdue"]: {cutflow["step4_muon_selection_purdue"]}')
 
 
             # --------------------------------------------------------------------------
@@ -540,25 +544,7 @@ class DimuonProcessor(processor.ProcessorABC):
             
 
             
-            # --------------------------------------------------
-            
-            output = pd.DataFrame(cutflow)
-            output["dataset"] = dataset
-            output["year"] = int(self.year)
-            to_return = None
-            if self.apply_to_output is None:
-                to_return = output
-            else:
-                self.apply_to_output(output)
-                to_return = self.accumulator.identity()
-    
-            if self.timer:
-                self.timer.add_checkpoint("Saving outputs")
-                self.timer.summary()
-    
-            
-            return to_return
-            #--------------------------------------------------
+           
 
             
             # --------------------------------------------------------#
@@ -717,6 +703,7 @@ class DimuonProcessor(processor.ProcessorABC):
                 weights,
                 numevents,
                 output,
+                cutflow,
             )
             # debugging
             # if "jer" in v_name:
@@ -725,6 +712,28 @@ class DimuonProcessor(processor.ProcessorABC):
             if output_updated is not None:
                 output = output_updated
 
+
+         # --------------------------------------------------
+            
+        output = pd.DataFrame(cutflow)
+        output["dataset"] = dataset
+        output["year"] = int(self.year)
+        to_return = None
+        if self.apply_to_output is None:
+            to_return = output
+        else:
+            self.apply_to_output(output)
+            to_return = self.accumulator.identity()
+
+        if self.timer:
+            self.timer.add_checkpoint("Saving outputs")
+            self.timer.summary()
+
+        
+        return to_return
+        #--------------------------------------------------
+        
+        
         if self.timer:
             self.timer.add_checkpoint("Jet loop")
 
@@ -827,6 +836,7 @@ class DimuonProcessor(processor.ProcessorABC):
         weights,
         numevents,
         output,
+        cutflow,
     ):
         weights = copy.deepcopy(weights)
         # print(f"jet_loop jets.fields: {jets.fields}")
@@ -858,14 +868,30 @@ class DimuonProcessor(processor.ProcessorABC):
                 jet_columns += ["pt_orig", "mass_orig"]
 
         # Find jets that have selected muons within dR<0.4 from them
-        matched_mu_pt = jets.matched_muons.pt_fsr
+        # matched_mu_pt = jets.matched_muons.pt_fsr
+        matched_mu_pt = jets.matched_muons.pt_raw
+        matched_mu_eta = jets.matched_muons.eta_raw
         matched_mu_iso = jets.matched_muons.pfRelIso04_all
         matched_mu_id = jets.matched_muons[self.parameters["muon_id"]]
+        matched_mu_GlobalOrTracker = jets.matched_muons.isGlobal | jets.matched_muons.isTracker
         matched_mu_pass = (
             (matched_mu_pt > self.parameters["muon_pt_cut"])
             & (matched_mu_iso < self.parameters["muon_iso_cut"])
             & matched_mu_id
+            & (abs(matched_mu_eta) < self.parameters["muon_eta_cut"])
+            & matched_mu_GlobalOrTracker
         )
+        
+        # ones = ak.ones_like(jets.matched_muons)
+        # njets_attemp = ak.num(ak.sum(ones,axis=2))
+        # njets = ak.num(jets,axis=1)
+        # print(f"njets_attemp: {njets_attemp}")
+        # print(f"njets: {njets}")
+        # print(f"matched_mu_pass: {matched_mu_pass}")
+        jet_isClean = ak.sum(matched_mu_pass, axis=2) == 0
+        print(f"jets: {jets}")
+        print(f"jet_isClean: {jet_isClean}")
+        
         clean = ~(
             ak.to_pandas(matched_mu_pass)
             .astype(float)
@@ -924,6 +950,92 @@ class DimuonProcessor(processor.ProcessorABC):
             else:
                 jets = jets[jet_columns]
 
+
+        # ----------------------------------------------------
+        # apply cutflow selection b4 convertings jets to pandas
+        # ----------------------------------------------------
+        # purdue
+        jet_selection = (
+            (jets.jetId > 0)
+            & ((jets.puId >=1) | (jets.pt > 50))
+            & (jets.qgl > -2)
+            & jet_isClean
+            & (jets.pt > self.parameters["jet_pt_cut"])
+            & (abs(jets.eta) < self.parameters["jet_eta_cut"])
+        )
+        # print(f"jet_selection: {jet_selection}")
+        # print(f"jets.pt: {jets.pt}")
+        # print(f"jet_selection: {ak.num(jet_selection, axis=1)}")
+        # print(f"jets.pt: {ak.num(jets.pt, axis=1)}")
+        njets_atLeastTwo = ak.fill_none(ak.sum(jet_selection, axis=1) >=2, value=False)
+        # print(f"jet_selection: {type(jet_selection)}")
+        nbtaggedM = ((jets.btagDeepB > self.parameters["btag_medium_wp"])
+                & (abs(jets.eta) < 2.5))
+        nbtaggedM = ak.sum(nbtaggedM, axis=1)
+        nbtaggedM_filter = ak.fill_none(nbtaggedM > 0, value=False)
+        # ----------------------------------------------------
+        nbtaggedL = ((jets.btagDeepB > self.parameters["btag_loose_wp"])
+                & (abs(jets.eta) < 2.5))
+        nbtaggedL = ak.sum(nbtaggedL, axis=1)
+        nbtaggedL_filter = ak.fill_none(nbtaggedL > 1, value=False)
+        # ----------------------------------------------------
+        btag_cut_old = ~(nbtaggedM_filter | nbtaggedL_filter)
+        # print(f"btag_cut_old: {btag_cut_old}")
+        # print(f"njets_atLeastTwo: {njets_atLeastTwo}")
+        btag_cut_njetApplied = ~((nbtaggedM_filter | nbtaggedL_filter) & njets_atLeastTwo)
+        cutflow["step5_Jet_selection_purdue_old"] = ak.to_numpy(btag_cut_old)
+        cutflow["step5_Jet_selection_purdue_njetApplied"] = ak.to_numpy(btag_cut_njetApplied)
+
+        # ----------------------------------------------------
+        # Pisa
+        jet_selection = (
+            (jets.jetId > 0)
+            & ((jets.puId > 0) | (jets.pt > 50))
+            & jet_isClean
+            & (jets.pt > self.parameters["jet_pt_cut"])
+            & (abs(jets.eta) < self.parameters["jet_eta_cut"])
+        )
+        # print(f"jet_selection: {type(jet_selection)}")
+        nbtaggedM = ((jets.btagDeepB > self.parameters["btag_medium_wp"])
+                & (abs(jets.eta) < 2.5))
+        nbtaggedM = ak.sum(nbtaggedM, axis=1)
+        nbtaggedM_filter = ak.fill_none(nbtaggedM < 1, value=False)
+        # ----------------------------------------------------
+        nbtaggedL = ((jets.btagDeepB > self.parameters["btag_loose_wp"])
+                & (abs(jets.eta) < 2.5))
+        nbtaggedL = ak.sum(nbtaggedL, axis=1)
+        nbtaggedL_filter = ak.fill_none(nbtaggedL < 2, value=False)
+        # ----------------------------------------------------
+        btag_cut_pisa = (nbtaggedM_filter & nbtaggedL_filter)
+        cutflow["step5_Jet_selection_pisa"] = ak.to_numpy(btag_cut_pisa)
+
+        # ----------------------------------------------------
+        # Caltech
+        jet_selection = (
+            (jets.jetId >= 2)
+            & (jets.puId >= 1)
+            & jet_isClean
+            & (jets.pt > self.parameters["jet_pt_cut"])
+            & (abs(jets.eta) < self.parameters["jet_eta_cut"])
+        )
+        # print(f"jet_selection: {type(jet_selection)}")
+        nbtaggedM = (jets.btagDeepB > self.parameters["btag_medium_wp"])
+        nbtaggedM = ak.sum(nbtaggedM, axis=1)
+        nbtaggedM_filter = ak.fill_none(nbtaggedM < 1, value=False)
+        # ----------------------------------------------------
+        btag_cut_caltech = nbtaggedM_filter
+        cutflow["step5_Jet_selection_caltech"] = ak.to_numpy(btag_cut_caltech)
+
+
+        for field, value in cutflow.items():
+            print(f"cutflow {field} len: {len(value)}")
+
+        
+        # return
+
+
+
+        
         # --- conversion from awkward to pandas --- #
         jets = ak.to_pandas(jets)
 
@@ -985,6 +1097,7 @@ class DimuonProcessor(processor.ProcessorABC):
             & (jets.pt > self.parameters["jet_pt_cut"])
             & (abs(jets.eta) < self.parameters["jet_eta_cut"])
         )
+        
 
         jets = jets[jet_selection]
 
