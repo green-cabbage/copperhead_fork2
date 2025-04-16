@@ -39,8 +39,6 @@ from config.variables import variables
 from config.branches import branches
 import copy
 from python.math_tools import delta_r
-from coffea.analysis_tools import PackedSelection
-
 
 class DimuonProcessor(processor.ProcessorABC):
     def __init__(self, **kwargs):
@@ -243,8 +241,6 @@ class DimuonProcessor(processor.ProcessorABC):
                 "pt_raw",
                 "eta_raw",
                 "pfRelIso04_all",
-                "isGlobal",
-                "isTracker"
             ] + [self.parameters["muon_id"]]
             muons = ak.to_pandas(df.Muon[muon_columns])
 
@@ -271,7 +267,6 @@ class DimuonProcessor(processor.ProcessorABC):
                 & (muons.pfRelIso04_all < self.parameters["muon_iso_cut"])
                 & muons[self.parameters["muon_id"]]
                 & muons.pass_flags
-                & (muons.isGlobal | muons.isTracker)
             )
 
             # Count muons
@@ -285,7 +280,7 @@ class DimuonProcessor(processor.ProcessorABC):
             # Find opposite-sign muons
             mm_charge = muons.loc[muons.selection, "charge"].groupby("entry").prod()
 
-            # Veto eveoMuons", (nmuons == 2)nts with good quality electrons
+            # Veto events with good quality electrons
             electrons = df.Electron[
                 (df.Electron.pt > self.parameters["electron_pt_cut"])
                 & (abs(df.Electron.eta) < self.parameters["electron_eta_cut"])
@@ -300,7 +295,7 @@ class DimuonProcessor(processor.ProcessorABC):
             output["two_muons"] = (nmuons == 2)
             output["two_muons"].fillna(False, inplace=True)
             two_muons = output["two_muons"]
-            
+            # print(f'output["two_muons"]: {output["two_muons"]}')
             output["event_selection"] = (
                 mask
                 & (hlt > 0)
@@ -310,32 +305,6 @@ class DimuonProcessor(processor.ProcessorABC):
                 & electron_veto
                 & good_pv
             )
-            
-            # cutflow = PackedSelection()
-            cutflow = {}
-
-            mask_and_flags = (
-                mask
-                & (flags > 0) & good_pv
-            )
-            # cutflow.add("mask_and_flags", (mask_and_flags).to_numpy())
-            # cutflow.add("electron_veto", electron_veto)
-            cutflow["step1_mask_and_flags"] = (mask_and_flags).to_numpy()
-            cutflow["step2_electron_veto"] = electron_veto
-            print(f"electron_veto: {len(electron_veto)}")
-
-            two_muons = two_muons.to_numpy()
-
-            output["mm_charge_cut"] = (mm_charge == -1)
-            output["mm_charge_cut"].fillna(False, inplace=True)
-            mm_charge_cut = output["mm_charge_cut"].to_numpy()
-
-            cutflow["step3_muonPair_oppositeCharge"] = two_muons  & mm_charge_cut
-            
-            # print(f"packed (nmuons == 2) len: {len(two_muons)}")
-
-            
-
             # print(f'output["event_selection"]: {output["event_selection"]}')
 
             # --------------------------------------------------------#
@@ -366,16 +335,8 @@ class DimuonProcessor(processor.ProcessorABC):
             # update event selection with leading muon pT cut
             output["pass_leading_pt"] = pass_leading_pt
 
-
-            cutflow["step4_muon_selection_purdue_leadingMuPt"] = output["pass_leading_pt"].fillna(False).to_numpy() 
-            # ---------------------------------------------------
-            # Do trigger matching 
-            # ---------------------------------------------------
-
-
-            # ---------------------------------------------------------------
-            # baseline trigger matching
-            isoMu_filterbit = 8
+            #Do trigger matching 
+            isoMu_filterbit = 2
             mu_id = 13
             # pt_threshold = 24 
             # if "2017" in year: # line 371 of AN-19-124
@@ -386,15 +347,14 @@ class DimuonProcessor(processor.ProcessorABC):
 
             dr_threshold = 0.1 # for matching gen muons to reco muons
             events = df
-            IsoMu24_muons = (abs(events.TrigObj.id) == mu_id) &  \
-                        ((events.TrigObj.filterBits & isoMu_filterbit) > 0)
+            IsoMu24_muons = (events.TrigObj.id == mu_id) &  \
+                        ((events.TrigObj.filterBits & isoMu_filterbit) == isoMu_filterbit) & \
+                    (events.TrigObj.pt > pt_threshold)
             #check the first two leading muons match any of the HLT trigger objs. if neither match, reject event
             ak_muon_selection = (
                 (events.Muon.pt_raw > self.parameters["muon_pt_cut"]) # pt_raw is pt b4 rochester
                 & (abs(events.Muon.eta_raw) < self.parameters["muon_eta_cut"])
                 & events.Muon[self.parameters["muon_id"]]
-                & (events.Muon.iso_fsr < self.parameters["muon_iso_cut"])
-                & (events.Muon.isGlobal | events.Muon.isTracker)
             )
             padded_muons_trig_match = ak.pad_none(df.Muon[ak_muon_selection], 2) # pad in case we have only one muon or zero in an event
             # padded_muons = ak.pad_none(events.Muon, 4)
@@ -404,20 +364,21 @@ class DimuonProcessor(processor.ProcessorABC):
             # print(f"mu1_trig_match: {mu1_trig_match}")
             # print(f"mu2_trig_match: {mu2_trig_match}")
             # print(f"events.TrigObj[IsoMu24_muons].eta: {events.TrigObj[IsoMu24_muons].eta}")
-            _,_, mu1_match_dR = delta_r(mu1_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu1_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
+            _,_, mu1_match_dR = delta_r(mu1_trig_match.eta, events.TrigObj[IsoMu24_muons].eta, mu1_trig_match.phi, events.TrigObj[IsoMu24_muons].phi)
             mu1_match = (mu1_match_dR < dr_threshold) & \
-                (mu1_trig_match.pt_roch > pt_threshold)
-            # mu1_match = ak.sum(mu1_match, axis=1)
-            mu1_match = ak.any(mu1_match, axis=1)
+                (mu1_trig_match.pt > pt_threshold)
+            # print(f"mu1_match: {mu1_match}")
+            mu1_match = ak.sum(mu1_match, axis=1)
+            # print(f"mu1_match after sum: {mu1_match}")
             mu1_match = ak.fill_none(mu1_match, value=False)
 
 
-            _,_, mu2_match_dR = delta_r(mu2_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu2_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
+            _,_, mu2_match_dR = delta_r(mu2_trig_match.eta, events.TrigObj[IsoMu24_muons].eta, mu2_trig_match.phi, events.TrigObj[IsoMu24_muons].phi)
             mu2_match = (mu2_match_dR < dr_threshold) & \
-                (mu2_trig_match.pt_roch > pt_threshold)
+                (mu2_trig_match.pt > pt_threshold)
             # print(f"mu2_match: {mu2_match}")
-            # mu2_match =  ak.sum(mu2_match, axis=1)
-            mu2_match =  ak.any(mu2_match, axis=1)
+            mu2_match =  ak.sum(mu2_match, axis=1)
+            # print(f"mu2_match after sum: {mu2_match}")
             mu2_match = ak.fill_none(mu2_match, value=False)
             # print(f"mu2_match after fillnone: {mu2_match}")
 
@@ -429,124 +390,6 @@ class DimuonProcessor(processor.ProcessorABC):
             output["event_selection"] = output.event_selection & trigger_match
             # output["event_selection"] = output.event_selection & output.pass_leading_pt
 
-            cutflow["step4_muon_selection_purdue_trigmatch"] = trigger_match 
-            # print(f'cutflow["step4_muon_selection_purdue"]: {cutflow["step4_muon_selection_purdue"]}')
-
-
-            # --------------------------------------------------------------------------
-            # Caltech/MIT trigger matching
-            mu_id = 13
-            # pt_threshold = 24 
-            # if "2017" in year: # line 371 of AN-19-124
-            #     pt_threshold = 29
-            # else: # for 2016, 2018 dunno about Run3
-            #     pt_threshold = 26
-            pt_threshold = self.parameters["muon_leading_pt"] # line 371 of AN-19-124. "muon_leading_pt" is deceptive name, but that's where we saved the threshold
-
-            dr_threshold = 0.1 # for matching gen muons to reco muons
-            events = df
-            IsoMu24_muons = (abs(events.TrigObj.id) == mu_id)
-            #check the first two leading muons match any of the HLT trigger objs. if neither match, reject event
-            ak_muon_selection = (
-                (events.Muon.pt_roch > self.parameters["muon_pt_cut"]) # pt_raw is pt b4 rochester
-                & (abs(events.Muon.eta_raw) < self.parameters["muon_eta_cut"])
-                & events.Muon[self.parameters["muon_id"]]
-                & (events.Muon.pfRelIso04_all_raw < self.parameters["muon_iso_cut"])
-                & (events.Muon.isGlobal)
-                & events.Muon.tightId
-                & (events.Muon.pfRelIso04_all_raw < 0.15)
-            )
-            padded_muons_trig_match = ak.pad_none(df.Muon[ak_muon_selection], 2) # pad in case we have only one muon or zero in an event
-            # padded_muons = ak.pad_none(events.Muon, 4)
-            # print(f"copperhead2 EventProcessor padded_muons: \n {padded_muons}")
-            mu1_trig_match = padded_muons_trig_match[:,0]
-            mu2_trig_match = padded_muons_trig_match[:,1]
-            # print(f"mu1_trig_match: {mu1_trig_match}")
-            # print(f"mu2_trig_match: {mu2_trig_match}")
-            # print(f"events.TrigObj[IsoMu24_muons].eta: {events.TrigObj[IsoMu24_muons].eta}")
-            _,_, mu1_match_dR = delta_r(mu1_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu1_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
-            mu1_match = (mu1_match_dR < dr_threshold) & \
-                (mu1_trig_match.pt_roch > pt_threshold)
-            # mu1_match = ak.sum(mu1_match, axis=1)
-            mu1_match = ak.any(mu1_match, axis=1)
-            mu1_match = ak.fill_none(mu1_match, value=False)
-
-
-            _,_, mu2_match_dR = delta_r(mu2_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu2_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
-            mu2_match = (mu2_match_dR < dr_threshold) & \
-                (mu2_trig_match.pt_roch > pt_threshold)
-            # print(f"mu2_match: {mu2_match}")
-            # mu2_match =  ak.sum(mu2_match, axis=1)
-            mu2_match =  ak.any(mu2_match, axis=1)
-            mu2_match = ak.fill_none(mu2_match, value=False)
-            # print(f"mu2_match after fillnone: {mu2_match}")
-
-            trigger_match = (mu1_match >0) | (mu2_match > 0)
-            # print(f"trigger_match: {trigger_match}")
-            trigger_match = ak.to_numpy(trigger_match)
-
-
-            cutflow["step4_muon_selection_caltech"] = trigger_match 
-            print(f'cutflow["step4_muon_selection_caltech"]: {cutflow["step4_muon_selection_caltech"]}')
-            
-
-
-            # ---------------------------------------------------------------
-            # pisa trigger matching
-            isoMu_filterbit = 8
-            mu_id = 13
-            # pt_threshold = 24 
-            # if "2017" in year: # line 371 of AN-19-124
-            #     pt_threshold = 29
-            # else: # for 2016, 2018 dunno about Run3
-            #     pt_threshold = 26
-            pt_threshold = self.parameters["muon_leading_pt"] # line 371 of AN-19-124. "muon_leading_pt" is deceptive name, but that's where we saved the threshold
-
-            dr_threshold = 0.4 # for matching gen muons to reco muons
-            events = df
-            IsoMu24_muons = (abs(events.TrigObj.id) == mu_id) &  \
-                        ((events.TrigObj.filterBits & isoMu_filterbit) > 0)
-            #check the first two leading muons match any of the HLT trigger objs. if neither match, reject event
-            ak_muon_selection = (
-                (events.Muon.pt_fsr > self.parameters["muon_pt_cut"]) # pt_raw is pt b4 rochester
-                & (abs(events.Muon.eta_raw) < self.parameters["muon_eta_cut"])
-                & events.Muon[self.parameters["muon_id"]]
-                & (events.Muon.iso_fsr < self.parameters["muon_iso_cut"])
-            )
-            padded_muons_trig_match = ak.pad_none(df.Muon[ak_muon_selection], 2) # pad in case we have only one muon or zero in an event
-            # padded_muons = ak.pad_none(events.Muon, 4)
-            # print(f"copperhead2 EventProcessor padded_muons: \n {padded_muons}")
-            mu1_trig_match = padded_muons_trig_match[:,0]
-            mu2_trig_match = padded_muons_trig_match[:,1]
-            _,_, mu1_match_dR = delta_r(mu1_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu1_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
-            mu1_match = (mu1_match_dR < dr_threshold) & \
-                (mu1_trig_match.pt_fsr > pt_threshold)
-            mu1_match = ak.any(mu1_match, axis=1)
-            mu1_match = ak.fill_none(mu1_match, value=False)
-
-
-            _,_, mu2_match_dR = delta_r(mu2_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu2_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
-            mu2_match = (mu2_match_dR < dr_threshold) & \
-                (mu2_trig_match.pt_fsr > pt_threshold)
-            mu2_match =  ak.any(mu2_match, axis=1)
-            mu2_match = ak.fill_none(mu2_match, value=False)
-
-            trigger_match = (mu1_match >0) | (mu2_match > 0)
-            # print(f"trigger_match: {trigger_match}")
-            trigger_match = ak.to_numpy(trigger_match)
-
-            
-
-            cutflow["step4_muon_selection_pisa"] = trigger_match 
-            print(f'cutflow["step4_muon_selection_pisa"]: {cutflow["step4_muon_selection_pisa"]}')
-
-            
-            
-
-            
-           
-
-            
             # --------------------------------------------------------#
             # Fill dimuon and muon variables
             # --------------------------------------------------------#
@@ -703,7 +546,6 @@ class DimuonProcessor(processor.ProcessorABC):
                 weights,
                 numevents,
                 output,
-                cutflow,
             )
             # debugging
             # if "jer" in v_name:
@@ -712,28 +554,6 @@ class DimuonProcessor(processor.ProcessorABC):
             if output_updated is not None:
                 output = output_updated
 
-
-         # --------------------------------------------------
-            
-        output = pd.DataFrame(cutflow)
-        output["dataset"] = dataset
-        output["year"] = int(self.year)
-        to_return = None
-        if self.apply_to_output is None:
-            to_return = output
-        else:
-            self.apply_to_output(output)
-            to_return = self.accumulator.identity()
-
-        if self.timer:
-            self.timer.add_checkpoint("Saving outputs")
-            self.timer.summary()
-
-        
-        return to_return
-        #--------------------------------------------------
-        
-        
         if self.timer:
             self.timer.add_checkpoint("Jet loop")
 
@@ -806,8 +626,7 @@ class DimuonProcessor(processor.ProcessorABC):
         # print(f"output.columns: {output.columns}")
         # output.to_csv("test.csv")
         # raise ValueError
-
-        #
+        
         to_return = None
         if self.apply_to_output is None:
             to_return = output
@@ -836,7 +655,6 @@ class DimuonProcessor(processor.ProcessorABC):
         weights,
         numevents,
         output,
-        cutflow,
     ):
         weights = copy.deepcopy(weights)
         # print(f"jet_loop jets.fields: {jets.fields}")
@@ -868,30 +686,14 @@ class DimuonProcessor(processor.ProcessorABC):
                 jet_columns += ["pt_orig", "mass_orig"]
 
         # Find jets that have selected muons within dR<0.4 from them
-        # matched_mu_pt = jets.matched_muons.pt_fsr
-        matched_mu_pt = jets.matched_muons.pt_raw
-        matched_mu_eta = jets.matched_muons.eta_raw
+        matched_mu_pt = jets.matched_muons.pt_fsr
         matched_mu_iso = jets.matched_muons.pfRelIso04_all
         matched_mu_id = jets.matched_muons[self.parameters["muon_id"]]
-        matched_mu_GlobalOrTracker = jets.matched_muons.isGlobal | jets.matched_muons.isTracker
         matched_mu_pass = (
             (matched_mu_pt > self.parameters["muon_pt_cut"])
             & (matched_mu_iso < self.parameters["muon_iso_cut"])
             & matched_mu_id
-            & (abs(matched_mu_eta) < self.parameters["muon_eta_cut"])
-            & matched_mu_GlobalOrTracker
         )
-        
-        # ones = ak.ones_like(jets.matched_muons)
-        # njets_attemp = ak.num(ak.sum(ones,axis=2))
-        # njets = ak.num(jets,axis=1)
-        # print(f"njets_attemp: {njets_attemp}")
-        # print(f"njets: {njets}")
-        # print(f"matched_mu_pass: {matched_mu_pass}")
-        jet_isClean = ak.sum(matched_mu_pass, axis=2) == 0
-        print(f"jets: {jets}")
-        print(f"jet_isClean: {jet_isClean}")
-        
         clean = ~(
             ak.to_pandas(matched_mu_pass)
             .astype(float)
@@ -950,92 +752,6 @@ class DimuonProcessor(processor.ProcessorABC):
             else:
                 jets = jets[jet_columns]
 
-
-        # ----------------------------------------------------
-        # apply cutflow selection b4 convertings jets to pandas
-        # ----------------------------------------------------
-        # purdue
-        jet_selection = (
-            (jets.jetId > 0)
-            & ((jets.puId >=1) | (jets.pt > 50))
-            & (jets.qgl > -2)
-            & jet_isClean
-            & (jets.pt > self.parameters["jet_pt_cut"])
-            & (abs(jets.eta) < self.parameters["jet_eta_cut"])
-        )
-        # print(f"jet_selection: {jet_selection}")
-        # print(f"jets.pt: {jets.pt}")
-        # print(f"jet_selection: {ak.num(jet_selection, axis=1)}")
-        # print(f"jets.pt: {ak.num(jets.pt, axis=1)}")
-        njets_atLeastTwo = ak.fill_none(ak.sum(jet_selection, axis=1) >=2, value=False)
-        # print(f"jet_selection: {type(jet_selection)}")
-        nbtaggedM = ((jets.btagDeepB > self.parameters["btag_medium_wp"])
-                & (abs(jets.eta) < 2.5))
-        nbtaggedM = ak.sum(nbtaggedM, axis=1)
-        nbtaggedM_filter = ak.fill_none(nbtaggedM > 0, value=False)
-        # ----------------------------------------------------
-        nbtaggedL = ((jets.btagDeepB > self.parameters["btag_loose_wp"])
-                & (abs(jets.eta) < 2.5))
-        nbtaggedL = ak.sum(nbtaggedL, axis=1)
-        nbtaggedL_filter = ak.fill_none(nbtaggedL > 1, value=False)
-        # ----------------------------------------------------
-        btag_cut_old = ~(nbtaggedM_filter | nbtaggedL_filter)
-        # print(f"btag_cut_old: {btag_cut_old}")
-        # print(f"njets_atLeastTwo: {njets_atLeastTwo}")
-        btag_cut_njetApplied = ~((nbtaggedM_filter | nbtaggedL_filter) & njets_atLeastTwo)
-        cutflow["step5_Jet_selection_purdue_old"] = ak.to_numpy(btag_cut_old)
-        cutflow["step5_Jet_selection_purdue_njetApplied"] = ak.to_numpy(btag_cut_njetApplied)
-
-        # ----------------------------------------------------
-        # Pisa
-        jet_selection = (
-            (jets.jetId > 0)
-            & ((jets.puId > 0) | (jets.pt > 50))
-            & jet_isClean
-            & (jets.pt > self.parameters["jet_pt_cut"])
-            & (abs(jets.eta) < self.parameters["jet_eta_cut"])
-        )
-        # print(f"jet_selection: {type(jet_selection)}")
-        nbtaggedM = ((jets.btagDeepB > self.parameters["btag_medium_wp"])
-                & (abs(jets.eta) < 2.5))
-        nbtaggedM = ak.sum(nbtaggedM, axis=1)
-        nbtaggedM_filter = ak.fill_none(nbtaggedM < 1, value=False)
-        # ----------------------------------------------------
-        nbtaggedL = ((jets.btagDeepB > self.parameters["btag_loose_wp"])
-                & (abs(jets.eta) < 2.5))
-        nbtaggedL = ak.sum(nbtaggedL, axis=1)
-        nbtaggedL_filter = ak.fill_none(nbtaggedL < 2, value=False)
-        # ----------------------------------------------------
-        btag_cut_pisa = (nbtaggedM_filter & nbtaggedL_filter)
-        cutflow["step5_Jet_selection_pisa"] = ak.to_numpy(btag_cut_pisa)
-
-        # ----------------------------------------------------
-        # Caltech
-        jet_selection = (
-            (jets.jetId >= 2)
-            & (jets.puId >= 1)
-            & jet_isClean
-            & (jets.pt > self.parameters["jet_pt_cut"])
-            & (abs(jets.eta) < self.parameters["jet_eta_cut"])
-        )
-        # print(f"jet_selection: {type(jet_selection)}")
-        nbtaggedM = (jets.btagDeepB > self.parameters["btag_medium_wp"])
-        nbtaggedM = ak.sum(nbtaggedM, axis=1)
-        nbtaggedM_filter = ak.fill_none(nbtaggedM < 1, value=False)
-        # ----------------------------------------------------
-        btag_cut_caltech = nbtaggedM_filter
-        cutflow["step5_Jet_selection_caltech"] = ak.to_numpy(btag_cut_caltech)
-
-
-        for field, value in cutflow.items():
-            print(f"cutflow {field} len: {len(value)}")
-
-        
-        # return
-
-
-
-        
         # --- conversion from awkward to pandas --- #
         jets = ak.to_pandas(jets)
 
@@ -1097,7 +813,6 @@ class DimuonProcessor(processor.ProcessorABC):
             & (jets.pt > self.parameters["jet_pt_cut"])
             & (abs(jets.eta) < self.parameters["jet_eta_cut"])
         )
-        
 
         jets = jets[jet_selection]
 
