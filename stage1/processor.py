@@ -328,15 +328,9 @@ class DimuonProcessor(processor.ProcessorABC):
             # and trigger matching (trig match not done in final vrsn)
             # --------------------------------------------------------#
 
-            # Events where there is at least one muon passing
-            # leading muon pT cut
-            pass_leading_pt = mu1.pt_raw > self.parameters["muon_leading_pt"]
-
-            # update event selection with leading muon pT cut
-            output["pass_leading_pt"] = pass_leading_pt
-
-            #Do trigger matching 
-            isoMu_filterbit = 2
+            # ---------------------------------------------------------------
+            # baseline trigger matching
+            isoMu_filterbit = 8
             mu_id = 13
             # pt_threshold = 24 
             # if "2017" in year: # line 371 of AN-19-124
@@ -347,14 +341,15 @@ class DimuonProcessor(processor.ProcessorABC):
 
             dr_threshold = 0.1 # for matching gen muons to reco muons
             events = df
-            IsoMu24_muons = (events.TrigObj.id == mu_id) &  \
-                        ((events.TrigObj.filterBits & isoMu_filterbit) == isoMu_filterbit) & \
-                    (events.TrigObj.pt > pt_threshold)
+            IsoMu24_muons = (abs(events.TrigObj.id) == mu_id) &  \
+                        ((events.TrigObj.filterBits & isoMu_filterbit) > 0)
             #check the first two leading muons match any of the HLT trigger objs. if neither match, reject event
             ak_muon_selection = (
                 (events.Muon.pt_raw > self.parameters["muon_pt_cut"]) # pt_raw is pt b4 rochester
                 & (abs(events.Muon.eta_raw) < self.parameters["muon_eta_cut"])
                 & events.Muon[self.parameters["muon_id"]]
+                & (events.Muon.iso_fsr < self.parameters["muon_iso_cut"])
+                & (events.Muon.isGlobal | events.Muon.isTracker)
             )
             padded_muons_trig_match = ak.pad_none(df.Muon[ak_muon_selection], 2) # pad in case we have only one muon or zero in an event
             # padded_muons = ak.pad_none(events.Muon, 4)
@@ -364,21 +359,20 @@ class DimuonProcessor(processor.ProcessorABC):
             # print(f"mu1_trig_match: {mu1_trig_match}")
             # print(f"mu2_trig_match: {mu2_trig_match}")
             # print(f"events.TrigObj[IsoMu24_muons].eta: {events.TrigObj[IsoMu24_muons].eta}")
-            _,_, mu1_match_dR = delta_r(mu1_trig_match.eta, events.TrigObj[IsoMu24_muons].eta, mu1_trig_match.phi, events.TrigObj[IsoMu24_muons].phi)
+            _,_, mu1_match_dR = delta_r(mu1_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu1_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
             mu1_match = (mu1_match_dR < dr_threshold) & \
-                (mu1_trig_match.pt > pt_threshold)
-            # print(f"mu1_match: {mu1_match}")
-            mu1_match = ak.sum(mu1_match, axis=1)
-            # print(f"mu1_match after sum: {mu1_match}")
+                (mu1_trig_match.pt_roch > pt_threshold)
+            # mu1_match = ak.sum(mu1_match, axis=1)
+            mu1_match = ak.any(mu1_match, axis=1)
             mu1_match = ak.fill_none(mu1_match, value=False)
 
 
-            _,_, mu2_match_dR = delta_r(mu2_trig_match.eta, events.TrigObj[IsoMu24_muons].eta, mu2_trig_match.phi, events.TrigObj[IsoMu24_muons].phi)
+            _,_, mu2_match_dR = delta_r(mu2_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu2_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
             mu2_match = (mu2_match_dR < dr_threshold) & \
-                (mu2_trig_match.pt > pt_threshold)
+                (mu2_trig_match.pt_roch > pt_threshold)
             # print(f"mu2_match: {mu2_match}")
-            mu2_match =  ak.sum(mu2_match, axis=1)
-            # print(f"mu2_match after sum: {mu2_match}")
+            # mu2_match =  ak.sum(mu2_match, axis=1)
+            mu2_match =  ak.any(mu2_match, axis=1)
             mu2_match = ak.fill_none(mu2_match, value=False)
             # print(f"mu2_match after fillnone: {mu2_match}")
 
