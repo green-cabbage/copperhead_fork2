@@ -262,8 +262,10 @@ class DimuonProcessor(processor.ProcessorABC):
 
             # Define baseline muon selection (applied to pandas DF!)
             muons["selection"] = (
-                (muons.pt_raw > self.parameters["muon_pt_cut"])
-                & (abs(muons.eta_raw) < self.parameters["muon_eta_cut"])
+                # (muons.pt_raw > self.parameters["muon_pt_cut"])
+                (muons.pt > self.parameters["muon_pt_cut"])
+                # & (abs(muons.eta_raw) < self.parameters["muon_eta_cut"])
+                & (abs(muons.eta) < self.parameters["muon_eta_cut"])
                 & (muons.pfRelIso04_all < self.parameters["muon_iso_cut"])
                 & muons[self.parameters["muon_id"]]
                 & muons.pass_flags
@@ -345,8 +347,10 @@ class DimuonProcessor(processor.ProcessorABC):
                         ((events.TrigObj.filterBits & isoMu_filterbit) > 0)
             #check the first two leading muons match any of the HLT trigger objs. if neither match, reject event
             ak_muon_selection = (
-                (events.Muon.pt_raw > self.parameters["muon_pt_cut"]) # pt_raw is pt b4 rochester
-                & (abs(events.Muon.eta_raw) < self.parameters["muon_eta_cut"])
+                # (events.Muon.pt_raw > self.parameters["muon_pt_cut"]) # pt_raw is pt b4 rochester
+                # & (abs(events.Muon.eta_raw) < self.parameters["muon_eta_cut"])
+                (events.Muon.pt > self.parameters["muon_pt_cut"]) # pt_raw is pt b4 rochester
+                & (abs(events.Muon.eta) < self.parameters["muon_eta_cut"])
                 & events.Muon[self.parameters["muon_id"]]
                 & (events.Muon.iso_fsr < self.parameters["muon_iso_cut"])
                 & (events.Muon.isGlobal | events.Muon.isTracker)
@@ -360,16 +364,24 @@ class DimuonProcessor(processor.ProcessorABC):
             # print(f"mu2_trig_match: {mu2_trig_match}")
             # print(f"events.TrigObj[IsoMu24_muons].eta: {events.TrigObj[IsoMu24_muons].eta}")
             _,_, mu1_match_dR = delta_r(mu1_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu1_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
-            mu1_match = (mu1_match_dR < dr_threshold) & \
-                (mu1_trig_match.pt_roch > pt_threshold)
+            # _,_, mu1_match_dR = delta_r(mu1_trig_match.eta, events.TrigObj[IsoMu24_muons].eta, mu1_trig_match.phi, events.TrigObj[IsoMu24_muons].phi)
+            mu1_match = (
+                (mu1_match_dR < dr_threshold)
+                # & (mu1_trig_match.pt_fsr > pt_threshold)
+                & (mu1_trig_match.pt > pt_threshold)
+            )
             # mu1_match = ak.sum(mu1_match, axis=1)
             mu1_match = ak.any(mu1_match, axis=1)
             mu1_match = ak.fill_none(mu1_match, value=False)
 
 
             _,_, mu2_match_dR = delta_r(mu2_trig_match.eta_raw, events.TrigObj[IsoMu24_muons].eta, mu2_trig_match.phi_raw, events.TrigObj[IsoMu24_muons].phi)
-            mu2_match = (mu2_match_dR < dr_threshold) & \
-                (mu2_trig_match.pt_roch > pt_threshold)
+            # _,_, mu2_match_dR = delta_r(mu2_trig_match.eta, events.TrigObj[IsoMu24_muons].eta, mu2_trig_match.phi, events.TrigObj[IsoMu24_muons].phi)
+            mu2_match = (
+                (mu2_match_dR < dr_threshold)
+                # & (mu2_trig_match.pt_fsr > pt_threshold)
+                & (mu2_trig_match.pt > pt_threshold)
+            )
             # print(f"mu2_match: {mu2_match}")
             # mu2_match =  ak.sum(mu2_match, axis=1)
             mu2_match =  ak.any(mu2_match, axis=1)
@@ -407,8 +419,8 @@ class DimuonProcessor(processor.ProcessorABC):
         prepare_jets(df, is_mc)
         jets = df.Jet
 
-        # self.do_jec = True
-        self.do_jec = False
+        self.do_jec = True
+        # self.do_jec = False
 
         # # We only need to reapply JEC for 2018 data
         # # (unless new versions of JEC are released)
