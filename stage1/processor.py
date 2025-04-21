@@ -40,6 +40,7 @@ from config.branches import branches
 import copy
 from python.math_tools import delta_r
 
+
 class DimuonProcessor(processor.ProcessorABC):
     def __init__(self, **kwargs):
         self.pt_variations = kwargs.get("pt_variations", ["nominal"])
@@ -111,8 +112,10 @@ class DimuonProcessor(processor.ProcessorABC):
         # enable timer for debugging
         do_timer = kwargs.get("do_timer", False)
         self.timer = Timer("global") if do_timer else None
+        self.cutflow = {}
 
     def process(self, df):
+        self.cutflow = pd.DataFrame({"TotalEntries": ak.ones_like(df.event==1)}) # intialize cutflow
         # print(f"df event: {df.event}")
         # Initialize timer
         if self.timer:
@@ -280,12 +283,14 @@ class DimuonProcessor(processor.ProcessorABC):
             # Find opposite-sign muons
             mm_charge = muons.loc[muons.selection, "charge"].groupby("entry").prod()
 
+            electron_id = df.Electron[self.parameters["electron_id"]]
+            
             # Veto events with good quality electrons
             ecal_gap = (1.44 < abs(df.Electron.eta)) & (1.57 > abs(df.Electron.eta))
             electrons = df.Electron[
                 (df.Electron.pt > self.parameters["electron_pt_cut"])
                 & (abs(df.Electron.eta) < self.parameters["electron_eta_cut"])
-                & (df.Electron[self.parameters["electron_id"]] == 1)
+                & (electron_id == 1)
                 & (~ecal_gap) # remove electrons in the ecal gap
             ]
             electron_veto = ak.to_numpy(ak.count(electrons.pt, axis=1) == 0)
@@ -307,6 +312,10 @@ class DimuonProcessor(processor.ProcessorABC):
                 & electron_veto
                 & good_pv
             )
+
+
+            
+            
             # print(f'output["event_selection"]: {output["event_selection"]}')
 
             # --------------------------------------------------------#
@@ -344,7 +353,9 @@ class DimuonProcessor(processor.ProcessorABC):
             dr_threshold = 0.1 # for matching gen muons to reco muons
             events = df
             IsoMu24_muons = (abs(events.TrigObj.id) == mu_id) &  \
-                        ((events.TrigObj.filterBits & isoMu_filterbit) > 0)
+                        (
+                            ((events.TrigObj.filterBits & isoMu_filterbit) > 0)
+                        )
             #check the first two leading muons match any of the HLT trigger objs. if neither match, reject event
             ak_muon_selection = (
                 (events.Muon.pt_raw > self.parameters["muon_pt_cut"]) # pt_raw is pt b4 rochester
@@ -394,6 +405,19 @@ class DimuonProcessor(processor.ProcessorABC):
 
             if self.timer:
                 self.timer.add_checkpoint("Event & muon selection")
+
+
+
+        step1_cutflow = (
+            mask
+            & (flags > 0)
+            & good_pv
+        )
+        self.cutflow["LumiMaskMetFilterPv"] = step1_cutflow
+        self.cutflow["HLT_filter"] = (flags > 0)
+        self.cutflow["muon_base_selection"] = (nmuons == 2)&(mm_charge == -1) 
+        self.cutflow["muon_trig_match"] = trigger_match
+        self.cutflow["electron_veto"] = electron_veto
 
         # ------------------------------------------------------------#
         # Fill GEN jet variables
@@ -553,6 +577,8 @@ class DimuonProcessor(processor.ProcessorABC):
         if self.timer:
             self.timer.add_checkpoint("Jet loop")
 
+        
+        
         # ------------------------------------------------------------#
         # Fill outputs
         # ------------------------------------------------------------#
@@ -619,6 +645,48 @@ class DimuonProcessor(processor.ProcessorABC):
         output.columns = ["_".join(col).strip("_") for col in output.columns.values]
         output = output[output.region.isin(self.regions)]
 
+        # --------------------------------------------------
+
+        self.cutflow["Jet_selection_njetsLeq2"] = (output["njets_nominal"] <= 2)
+        self.cutflow["Jet_selection_njetsLeq2"] = self.cutflow["Jet_selection_njetsLeq2"].fillna(True)
+        btagLoose_filter = (output["nBtagLoose_nominal"] >= 2).fillna(False)
+        btagMedium_filter = (output["nBtagMedium_nominal"] >= 1).fillna(False) & (output["njets_nominal"] >= 2).fillna(False)
+        btagLoose_filter = btagLoose_filter.fillna(False)
+        btagMedium_filter = btagMedium_filter.fillna(False)
+        btag_cut = btagLoose_filter | btagMedium_filter  
+        self.cutflow["anti_ttH_btag_cut"] = ~btag_cut 
+        self.cutflow["anti_ttH_btag_cut"] = self.cutflow["anti_ttH_btag_cut"].fillna(True)
+
+        vbf_cut = (output["jj_mass_nominal"] > 400) & (output["jj_dEta_nominal"] > 2.5) & (output["jet1_pt_nominal"] > 35) 
+        self.cutflow["ggH_cut"] = ~vbf_cut
+        self.cutflow["ggH_cut"] = self.cutflow["ggH_cut"].fillna(True)
+
+        self.cutflow["signal_fit_region"] = (mass > 110) & (mass < 150)
+        self.cutflow["signal_fit_region"] = self.cutflow["signal_fit_region"].fillna(False)
+        
+
+            
+        output = self.cutflow
+        # print(f"output: {output}")
+        output["dataset"] = dataset
+        output["year"] = int(self.year)
+        to_return = None
+        if self.apply_to_output is None:
+            to_return = output
+        else:
+            self.apply_to_output(output)
+            to_return = self.accumulator.identity()
+
+        if self.timer:
+            self.timer.add_checkpoint("Saving outputs")
+            self.timer.summary()
+
+        
+        return to_return
+        #--------------------------------------------------
+        
+
+        
         # print(f"output.columns: {output.columns}")
         # output.to_csv("test.csv")
         # raise ValueError
