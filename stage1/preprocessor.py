@@ -169,10 +169,13 @@ class SamplesInfo(object):
 
 
         # testing -----------------------------------------------
-        # all_files = [
-        # #     "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdMc2017_NANOV8h_06May2020/VBFHToMuMu_M-125_TuneCP5_13TeV-powheg-pythia_dipole/RunIISummer16MiniAODv3_FSRmyNanoProdMc2017_NANOV8h_7a39ab0ed099ff55ceb9/200414_114321/0000/myNanoProdMc2017_NANO_1.root",
+        all_files = [
+        #     "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdMc2017_NANOV8h_06May2020/VBFHToMuMu_M-125_TuneCP5_13TeV-powheg-pythia_dipole/RunIISummer16MiniAODv3_FSRmyNanoProdMc2017_NANOV8h_7a39ab0ed099ff55ceb9/200414_114321/0000/myNanoProdMc2017_NANO_1.root",
         # "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRnano18MC_NANOV10b/GluGluHToMuMu_M-125_TuneCP5_PSweights_13TeV_powheg_pythia8/RunIISummer16MiniAODv3_FSRnano18MC_NANOV10b_ealistic_v15_ext1-v1/200408_225210/0000/nano18MC_NANO_9.root"
-        # ]
+            '/eos/purdue/store/group/local/hmm/nanoAODv6_private/FSRmyNanoProdData2017_NANOV4/SingleMuon/RunIISummer16MiniAODv3_FSRmyNanoProdData2017_NANOV4_un2017B-31Mar2018-v1/191007_094149/0000/myNanoProdData2017_NANO_281.root',
+ '/eos/purdue/store/group/local/hmm/nanoAODv6_private/FSRmyNanoProdData2017_NANOV4/SingleMuon/RunIISummer16MiniAODv3_FSRmyNanoProdData2017_NANOV4_un2017B-31Mar2018-v1/191007_094149/0000/myNanoProdData2017_NANO_385.root',
+ '/eos/purdue/store/group/local/hmm/nanoAODv6_private/FSRmyNanoProdData2017_NANOV4/SingleMuon/RunIISummer16MiniAODv3_FSRmyNanoProdData2017_NANOV4_un2017B-31Mar2018-v1/191007_094149/0000/myNanoProdData2017_NANO_546.root'
+        ]
         #------------------------------------------------------------
         bad_files = [
             "root://eos.cms.rcac.purdue.edu//store/group/local/hmm/FSRmyNanoProdData2018ABC_NANOV8a/SingleMuon/RunIIData17_FSRmyNanoProdData2018ABC_NANOV8a_Run2018A-17Sep2018-v2/200113_205609/0000/myNanoProdData2018ABC_NANO_90.root",
@@ -231,7 +234,7 @@ class SamplesInfo(object):
             if f not in all_files_clean:
                 all_files_clean.append(f)
         # print(f"Removed double files: {len(all_files_clean)} files")
-        # print(f"all_files_clean: {all_files_clean}")
+        print(f"all_files_clean: {all_files_clean}")
         # addition end ---------------------------------------------------------------------------------
         # print(f"check if all_files length is same! : {len(all_files) == len(all_files_clean)}")
         print(f"Loading {sample} all_files: {len(all_files)} files")
