@@ -81,7 +81,7 @@ class DimuonProcessor(processor.ProcessorABC):
         self.regions = kwargs.get("regions", ["h-peak", "h-sidebands"])
 
         # variables to save
-        self.vars_to_save = set([v.name for v in variables])
+        self.vars_to_save = set([v.name for v in variables] + ["luminosityBlock"])
 
         # Look at variation names and see if we need to enable
         # calculation of JEC or JER uncertainties
@@ -134,7 +134,7 @@ class DimuonProcessor(processor.ProcessorABC):
 
         # All variables that we want to save
         # will be collected into the 'output' dataframe
-        output = pd.DataFrame({"run": df.run, "event": df.event})
+        output = pd.DataFrame({"run": df.run, "event": df.event, "luminosityBlock": df.luminosityBlock})
         output.index.name = "entry"
         output["npv"] = df.PV.npvs
         output["met"] = df.MET.pt
@@ -643,70 +643,71 @@ class DimuonProcessor(processor.ProcessorABC):
             or ("gjj" in c[0])
         ]
 
+        print(f"columns_to_save: {columns_to_save}")
 
 
         # --------------------------------------------------
 
-        output = output.reindex(sorted(output.columns), axis=1)
-        output.columns = ["_".join(col).strip("_") for col in output.columns.values]
+        # output = output.reindex(sorted(output.columns), axis=1)
+        # output.columns = ["_".join(col).strip("_") for col in output.columns.values]
         
-        self.cutflow["Jet_selection_njetsLeq2"] = (output["njets_nominal"].fillna(0) <= 2)
-        # print(f'output["njets_nominal"]: {output["njets_nominal"]}')
-        # print(f'self.cutflow["Jet_selection_njetsLeq2"]: {self.cutflow["Jet_selection_njetsLeq2"]}')
-        self.cutflow["Jet_selection_njetsLeq2"] = self.cutflow["Jet_selection_njetsLeq2"].fillna(True)
-        # print(f'self.cutflow["Jet_selection_njetsLeq2"]: {self.cutflow["Jet_selection_njetsLeq2"]}')
-        # print(f'output["njets_nominal"] <= 2: {output["njets_nominal"] <= 2}')
-        btagLoose_filter = (output["nBtagLoose_nominal"] >= 2).fillna(False)
-        btagMedium_filter = (output["nBtagMedium_nominal"] >= 1).fillna(False) & (output["njets_nominal"] >= 2).fillna(False)
-        btagLoose_filter = btagLoose_filter.fillna(False)
-        btagMedium_filter = btagMedium_filter.fillna(False)
-        btag_cut = btagLoose_filter | btagMedium_filter  
-        self.cutflow["anti_ttH_btag_cut"] = ~btag_cut 
-        self.cutflow["anti_ttH_btag_cut"] = self.cutflow["anti_ttH_btag_cut"].fillna(True)
+        # self.cutflow["Jet_selection_njetsLeq2"] = (output["njets_nominal"].fillna(0) <= 2)
+        # # print(f'output["njets_nominal"]: {output["njets_nominal"]}')
+        # # print(f'self.cutflow["Jet_selection_njetsLeq2"]: {self.cutflow["Jet_selection_njetsLeq2"]}')
+        # self.cutflow["Jet_selection_njetsLeq2"] = self.cutflow["Jet_selection_njetsLeq2"].fillna(True)
+        # # print(f'self.cutflow["Jet_selection_njetsLeq2"]: {self.cutflow["Jet_selection_njetsLeq2"]}')
+        # # print(f'output["njets_nominal"] <= 2: {output["njets_nominal"] <= 2}')
+        # btagLoose_filter = (output["nBtagLoose_nominal"] >= 2).fillna(False)
+        # btagMedium_filter = (output["nBtagMedium_nominal"] >= 1).fillna(False) & (output["njets_nominal"] >= 2).fillna(False)
+        # btagLoose_filter = btagLoose_filter.fillna(False)
+        # btagMedium_filter = btagMedium_filter.fillna(False)
+        # btag_cut = btagLoose_filter | btagMedium_filter  
+        # self.cutflow["anti_ttH_btag_cut"] = ~btag_cut 
+        # self.cutflow["anti_ttH_btag_cut"] = self.cutflow["anti_ttH_btag_cut"].fillna(True)
 
-        vbf_cut = (output["jj_mass_nominal"].fillna(0) > 400) & (output["jj_dEta_nominal"].fillna(-1) > 2.5) & (output["jet1_pt_nominal"].fillna(0) > 35) 
-        self.cutflow["ggH_cut"] = ~vbf_cut
-        self.cutflow["ggH_cut"] = self.cutflow["ggH_cut"].fillna(True)
+        # vbf_cut = (output["jj_mass_nominal"].fillna(0) > 400) & (output["jj_dEta_nominal"].fillna(-1) > 2.5) & (output["jet1_pt_nominal"].fillna(0) > 35) 
+        # self.cutflow["ggH_cut"] = ~vbf_cut
+        # self.cutflow["ggH_cut"] = self.cutflow["ggH_cut"].fillna(True)
 
-        self.cutflow["signal_fit_region"] = (mass > 110) & (mass < 150)
-        self.cutflow["signal_fit_region"] = self.cutflow["signal_fit_region"].fillna(False)
+        # self.cutflow["signal_fit_region"] = (mass > 110) & (mass < 150)
+        # self.cutflow["signal_fit_region"] = self.cutflow["signal_fit_region"].fillna(False)
 
-        # add few values for bebugging
+        # # add few values for bebugging
         
-        self.cutflow["njets_nominal"] = output["njets_nominal"] 
-        self.cutflow["njets_nominal"] = self.cutflow["njets_nominal"].fillna(0)
-        self.cutflow["jet1_pt_nominal"] = output["jet1_pt_nominal"] 
-        self.cutflow["jet1_pt_nominal"] = self.cutflow["jet1_pt_nominal"].fillna(0)
-        self.cutflow["jj_mass_nominal"] = output["jj_mass_nominal"] 
-        self.cutflow["jj_mass_nominal"] = self.cutflow["jj_mass_nominal"].fillna(0)
-        self.cutflow["jj_dEta_nominal"] = output["jj_dEta_nominal"] 
-        self.cutflow["jj_dEta_nominal"] = self.cutflow["jj_dEta_nominal"].fillna(-1)
-        self.cutflow["nBtagLoose_nominal"] = output["nBtagLoose_nominal"] 
-        self.cutflow["nBtagLoose_nominal"] = self.cutflow["nBtagLoose_nominal"].fillna(-1)
-        self.cutflow["nBtagMedium_nominal"] = output["nBtagMedium_nominal"] 
-        self.cutflow["nBtagMedium_nominal"] = self.cutflow["nBtagMedium_nominal"].fillna(-1)
+        # self.cutflow["njets_nominal"] = output["njets_nominal"] 
+        # self.cutflow["njets_nominal"] = self.cutflow["njets_nominal"].fillna(0)
+        # self.cutflow["jet1_pt_nominal"] = output["jet1_pt_nominal"] 
+        # self.cutflow["jet1_pt_nominal"] = self.cutflow["jet1_pt_nominal"].fillna(0)
+        # self.cutflow["jj_mass_nominal"] = output["jj_mass_nominal"] 
+        # self.cutflow["jj_mass_nominal"] = self.cutflow["jj_mass_nominal"].fillna(0)
+        # self.cutflow["jj_dEta_nominal"] = output["jj_dEta_nominal"] 
+        # self.cutflow["jj_dEta_nominal"] = self.cutflow["jj_dEta_nominal"].fillna(-1)
+        # self.cutflow["nBtagLoose_nominal"] = output["nBtagLoose_nominal"] 
+        # self.cutflow["nBtagLoose_nominal"] = self.cutflow["nBtagLoose_nominal"].fillna(-1)
+        # self.cutflow["nBtagMedium_nominal"] = output["nBtagMedium_nominal"] 
+        # self.cutflow["nBtagMedium_nominal"] = self.cutflow["nBtagMedium_nominal"].fillna(-1)
 
 
         
 
             
-        output = self.cutflow
-        # print(f"output: {output}")
-        output["dataset"] = dataset
-        output["year"] = int(self.year)
-        to_return = None
-        if self.apply_to_output is None:
-            to_return = output
-        else:
-            self.apply_to_output(output)
-            to_return = self.accumulator.identity()
+        # output = self.cutflow
+        # # print(f"output: {output}")
+        # output["dataset"] = dataset
+        # output["year"] = int(self.year)
+        # to_return = None
+        # if self.apply_to_output is None:
+        #     to_return = output
+        # else:
+        #     self.apply_to_output(output)
+        #     to_return = self.accumulator.identity()
 
-        if self.timer:
-            self.timer.add_checkpoint("Saving outputs")
-            self.timer.summary()
+        # if self.timer:
+        #     self.timer.add_checkpoint("Saving outputs")
+        #     self.timer.summary()
 
         
-        return to_return
+        # return to_return
         #--------------------------------------------------
 
 
