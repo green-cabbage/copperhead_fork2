@@ -39,6 +39,7 @@ from config.variables import variables
 from config.branches import branches
 import copy
 from python.math_tools import delta_r
+# pd.set_option('display.max_rows', None)
 
 
 class DimuonProcessor(processor.ProcessorABC):
@@ -414,8 +415,9 @@ class DimuonProcessor(processor.ProcessorABC):
             & good_pv
         )
         self.cutflow["LumiMaskMetFilterPv"] = step1_cutflow
-        self.cutflow["HLT_filter"] = (flags > 0)
+        self.cutflow["HLT_filter"] = (hlt > 0)
         self.cutflow["muon_base_selection"] = (nmuons == 2)&(mm_charge == -1) 
+        self.cutflow["muon_base_selection"] = self.cutflow["muon_base_selection"].fillna(False)
         self.cutflow["muon_trig_match"] = trigger_match
         self.cutflow["electron_veto"] = electron_veto
 
@@ -640,15 +642,20 @@ class DimuonProcessor(processor.ProcessorABC):
             or ("gjet" in c[0])
             or ("gjj" in c[0])
         ]
-        output = output.loc[output.event_selection, columns_to_save]
-        output = output.reindex(sorted(output.columns), axis=1)
-        output.columns = ["_".join(col).strip("_") for col in output.columns.values]
-        output = output[output.region.isin(self.regions)]
+
+
 
         # --------------------------------------------------
 
-        self.cutflow["Jet_selection_njetsLeq2"] = (output["njets_nominal"] <= 2)
+        output = output.reindex(sorted(output.columns), axis=1)
+        output.columns = ["_".join(col).strip("_") for col in output.columns.values]
+        
+        self.cutflow["Jet_selection_njetsLeq2"] = (output["njets_nominal"].fillna(0) <= 2)
+        # print(f'output["njets_nominal"]: {output["njets_nominal"]}')
+        # print(f'self.cutflow["Jet_selection_njetsLeq2"]: {self.cutflow["Jet_selection_njetsLeq2"]}')
         self.cutflow["Jet_selection_njetsLeq2"] = self.cutflow["Jet_selection_njetsLeq2"].fillna(True)
+        # print(f'self.cutflow["Jet_selection_njetsLeq2"]: {self.cutflow["Jet_selection_njetsLeq2"]}')
+        # print(f'output["njets_nominal"] <= 2: {output["njets_nominal"] <= 2}')
         btagLoose_filter = (output["nBtagLoose_nominal"] >= 2).fillna(False)
         btagMedium_filter = (output["nBtagMedium_nominal"] >= 1).fillna(False) & (output["njets_nominal"] >= 2).fillna(False)
         btagLoose_filter = btagLoose_filter.fillna(False)
@@ -657,12 +664,29 @@ class DimuonProcessor(processor.ProcessorABC):
         self.cutflow["anti_ttH_btag_cut"] = ~btag_cut 
         self.cutflow["anti_ttH_btag_cut"] = self.cutflow["anti_ttH_btag_cut"].fillna(True)
 
-        vbf_cut = (output["jj_mass_nominal"] > 400) & (output["jj_dEta_nominal"] > 2.5) & (output["jet1_pt_nominal"] > 35) 
+        vbf_cut = (output["jj_mass_nominal"].fillna(0) > 400) & (output["jj_dEta_nominal"].fillna(-1) > 2.5) & (output["jet1_pt_nominal"].fillna(0) > 35) 
         self.cutflow["ggH_cut"] = ~vbf_cut
         self.cutflow["ggH_cut"] = self.cutflow["ggH_cut"].fillna(True)
 
         self.cutflow["signal_fit_region"] = (mass > 110) & (mass < 150)
         self.cutflow["signal_fit_region"] = self.cutflow["signal_fit_region"].fillna(False)
+
+        # add few values for bebugging
+        
+        self.cutflow["njets_nominal"] = output["njets_nominal"] 
+        self.cutflow["njets_nominal"] = self.cutflow["njets_nominal"].fillna(0)
+        self.cutflow["jet1_pt_nominal"] = output["jet1_pt_nominal"] 
+        self.cutflow["jet1_pt_nominal"] = self.cutflow["jet1_pt_nominal"].fillna(0)
+        self.cutflow["jj_mass_nominal"] = output["jj_mass_nominal"] 
+        self.cutflow["jj_mass_nominal"] = self.cutflow["jj_mass_nominal"].fillna(0)
+        self.cutflow["jj_dEta_nominal"] = output["jj_dEta_nominal"] 
+        self.cutflow["jj_dEta_nominal"] = self.cutflow["jj_dEta_nominal"].fillna(-1)
+        self.cutflow["nBtagLoose_nominal"] = output["nBtagLoose_nominal"] 
+        self.cutflow["nBtagLoose_nominal"] = self.cutflow["nBtagLoose_nominal"].fillna(-1)
+        self.cutflow["nBtagMedium_nominal"] = output["nBtagMedium_nominal"] 
+        self.cutflow["nBtagMedium_nominal"] = self.cutflow["nBtagMedium_nominal"].fillna(-1)
+
+
         
 
             
@@ -684,6 +708,15 @@ class DimuonProcessor(processor.ProcessorABC):
         
         return to_return
         #--------------------------------------------------
+
+
+        
+        output = output.loc[output.event_selection, columns_to_save]
+        output = output.reindex(sorted(output.columns), axis=1)
+        output.columns = ["_".join(col).strip("_") for col in output.columns.values]
+        # output = output[output.region.isin(self.regions)]
+
+        
         
 
         
