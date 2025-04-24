@@ -81,19 +81,12 @@ class DimuonProcessor(processor.ProcessorABC):
         self.regions = kwargs.get("regions", ["h-peak", "h-sidebands"])
 
         # variables to save
-        self.vars_to_save = set([v.name for v in variables] + ["luminosityBlock"])
+        self.vars_to_save = set([v.name for v in variables] + ["luminosityBlock", "mu1_pt_raw", "mu2_pt_raw", "event_selection"])
 
         # Look at variation names and see if we need to enable
         # calculation of JEC or JER uncertainties
         jec_pars = {k: v[self.year] for k, v in jec_parameters.items()}
 
-        # temp overwrite -------------------------------------------
-        # pt_variations_copy = []
-        # for pt_var in self.pt_variations:
-        #     if "jer" not in pt_var:
-        #         pt_variations_copy.append(pt_var)
-        # self.pt_variations = pt_variations_copy
-        # temp overwrite -------------------------------------------
                     
         print(f"self.pt_variations: {self.pt_variations}")
         print(f"jec_pars: {jec_pars}")
@@ -245,6 +238,8 @@ class DimuonProcessor(processor.ProcessorABC):
                 "pt_raw",
                 "eta_raw",
                 "pfRelIso04_all",
+                "isGlobal",
+                "isTracker",
             ] + [self.parameters["muon_id"]]
             muons = ak.to_pandas(df.Muon[muon_columns])
 
@@ -271,6 +266,7 @@ class DimuonProcessor(processor.ProcessorABC):
                 & (muons.pfRelIso04_all < self.parameters["muon_iso_cut"])
                 & muons[self.parameters["muon_id"]]
                 & muons.pass_flags
+                & (muons.isGlobal & muons.isTracker)
             )
 
             # Count muons
@@ -282,8 +278,33 @@ class DimuonProcessor(processor.ProcessorABC):
             )
 
             # Find opposite-sign muons
-            mm_charge = muons.loc[muons.selection, "charge"].groupby("entry").prod()
+            # mm_charge = muons.loc[muons.selection, "charge"].groupby("entry")
+            # # print(f"mm_charge b4 head: {mm_charge}")
+            # mm_charge = mm_charge.head(2)
+            # # print(f"mm_charge after head: {mm_charge}")
+            # mm_charge = mm_charge.prod()
+            # mm_charge = muons.loc[muons.selection, "charge"].groupby("entry").head(2).prod()
+            # mm_charge = muons.loc[muons.selection, "charge"].groupby("entry").prod()
 
+            ak_muons = df.Muon
+            ak_muon_selection = (
+                (ak_muons.pt_raw > self.parameters["muon_pt_cut"])
+                & (abs(ak_muons.eta_raw) < self.parameters["muon_eta_cut"])
+                & (ak_muons.pfRelIso04_all < self.parameters["muon_iso_cut"])
+                & ak_muons[self.parameters["muon_id"]]
+                & (ak_muons.isGlobal & ak_muons.isTracker)
+            )
+            ak_muons = ak_muons[ak_muon_selection]
+            num_ak_muons = ak.num(ak_muons, axis=1)
+            # print(f"ak_muons b4 pad none: {ak_muons}")
+            # print(f"num_ak_muons: {num_ak_muons}")
+            
+            ak_muons = ak.pad_none(ak_muons, target=2, clip=True)
+            # print(f"ak_muons after pad none: {ak_muons}")
+            mm_charge = ak.prod(ak_muons.charge, axis=1)
+            # print(f"mm_charge: {mm_charge}")
+
+            
             electron_id = df.Electron[self.parameters["electron_id"]]
             
             # Veto events with good quality electrons
@@ -308,11 +329,14 @@ class DimuonProcessor(processor.ProcessorABC):
                 mask
                 & (hlt > 0)
                 & (flags > 0)
-                & (nmuons == 2)
+                & (nmuons >= 2) # at least two muonscut in https://twiki.cern.ch/twiki/bin/viewauth/CMS/HiggsToMuMuRunII#Synchronization
                 & (mm_charge == -1)
-                & electron_veto
+                # & electron_veto # electron veto not mentioned in https://twiki.cern.ch/twiki/bin/viewauth/CMS/HiggsToMuMuRunII#Synchronization
                 & good_pv
             )
+            # print(f"len(nmuons): {len(nmuons)}")
+            # print(f"len(mm_charge): {len(mm_charge)}")
+            # raise ValueError
 
 
             
@@ -329,11 +353,24 @@ class DimuonProcessor(processor.ProcessorABC):
             # or sort_values().drop_duplicates()
             # or using Numba
             # https://stackoverflow.com/questions/50381064/select-the-max-row-per-group-pandas-performance-issue
-            muons = muons[muons.selection & (nmuons == 2)]
-            mu1 = muons.loc[muons.pt.groupby("entry").idxmax()]
-            mu2 = muons.loc[muons.pt.groupby("entry").idxmin()]
+            # muons = muons[muons.selection & (nmuons == 2)]
+            muons = muons[muons.selection & (nmuons >= 2)] # FIXME
+            mu1 = muons.loc[muons.pt.groupby("entry").idxmax()] 
+            # mu2 = muons.loc[muons.pt.groupby("entry").idxmin()]
+            mu2_idxs = muons.groupby("entry")["pt"].apply(lambda x: x.nlargest(2).index[-1])
+            mu2 = muons.loc[mu2_idxs] # FIXME
             mu1.index = mu1.index.droplevel("subentry")
             mu2.index = mu2.index.droplevel("subentry")
+            ak_mu_filter = num_ak_muons >=2
+            new_ak_muons = ak_muons[ak_mu_filter]
+            # print(f"len(ak_mu_filter): {len(ak_mu_filter)}")
+            # print(f"len(ak_muons): {len(ak_muons)}")
+            # print(f"nmuons >=2: {ak_mu_filter}")
+            # print(f"new_ak_muons.pt: {new_ak_muons.pt}")
+            # print(f"muons.pt: {muons.pt}")
+            # print(f"mu1.pt: {mu1.pt}")
+            # print(f"mu2.pt: {mu2.pt}")
+            # raise ValueError
 
             # --------------------------------------------------------#
             # Select events with muons passing leading pT cut
@@ -349,7 +386,8 @@ class DimuonProcessor(processor.ProcessorABC):
             #     pt_threshold = 29
             # else: # for 2016, 2018 dunno about Run3
             #     pt_threshold = 26
-            pt_threshold = self.parameters["muon_leading_pt"] # line 371 of AN-19-124. "muon_leading_pt" is deceptive name, but that's where we saved the threshold
+            # pt_threshold = self.parameters["muon_leading_pt"] # line 371 of AN-19-124. "muon_leading_pt" is deceptive name, but that's where we saved the threshold
+            pt_threshold = 30 # match wtih https://twiki.cern.ch/twiki/bin/viewauth/CMS/HiggsToMuMuRunII#Synchronization
 
             dr_threshold = 0.1 # for matching gen muons to reco muons
             events = df
@@ -363,7 +401,7 @@ class DimuonProcessor(processor.ProcessorABC):
                 & (abs(events.Muon.eta_raw) < self.parameters["muon_eta_cut"])
                 & events.Muon[self.parameters["muon_id"]]
                 & (events.Muon.iso_fsr < self.parameters["muon_iso_cut"])
-                & (events.Muon.isGlobal | events.Muon.isTracker)
+                & (events.Muon.isGlobal & events.Muon.isTracker)
             )
             padded_muons_trig_match = ak.pad_none(df.Muon[ak_muon_selection], 2) # pad in case we have only one muon or zero in an event
             # padded_muons = ak.pad_none(events.Muon, 4)
@@ -416,8 +454,8 @@ class DimuonProcessor(processor.ProcessorABC):
         )
         self.cutflow["LumiMaskMetFilterPv"] = step1_cutflow
         self.cutflow["HLT_filter"] = (hlt > 0)
-        self.cutflow["muon_base_selection"] = (nmuons == 2)&(mm_charge == -1) 
-        self.cutflow["muon_base_selection"] = self.cutflow["muon_base_selection"].fillna(False)
+        # self.cutflow["muon_base_selection"] = (nmuons == 2)&(mm_charge == -1) 
+        # self.cutflow["muon_base_selection"] = self.cutflow["muon_base_selection"].fillna(False)
         self.cutflow["muon_trig_match"] = trigger_match
         self.cutflow["electron_veto"] = electron_veto
 
@@ -906,9 +944,9 @@ class DimuonProcessor(processor.ProcessorABC):
         jet_selection = (
             pass_jet_id
             & pass_jet_puid
-            & (jets.qgl > -2)
+            # & (jets.qgl > -2)
             & jets.clean
-            & (jets.pt > self.parameters["jet_pt_cut"])
+            & (jets.pt > 30) # match with https://twiki.cern.ch/twiki/bin/viewauth/CMS/HiggsToMuMuRunII#Synchronization
             & (abs(jets.eta) < self.parameters["jet_eta_cut"])
         )
 
