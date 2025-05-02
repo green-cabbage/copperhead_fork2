@@ -237,11 +237,11 @@ if __name__ == "__main__":
                 available_processes.append("ttjets_dl")
                 available_processes.append("ttjets_sl")
                 available_processes.append("tt_inclusive")
-                available_processes.append("st_t_top")
-                available_processes.append("st_t_antitop")
             elif bkg_sample.upper() == "ST": # enforce upper case to prevent confusion
                 available_processes.append("st_tw_top")
                 available_processes.append("st_tw_antitop")
+                available_processes.append("st_t_top")
+                available_processes.append("st_t_antitop")
             elif bkg_sample.upper() == "VV": # enforce upper case to prevent confusion
                 available_processes.append("ww_2l2nu")
                 available_processes.append("wz_3lnu")
@@ -325,8 +325,8 @@ if __name__ == "__main__":
                 # plot both leading and subleading muons/jets
                 variables2plot.append(f"{particle}1_{kinematic}_nominal")
                 variables2plot.append(f"{particle}2_{kinematic}_nominal")
-            variables2plot.append(f"jet1_qgl_nominal")
-            variables2plot.append(f"jet2_qgl_nominal")
+            # variables2plot.append(f"jet1_qgl_nominal")
+            # variables2plot.append(f"jet2_qgl_nominal")
        
         else:
             print(f"Unsupported variable: {particle} is given!")
@@ -401,6 +401,7 @@ if __name__ == "__main__":
             # "vbf_cut",
             "nBtagLoose_nominal", 
             "nBtagMedium_nominal", 
+            "njets_nominal", 
             "dimuon_mass",
             "zeppenfeld_nominal", 
             "jj_mass_nominal", 
@@ -499,6 +500,7 @@ if __name__ == "__main__":
                 print(f"is_data: {is_data}")
                 if is_data:
                     weights = ak.to_numpy(ak.fill_none(events["wgt_nominal"], value=0.0))
+                    fraction_weight = 1/events.fraction
                 else: # MC
                     weights = ak.fill_none(events["wgt_nominal"], value=0.0)
                     # print(f"weights {process} b4 numpy: {weights}")
@@ -506,13 +508,12 @@ if __name__ == "__main__":
                     # for some reason, some nan weights are still passes ak.fill_none() bc they're "nan", not None, this used to be not a problem
                     # could be an issue of copying bunching of parquet files from one directory to another, but not exactly sure
                     weights = np.nan_to_num(weights, nan=0.0) 
+                    fraction_weight = ak.ones_like(events["wgt_nominal"]) # MC is already normalized by lumisonity, so no need for scaling by fraction
 
-                
                 # print(f"weights {process} after numpy: {weights}")
                 # print(f"weights {process} isnan sum: {np.sum(np.isnan(weights))}")
                 
 
-                fraction_weight = 1/events.fraction # TBF, all fractions should be same
 
                 # obtain the category selection
                 
@@ -535,7 +536,10 @@ if __name__ == "__main__":
                     print("ERROR: acceptable region!")
                     raise ValueError
                 # region = events.z_peak
-                btag_cut = btag_cut =ak.fill_none((events.nBtagLoose_nominal >= 2), value=False) | ak.fill_none((events.nBtagMedium_nominal >= 1), value=False)
+                # btag_cut = btag_cut =ak.fill_none((events.nBtagLoose_nominal >= 2), value=False) | ak.fill_none((events.nBtagMedium_nominal >= 1), value=False)
+                btagLoose_filter = ak.fill_none((events.nBtagLoose_nominal >= 2), value=False)
+                btagMedium_filter = ak.fill_none((events.nBtagMedium_nominal >= 1), value=False) & ak.fill_none((events.njets_nominal >= 2), value=False)
+                btag_cut = btagLoose_filter | btagMedium_filter
                 vbf_cut = (events.jj_mass_nominal > 400) & (events.jj_dEta_nominal > 2.5) & (events.jet1_pt_nominal > 35) 
                 vbf_cut = ak.fill_none(vbf_cut, value=False)
                 # if args.vbf_cat_mode:
@@ -1062,8 +1066,10 @@ if __name__ == "__main__":
                     raise ValueError
 
                 # do category cut
-                btag_cut =ak.fill_none((events.nBtagLoose_nominal >= 2), value=False) | ak.fill_none((events.nBtagMedium_nominal >= 1), value=False)
-                # vbf_cut = ak.fill_none(events.vbf_cut, value=False) # in the future none values will be replaced with False
+                # btag_cut =ak.fill_none((events.nBtagLoose_nominal >= 2), value=False) | ak.fill_none((events.nBtagMedium_nominal >= 1), value=False)
+                btagLoose_filter = ak.fill_none((events.nBtagLoose_nominal >= 2), value=False)
+                btagMedium_filter = ak.fill_none((events.nBtagMedium_nominal >= 1), value=False) & ak.fill_none((events.njets_nominal >= 2), value=False)
+                btag_cut = btagLoose_filter | btagMedium_filter
                 vbf_cut = (events.jj_mass_nominal > 400) & (events.jj_dEta_nominal > 2.5) & (events.jet1_pt_nominal > 35) 
                 vbf_cut = ak.fill_none(vbf_cut, value=False)
                 # if args.vbf_cat_mode:
@@ -1125,6 +1131,11 @@ if __name__ == "__main__":
                 # extract weights
                 if is_data:
                     weights = ak.to_numpy(ak.fill_none(events["wgt_nominal"], value=0.0))
+                    # fraction_weight = 1/events.fraction
+                    
+                    fraction_weight = ak.ones_like(events["wgt_nominal"])/0.1999999964965889 # FIXME
+                    # fraction_weight = ak.ones_like(events["wgt_nominal"]) # FIXME
+                    
                 else: # MC
                     weights = ak.fill_none(events["wgt_nominal"], value=0.0)
                     
@@ -1136,14 +1147,13 @@ if __name__ == "__main__":
                     #     weights = weights/events["separate_wgt_zpt_wgt"]
 
                     
-                    # print(f"weights {process} b4 numpy: {weights}")
                     weights = ak.to_numpy(weights) # MC are already normalized by xsec*lumi
                     # for some reason, some nan weights are still passes ak.fill_none() bc they're "nan", not None, this used to be not a problem
                     # could be an issue of copying bunching of parquet files from one directory to another, but not exactly sure
                     weights = np.nan_to_num(weights, nan=0.0) 
+                    fraction_weight = ak.ones_like(events["wgt_nominal"])  # MC is already normalized by lumisonity, so no need for scaling by fraction
                     
                 
-                fraction_weight = ak.ones_like(events.wgt_nominal) # TBF, all fractions should be same
                 print(f"var: {var}")
                 # temp overwrite
                 if ("_range2" in var):
@@ -1157,35 +1167,23 @@ if __name__ == "__main__":
                 # print(f"weights.shape: {weights[weights>0].shape}")
                 print(f"weights {process} : {weights.shape}")
                 print(f"values {process} : {values.shape}")
-                val_filter = values > 6
-                print(f"values[val_filter]: {values[val_filter]}")
                 
 
                 
-                # temporary overwrite start -------------------------
-                # we have bad ll_zstar_log caluclation, so we re-calculate on the spot
-                # if var == "ll_zstar_log":
-                #     print("ll_zstar_log overwrite!")
-                #     values = ak.to_numpy(np.log(np.abs(events["zeppenfeld"])))
-                # elif var == "rpt":
-                #     print("rpt overwrite!")
-                #     numerator = np.abs(events["jj_pt"] + events["dimuon_pt"])
-                #     denominator = np.abs(events["jet1_pt"]) + np.abs(events["jet2_pt"]) +  np.abs(events["dimuon_pt"])
-                #     values = ak.to_numpy(numerator/denominator)
-                #     # debug
-                #     print(f"events.jj_pt is nan: {np.any(np.isnan(events.jj_pt))}")
-                #     print(f"events.dimuon_pt is nan: {np.any(np.isnan(events.dimuon_pt))}")
-                #     print(f"events.jet1_pt is nan: {np.any(np.isnan(events.jet1_pt))}")
-                #     print(f"events.jet2_pt is nan: {np.any(np.isnan(events.jet2_pt))}")
-                #     print(f"events.jj_pt is none: {np.any(ak.is_none(events.jj_pt))}")
-                #     print(f"events.dimuon_pt is none: {np.any(ak.is_none(events.dimuon_pt))}")
-                #     print(f"events.jet1_pt is none: {np.any(ak.is_none(events.jet1_pt))}")
-                #     print(f"events.jet2_pt is none: {np.any(ak.is_none(events.jet2_pt))}")
-                    
+                # filter out jets with less than 30 GeV -------------------------
+                # nan_val = np.ones_like(values)* -999.0
+                # if "jet1" in var:
+                #     additional_filter = events["jet1_pt_nominal"] > 30
+                #     additional_filter = ak.to_numpy(ak.fill_none(additional_filter, value=False))
+                #     values = np.where(additional_filter, values, nan_val)
+                # elif "jet2" in var:
+                #     additional_filter = events["jet1_pt_nominal"] > 30
+                #     additional_filter = ak.to_numpy(ak.fill_none(additional_filter, value=False))
+                #     values = np.where(additional_filter, values, nan_val)
+                # temporary overwrite end -------------------------
+
                 print(f"values is nan: {np.any(np.isnan(values))}")
                 print(f"values is none: {np.any(ak.is_none(values))}")
-                
-                # temporary overwrite end -------------------------
                 # print(f"values[0]: {values[0]}")
                 values_filter = values!=-999.0
                 values = values[values_filter]

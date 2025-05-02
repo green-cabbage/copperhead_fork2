@@ -198,7 +198,7 @@ def plotDataMC_compare(
     # -----------------------------------------
     # Legend, title, etc +  save figure
     # -----------------------------------------
-    ax_main.legend(loc="upper right")
+    ax_main.legend(loc="best", ncol=2)
     if title != "":
         ax_main.set_title(title)
     # save figure, we assume that the directory exists
@@ -424,7 +424,8 @@ def plotDataMC_compare_normalized(
     # -----------------------------------------
     # Legend, title, etc +  save figure
     # -----------------------------------------
-    ax_main.legend(loc="upper right")
+    ax_main.legend(loc="best", ncol=2)
+    
     if title != "":
         ax_main.set_title(title)
     # save figure, we assume that the directory exists
