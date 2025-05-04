@@ -293,7 +293,7 @@ if __name__ == "__main__":
             
             variables2plot.append(f"dimuon_ebe_mass_res")
             variables2plot.append(f"dimuon_ebe_mass_res_rel")
-            variables2plot.append(f"{particle}_rapidity")
+            # variables2plot.append(f"{particle}_rapidity")
         elif "dijet" in particle:
             variables2plot.append(f"jj_dEta_nominal")
             variables2plot.append(f"jj_mass_nominal")
@@ -325,9 +325,10 @@ if __name__ == "__main__":
                 # plot both leading and subleading muons/jets
                 variables2plot.append(f"{particle}1_{kinematic}_nominal")
                 variables2plot.append(f"{particle}2_{kinematic}_nominal")
-            # variables2plot.append(f"jet1_qgl_nominal")
-            # variables2plot.append(f"jet2_qgl_nominal")
-       
+            variables2plot.append(f"jet1_qgl_nominal")
+            variables2plot.append(f"jet2_qgl_nominal")
+            variables2plot.append(f"jet1_puId_nominal")
+            variables2plot.append(f"jet2_puId_nominal")
         else:
             print(f"Unsupported variable: {particle} is given!")
 
@@ -411,6 +412,7 @@ if __name__ == "__main__":
             "jet2_pt_nominal",
             "jj_pt_nominal",
             "zeppenfeld_nominal",
+            "fraction",
         ]
         
             
@@ -535,7 +537,6 @@ if __name__ == "__main__":
                 else: 
                     print("ERROR: acceptable region!")
                     raise ValueError
-                # region = events.z_peak
                 # btag_cut = btag_cut =ak.fill_none((events.nBtagLoose_nominal >= 2), value=False) | ak.fill_none((events.nBtagMedium_nominal >= 1), value=False)
                 btagLoose_filter = ak.fill_none((events.nBtagLoose_nominal >= 2), value=False)
                 btagMedium_filter = ak.fill_none((events.nBtagMedium_nominal >= 1), value=False) & ak.fill_none((events.njets_nominal >= 2), value=False)
@@ -1131,9 +1132,9 @@ if __name__ == "__main__":
                 # extract weights
                 if is_data:
                     weights = ak.to_numpy(ak.fill_none(events["wgt_nominal"], value=0.0))
-                    # fraction_weight = 1/events.fraction
+                    fraction_weight = 1/events.fraction
                     
-                    fraction_weight = ak.ones_like(events["wgt_nominal"])/0.1999999964965889 # FIXME
+                    # fraction_weight = ak.ones_like(events["wgt_nominal"])/0.1999999964965889 # FIXME
                     # fraction_weight = ak.ones_like(events["wgt_nominal"]) # FIXME
                     
                 else: # MC
@@ -1177,11 +1178,21 @@ if __name__ == "__main__":
                 #     additional_filter = ak.to_numpy(ak.fill_none(additional_filter, value=False))
                 #     values = np.where(additional_filter, values, nan_val)
                 # elif "jet2" in var:
-                #     additional_filter = events["jet1_pt_nominal"] > 30
+                #     additional_filter = events["jet2_pt_nominal"] > 30
                 #     additional_filter = ak.to_numpy(ak.fill_none(additional_filter, value=False))
                 #     values = np.where(additional_filter, values, nan_val)
                 # temporary overwrite end -------------------------
 
+                # filter out jets with that don't pass tight puID -------------------------
+                nan_val = np.ones_like(values)* -999.0
+                if "jet1" in var:
+                    additional_filter = (events["jet1_puId_nominal"] >= 7) | (events["jet1_pt_nominal"] >= 50) # tight pu Id
+                elif "jet2" in var:
+                    additional_filter = (events["jet2_puId_nominal"] >= 7) | (events["jet2_pt_nominal"] >= 50) # tight pu Id
+                additional_filter = ak.to_numpy(ak.fill_none(additional_filter, value=False))
+                values = np.where(additional_filter, values, nan_val)
+                # temporary overwrite end -------------------------
+                
                 print(f"values is nan: {np.any(np.isnan(values))}")
                 print(f"values is none: {np.any(ak.is_none(values))}")
                 # print(f"values[0]: {values[0]}")
