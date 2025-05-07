@@ -7,9 +7,17 @@
         "xlabel": "$m_{\\mu\\mu}$ [GeV]",
         "color": "royalblue"
     },
+    "dimuon_mass_zpeak": {
+        "variable": "dimuon_mass",
+        "binning_linspace": [70, 110, 51],
+        "density": false,
+        "ylabel": "Events / 1 GeV",
+        "xlabel": "$m_{\\mu\\mu}$ [GeV]",
+        "color": "royalblue"
+    },
     "dimuon_pt": {
         "variable": "dimuon_pt",
-        "binning_linspace": [0, 300, 31],
+        "binning_linspace": [0, 200, 61],
         "density": false,
         "ylabel": "Events / 1 GeV",
         "xlabel": "$p_T(\\mu\\mu)$ [GeV]",
@@ -143,6 +151,22 @@
         "xlabel": "N Jets",
         "color": "royalblue"
     },
+    "jet1_puId": {
+        "variable": "jet1_puId",
+        "binning_linspace": [-0.001, 9.999, 11],
+        "density": false,
+        "ylabel": "Events / 1 GeV",
+        "xlabel": "jet1_puId",
+        "color": "royalblue"
+    },
+    "jet2_puId": {
+        "variable": "jet2_puId",
+        "binning_linspace": [-0.001, 9.999, 11],
+        "density": false,
+        "ylabel": "Events / 1 GeV",
+        "xlabel": "jet2_puId",
+        "color": "royalblue"
+    },
     "gjj_mass": {
         "variable": "gjj_mass",
         "binning_linspace": [0, 600, 51],
@@ -153,7 +177,7 @@
     },
     "jj_mass": {
         "variable": "jj_mass",
-        "binning_linspace": [400, 2500, 22],
+        "binning_linspace": [400, 2500, 51],
         "density": false,
         "ylabel": "Events / 1 GeV",
         "xlabel": "$m_{jj}$ [GeV]",
@@ -161,7 +185,7 @@
     },
     "jj_mass_range2": {
         "variable": "jj_mass_range2",
-        "binning_linspace": [0, 2500, 41],
+        "binning_linspace": [0, 2500, 51],
         "density": false,
         "ylabel": "Events / 1 GeV",
         "xlabel": "$m_{jj}$ [GeV]",
@@ -185,7 +209,7 @@
     },
     "jj_dEta": {
         "variable": "jj_dEta",
-        "binning_linspace": [0, 10, 51],
+        "binning_linspace": [0, 9, 51],
         "density": false,
         "ylabel": "Events / 1 GeV",
         "xlabel": "$\\Delta\\eta_{jj}$",

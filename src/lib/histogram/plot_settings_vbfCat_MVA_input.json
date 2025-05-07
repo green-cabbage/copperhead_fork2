@@ -7,6 +7,14 @@
         "xlabel": "$m_{\\mu\\mu}$ [GeV]",
         "color": "royalblue"
     },
+    "dimuon_mass_zpeak": {
+        "variable": "dimuon_mass",
+        "binning_linspace": [70, 110, 51],
+        "density": false,
+        "ylabel": "Events / 1 GeV",
+        "xlabel": "$m_{\\mu\\mu}$ [GeV]",
+        "color": "royalblue"
+    },
     "dimuon_pt": {
         "variable": "dimuon_pt",
         "binning_linspace": [0, 300, 31],
@@ -141,6 +149,22 @@
         "density": false,
         "ylabel": "Events / 1 GeV",
         "xlabel": "N Jets",
+        "color": "royalblue"
+    },
+    "jet1_puId": {
+        "variable": "jet1_puId",
+        "binning_linspace": [-0.001, 9.999, 11],
+        "density": false,
+        "ylabel": "Events / 1 GeV",
+        "xlabel": "jet1_puId",
+        "color": "royalblue"
+    },
+    "jet2_puId": {
+        "variable": "jet2_puId",
+        "binning_linspace": [-0.001, 9.999, 11],
+        "density": false,
+        "ylabel": "Events / 1 GeV",
+        "xlabel": "jet2_puId",
         "color": "royalblue"
     },
     "gjj_mass": {
